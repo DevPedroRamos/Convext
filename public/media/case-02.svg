@@ -1,0 +1,7 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#0F0F0F"/>
+  <path d="M0 660C240 540 360 760 610 600C835 456 950 500 1200 360V900H0V660Z" fill="#1B1B1B" fill-opacity="0.82"/>
+  <path d="M145 150H1055V750H145V150Z" stroke="#FCFCFC" stroke-opacity="0.12"/>
+  <circle cx="880" cy="270" r="190" fill="#F35703" fill-opacity="0.22"/>
+  <text x="80" y="820" fill="#FCFCFC" font-size="92" font-family="Arial" letter-spacing="-5">CONVEXT 02</text>
+</svg>
