@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "Convext",
   url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-  description: "Estratégia, tecnologia e criatividade trabalhando juntas para transformar marcas em experiências que geram resultado.",
+  description: "Performance para o mercado imobiliário. Mais leads qualificados e mais oportunidades para vender.",
   contact: {
     email: "contato@convext.com.br",
     phone: "+55 (11) 0000-0000",
@@ -29,9 +29,9 @@ export const siteConfig = {
     { title: "Projeto 03", category: "Social + Creative", image: "/media/case-03.svg" },
   ],
   metrics: [
-    { value: 120, suffix: "+", label: "Projetos entregues" },
-    { value: 48, suffix: "M+", label: "Impressões geradas" },
-    { value: 42, prefix: "+", suffix: "%", label: "Performance média" },
-    { value: 10, suffix: "+", label: "Segmentos atendidos" },
+    { value: 30, prefix: "+", label: "clientes" },
+    { value: 50, prefix: "+", label: "imobiliárias" },
+    { value: 1, prefix: "+R$ ", suffix: " bi", label: "em VGV impactado" },
+    { value: 30, prefix: "+R$ ", suffix: " mi", label: "em tráfego pago" },
   ],
 };

@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { Container } from "@/components/layout/container";
+import { SplitLines } from "@/components/motion/split-lines";
 import { siteConfig } from "@/lib/site";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -30,6 +31,17 @@ export function Metrics() {
   return (
     <section ref={ref} className="py-20 sm:py-28">
       <Container>
+        <div className="mb-12 grid gap-6 lg:grid-cols-[1.15fr_.85fr] lg:items-end">
+          <div>
+            <p className="label text-primary">Resultados</p>
+            <SplitLines as="h2" className="mt-4 max-w-4xl font-display text-h2">
+              Mais de R$ 1 bilhão em VGV impactado.
+            </SplitLines>
+          </div>
+          <p className="max-w-xl text-sm leading-6 text-muted-foreground lg:justify-self-end">
+            A Convext atua exclusivamente com o mercado imobiliário, ajudando corretores, imobiliárias, construtoras e incorporadoras a transformar investimento em mídia em novas oportunidades comerciais. Atuação em São Paulo e Rio de Janeiro.
+          </p>
+        </div>
         <div className="grid gap-4 md:grid-cols-4">
           {siteConfig.metrics.map((metric) => (
             <div key={metric.label} className="surface min-h-48 p-6">

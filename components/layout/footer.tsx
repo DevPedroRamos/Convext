@@ -19,8 +19,8 @@ export function Footer() {
         <div className="grid gap-10 border-b border-black/20 pb-12 lg:grid-cols-[1.2fr_.8fr]">
           <div>
             <p className="label text-black/60">Contato</p>
-            <SplitLines as="h2" className="mt-5 max-w-2xl text-h2 font-display">Tem uma ideia? Vamos transformar em algo grande.</SplitLines>
-            <p className="mt-6 max-w-md text-sm text-black/70">Estratégia, criação e tecnologia para marcas que precisam ganhar movimento.</p>
+            <SplitLines as="h2" className="mt-5 max-w-2xl text-h2 font-display">Convext Mídias. Performance para o mercado imobiliário.</SplitLines>
+            <p className="mt-6 max-w-md text-sm text-black/70">Vamos construir uma estratégia para gerar mais oportunidades para o seu time de vendas.</p>
           </div>
           <div className="grid gap-8 sm:grid-cols-3">
             {columns.map((column) => (
@@ -42,7 +42,7 @@ export function Footer() {
         <div className="flex flex-col gap-6 py-8 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs uppercase tracking-[.16em] text-black/60">© 2026 Convext. Todos os direitos reservados.</p>
           <Button asChild variant="secondary" className="w-fit bg-black text-white hover:bg-black/80">
-            <Link href="/contato">Fale com a Convext <ArrowUpRight /></Link>
+            <Link href="/contato">Quero falar com a Convext <ArrowUpRight /></Link>
           </Button>
         </div>
         <Wordmark text="Convext" className="select-none overflow-hidden font-display text-[24vw] leading-[.72] tracking-[-.12em] text-black/90 sm:text-[20vw]" />
