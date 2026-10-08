@@ -11,7 +11,7 @@ export default function ContactPage() {
     <div className="pt-28">
       <Container className="grid min-h-[calc(100vh-7rem)] gap-10 pb-20 pt-10 lg:grid-cols-[.85fr_1.15fr] lg:items-start">
         <aside className="lg:sticky lg:top-28">
-          <p className="label text-primary">Contato</p>
+          <p className="label">Contato</p>
           <h1 className="mt-5 max-w-2xl font-display text-h1">Vamos criar algo relevante.</h1>
           <p className="mt-6 max-w-md text-foreground/65">Conte para nós sobre sua marca, projeto ou desafio. Nosso time entra em contato para entender como a Convext pode ajudar.</p>
           <div className="mt-10 divide-y divide-border border-y border-border text-sm">

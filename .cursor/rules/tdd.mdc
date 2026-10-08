@@ -1,0 +1,35 @@
+---
+description: TDD red-green-refactor para comportamentos novos e bugs importantes
+globs: "**/*.{ts,tsx},**/*.{test,spec}.{ts,tsx}"
+alwaysApply: false
+---
+
+# TDD
+
+Para novos comportamentos ou correções importantes:
+
+```text
+RED → GREEN → REFACTOR
+```
+
+## RED
+
+1. Identificar o comportamento esperado.
+2. Identificar o boundary/interface público a testar.
+3. Escrever o teste.
+4. Executar o teste.
+5. Confirmar que falha pelo motivo correto.
+
+Testar comportamento público. Não testar detalhes internos. Não criar testes que reproduzem a implementação.
+
+Este repositório ainda não tem runner nem script `test`. Sem runner, parar e informar isso em vez de inventar testes que não executam. Não adicionar Vitest/Jest nesta tarefa a menos que o usuário peça.
+
+## GREEN
+
+Implementar somente o necessário para o teste passar.
+
+Evitar abstrações prematuras, funcionalidades extras, refactors não relacionados e generalizações não pedidas.
+
+## REFACTOR
+
+Com o verde: remover duplicação, melhorar nomes e responsabilidades, simplificar interfaces — sem mudar comportamento. Executar os testes de novo.

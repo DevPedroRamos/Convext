@@ -12,13 +12,17 @@ export function ContactNotificationEmail({ contact }: { contact: ContactFormValu
           <Text style={muted}>Tipo: {contact.inquiryType}</Text>
           <Hr style={hr} />
           <Section>
-            <Text><strong>Nome:</strong> {contact.firstName} {contact.lastName}</Text>
+            <Text><strong>Nome:</strong> {[contact.firstName, contact.lastName].filter(Boolean).join(" ")}</Text>
             <Text><strong>E-mail:</strong> {contact.email}</Text>
             <Text><strong>Telefone:</strong> {contact.phone || "Não informado"}</Text>
             <Text><strong>Empresa:</strong> {contact.company || "Não informada"}</Text>
-            <Text><strong>Website / Instagram:</strong> {contact.website || "Não informado"}</Text>
-            <Text><strong>Mensagem:</strong></Text>
-            <Text>{contact.message}</Text>
+            {contact.website ? <Text><strong>Website / Instagram:</strong> {contact.website}</Text> : null}
+            {contact.message ? (
+              <>
+                <Text><strong>Mensagem:</strong></Text>
+                <Text>{contact.message}</Text>
+              </>
+            ) : null}
           </Section>
         </Container>
       </Body>

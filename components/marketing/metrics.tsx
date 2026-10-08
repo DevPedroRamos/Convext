@@ -15,6 +15,14 @@ export function Metrics() {
 
   useGSAP(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    gsap.from(".metric-card", {
+      opacity: 0,
+      y: 42,
+      duration: 0.9,
+      stagger: 0.08,
+      ease: "power3.out",
+      scrollTrigger: { trigger: ref.current, start: "top 80%" },
+    });
     gsap.utils.toArray<HTMLElement>("[data-count]").forEach((node) => {
       const target = Number(node.dataset.count || 0);
       const counter = { value: 0 };
@@ -33,18 +41,18 @@ export function Metrics() {
       <Container>
         <div className="mb-12 grid gap-6 lg:grid-cols-[1.15fr_.85fr] lg:items-end">
           <div>
-            <p className="label text-primary">Resultados</p>
+            <p className="label">Resultados</p>
             <SplitLines as="h2" className="mt-4 max-w-4xl font-display text-h2">
-              Mais de R$ 1 bilhão em VGV impactado.
+              Performance comprovada no mercado imobiliário
             </SplitLines>
           </div>
           <p className="max-w-xl text-sm leading-6 text-muted-foreground lg:justify-self-end">
-            A Convext atua exclusivamente com o mercado imobiliário, ajudando corretores, imobiliárias, construtoras e incorporadoras a transformar investimento em mídia em novas oportunidades comerciais. Atuação em São Paulo e Rio de Janeiro.
+            A Convext atua exclusivamente com o segmento imobiliário, ajudando construtoras, incorporadoras, imobiliárias e corretores a transformar investimento em mídia em vendas reais. Presença consolidada em São Paulo e Rio de Janeiro.
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-4">
           {siteConfig.metrics.map((metric) => (
-            <div key={metric.label} className="surface min-h-48 p-6">
+            <div key={metric.label} className="metric-card surface min-h-48 p-6">
               <div className="font-display text-6xl tracking-[-.07em]">
                 {metric.prefix}<span data-count={metric.value}>0</span>{metric.suffix}
               </div>

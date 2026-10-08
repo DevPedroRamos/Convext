@@ -4,11 +4,26 @@ import { ContactConfirmationEmail } from "@/emails/contact-confirmation";
 import { ContactNotificationEmail } from "@/emails/contact-notification";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hasResendEnv, hasServerSupabaseEnv } from "@/lib/env";
-import { contactSchema } from "@/lib/validations/contact";
+import { contactSchema, type ContactFormValues } from "@/lib/validations/contact";
+import { heroLeadSchema, type HeroLeadValues } from "@/lib/validations/hero-lead";
+
+function mapHeroLead(values: HeroLeadValues): ContactFormValues {
+  return {
+    inquiryType: "Novo projeto",
+    firstName: values.name,
+    lastName: "",
+    email: values.email,
+    phone: values.whatsapp,
+    company: values.company || "",
+    website: "",
+    message: "Lead enviado pela hero.",
+  };
+}
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
-  const parsed = contactSchema.safeParse(body);
+  const heroParsed = heroLeadSchema.safeParse(body);
+  const parsed = heroParsed.success ? { success: true as const, data: mapHeroLead(heroParsed.data) } : contactSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Dados inválidos.", issues: parsed.error.flatten() }, { status: 400 });
   if (!hasServerSupabaseEnv()) return NextResponse.json({ error: "Supabase server env vars não configuradas." }, { status: 503 });
 
@@ -16,7 +31,7 @@ export async function POST(request: Request) {
   const supabase = createAdminClient();
   const { error } = await supabase.from("contacts").insert({
     first_name: values.firstName,
-    last_name: values.lastName,
+    last_name: values.lastName || null,
     email: values.email,
     phone: values.phone || null,
     company: values.company || null,

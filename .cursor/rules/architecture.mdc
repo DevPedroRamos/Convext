@@ -1,0 +1,50 @@
+---
+description: Separação de responsabilidades e baixo acoplamento no monólito Convext
+globs: "app/**/*.{ts,tsx},components/**/*.{ts,tsx},lib/**/*.ts,emails/**/*.tsx,proxy.ts"
+alwaysApply: false
+---
+
+# Arquitetura
+
+Este projeto é um monólito Next.js. Não criar pastas `domain/`, `features/` ou layers artificiais. Mapear as camadas conceituais para o que já existe:
+
+```text
+Domain / regras de negócio     → lib/validations, lib/profile, tipos em types/
+Application / use cases        → funções em lib/ e handlers em app/api
+Adapters                       → app/api, proxy.ts, forms em components/forms
+Infrastructure / frameworks    → lib/supabase, emails/, Resend, Next.js
+```
+
+```mermaid
+graph LR
+    Infra[Infrastructure / Frameworks]
+    Adapters[Adapters / Controllers / Gateways]
+    Application[Application / Use Cases]
+    Domain[Domain / Entities]
+
+    Infra --> Adapters
+    Adapters --> Application
+    Application --> Domain
+```
+
+## Dependências apontam para dentro
+
+- Validação e regra de negócio não importam Supabase, Resend, Next, UI ou SDKs.
+- Route Handlers e Server Components orquestram; não acumulam domínio.
+- Componentes React não contêm regra de negócio.
+
+## Responsabilidade única
+
+Evitar God Objects, services gigantes, controllers com lógica de domínio e funções que misturam leitura, transformação, persistência e apresentação.
+
+Se um módulo já mistura essas coisas, não aumentar a mistura. Propor separação antes de continuar.
+
+## Anti-overengineering
+
+Antes de qualquer abstração (repository, factory, interface de uma implementação, event bus):
+
+```text
+Qual problema concreto essa abstração resolve agora?
+```
+
+Sem resposta concreta, preferir a solução mais simples. Não reorganizar o projeto.

@@ -1,32 +1,26 @@
-import Link from "next/link";
-import { ArrowDown, ArrowUpRight, Play } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { HeroLeadForm } from "@/components/forms/hero-lead-form";
 
 export function Hero() {
   return (
     <section className="relative min-h-screen overflow-hidden bg-background">
-      <div className="relative z-10 flex min-h-screen items-end">
-        <div className="container-convext pb-12 pt-32 sm:pb-18 lg:pb-24">
-          <p className="label mb-5 text-primary">Convext Mídias</p>
-          <div className="grid gap-8 lg:grid-cols-[1.2fr_.8fr] lg:items-end">
-            <h1 className="max-w-5xl font-display text-display-xl text-foreground">
-              <span className="block">Mais leads qualificados.</span>
-              <span className="block opacity-80">Mais oportunidades para vender.</span>
-            </h1>
-            <div className="max-w-xl lg:justify-self-end">
-              <p className="text-lg text-foreground/75 sm:text-xl">Seu marketing não precisa gerar mais contatos. Precisa gerar mais pessoas com potencial real de compra.</p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Button asChild size="lg" className="h-12 rounded-xl bg-primary px-5 text-primary-foreground hover:bg-primary/90">
-                  <Link href="/contato">Quero gerar mais leads qualificados <ArrowUpRight /></Link>
-                </Button>
-                <Button asChild size="lg" variant="outline" className="h-12 rounded-xl border-white/15 bg-white/5 px-5 text-white hover:bg-white/10">
-                  <Link href="#cases"><Play className="fill-current" /> Ver projetos</Link>
-                </Button>
-              </div>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(243,87,3,.16),transparent_34%),radial-gradient(circle_at_88%_72%,rgba(243,87,3,.1),transparent_32%)]" />
+      <div className="relative z-10 flex min-h-screen items-center">
+        <div className="container-convext py-28 sm:py-32">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_.95fr] lg:gap-16">
+            <div>
+              <p className="label mb-5">Marketing imobiliário</p>
+              <h1 className="max-w-4xl font-display text-[clamp(2.25rem,4.4vw,4.25rem)] leading-[0.92] tracking-[-0.055em] text-foreground">
+                <span className="block text-[calc(1em-8px)]">Mais leads qualificados.</span>
+                <span className="block text-primary">Mais oportunidades para vender.</span>
+              </h1>
+              <p className="mt-7 max-w-xl text-lg leading-8 text-foreground/75 sm:text-xl sm:leading-9">
+                A Convext Mídias transforma mídia paga em uma operação de geração de leads de alta conversão para o mercado imobiliário, conectando estratégia, anúncios, criativos, dados e comercial.
+              </p>
+              <p className="mt-6 max-w-xl text-base leading-7 text-foreground/60 sm:text-lg">
+                Porque gerar lead é fácil. Gerar lead que pode virar venda é o que importa.
+              </p>
             </div>
-          </div>
-          <div className="mt-14 flex items-center gap-3 text-xs uppercase tracking-[.16em] text-white/55">
-            <ArrowDown className="size-4 text-primary" /> Scroll para explorar
+            <HeroLeadForm />
           </div>
         </div>
       </div>

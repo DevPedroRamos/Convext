@@ -1,0 +1,22 @@
+---
+description: Clientes Supabase, RLS e migrations como fonte do schema
+globs: "lib/supabase/**/*.ts,supabase/**/*.sql,types/database*.ts,app/api/**/*.ts"
+alwaysApply: false
+---
+
+# Supabase
+
+## Clientes
+
+- Browser: `lib/supabase/browser.ts`
+- Server (cookies, RLS do usuário): `lib/supabase/server.ts`
+- Admin / service role: `lib/supabase/admin.ts` — somente no servidor. Nunca no client component.
+
+Não criar um quarto cliente sem motivo concreto.
+
+## Schema e segurança
+
+- `supabase/migrations/` é a fonte do schema. Alteração de tabela, policy ou função = nova migration.
+- Não editar tipos gerados à mão como substituto de migration.
+- RLS permanece a barreira de acesso. Route Handlers autenticados usam o cliente de servidor; service role só quando a operação não puder correr no contexto do usuário.
+- Nunca expor `SUPABASE_SERVICE_ROLE_KEY` ao browser.

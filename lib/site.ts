@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: "Convext",
-  url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:8080",
   description: "Performance para o mercado imobiliário. Mais leads qualificados e mais oportunidades para vender.",
   contact: {
     email: "contato@convext.com.br",
@@ -16,12 +16,11 @@ export const siteConfig = {
     { href: "/contato", label: "Contato" },
   ],
   services: [
-    { number: "01", title: "Branding", description: "Sistemas de marca com estratégia, voz e presença memorável." },
-    { number: "02", title: "Social Media", description: "Conteúdo, rotina criativa e narrativa para marcas em movimento." },
-    { number: "03", title: "Performance", description: "Campanhas, dados e otimização para crescimento sustentável." },
-    { number: "04", title: "Web & Technology", description: "Sites, interfaces e experiências digitais rápidas e sofisticadas." },
-    { number: "05", title: "Creative Strategy", description: "Ideias com direção, contexto e clareza para cada canal." },
-    { number: "06", title: "Content", description: "Produção visual e textual para campanhas, lançamentos e comunidades." },
+    { number: "01", title: "Estratégia dedicada ao Mercado Imobiliário", description: "Entendemos o empreendimento, região, público, produto, condições comerciais e objetivo da operação antes de colocar verba na mídia. A campanha começa antes do anúncio." },
+    { number: "02", title: "Gestão de Mídia Paga", description: "Estruturamos e otimizamos campanhas para encontrar pessoas com maior potencial de compra. Acompanhamos a performance continuamente e redistribuímos o investimento onde há mais resultado comercial." },
+    { number: "03", title: "Criativos de Alta Performance", description: "Desenvolvemos e testamos diferentes ângulos, ofertas, formatos e mensagens para mostrar por que o seu empreendimento merece a atenção do comprador." },
+    { number: "04", title: "Análise e Otimização Contínua", description: "Analisamos dados constantemente para identificar gargalos (seja região, público, oferta ou criativo) e testar novas possibilidades de otimização de oportunidades." },
+    { number: "05", title: "Conexão Mídia + Comercial", description: "Usamos o feedback do seu time de vendas para calibrar a inteligência das campanhas. Mídia e comercial alinhados garantem que você pare de investir dinheiro em leads sem perfil." },
   ],
   projects: [
     { title: "Projeto 01", category: "Branding + Website", image: "/media/case-01.svg" },
@@ -29,9 +28,9 @@ export const siteConfig = {
     { title: "Projeto 03", category: "Social + Creative", image: "/media/case-03.svg" },
   ],
   metrics: [
-    { value: 30, prefix: "+", label: "clientes" },
-    { value: 50, prefix: "+", label: "imobiliárias" },
     { value: 1, prefix: "+R$ ", suffix: " bi", label: "em VGV impactado" },
-    { value: 30, prefix: "+R$ ", suffix: " mi", label: "em tráfego pago" },
+    { value: 30, prefix: "+R$ ", suffix: " mi", label: "investidos em tráfego pago" },
+    { value: 30, prefix: "+", label: "clientes atendidos" },
+    { value: 50, prefix: "+", label: "imobiliárias impactadas" },
   ],
 };

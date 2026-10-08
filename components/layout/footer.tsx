@@ -18,14 +18,14 @@ export function Footer() {
       <Container className="py-10 sm:py-16">
         <div className="grid gap-10 border-b border-black/20 pb-12 lg:grid-cols-[1.2fr_.8fr]">
           <div>
-            <p className="label text-black/60">Contato</p>
+            <p className="label">Contato</p>
             <SplitLines as="h2" className="mt-5 max-w-2xl text-h2 font-display">Convext Mídias. Performance para o mercado imobiliário.</SplitLines>
             <p className="mt-6 max-w-md text-sm text-black/70">Vamos construir uma estratégia para gerar mais oportunidades para o seu time de vendas.</p>
           </div>
           <div className="grid gap-8 sm:grid-cols-3">
             {columns.map((column) => (
               <div key={column.title}>
-                <p className="label text-black/50">{column.title}</p>
+                <p className="label">{column.title}</p>
                 <ul className="mt-5 space-y-3 text-sm">
                   {column.links.map((link) => (
                     <li key={link.label}>

@@ -26,7 +26,7 @@ const calibri = localFont({
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:8080"),
   title: { default: "Convext — Marketing, criatividade e tecnologia", template: "%s — Convext" },
   description: "Agência de marketing, tecnologia e criatividade focada na construção de marcas e experiências digitais.",
   applicationName: "Convext",

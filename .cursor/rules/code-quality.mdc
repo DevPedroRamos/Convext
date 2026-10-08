@@ -1,0 +1,30 @@
+---
+description: Revisão rigorosa do código tocado pela tarefa, sem expandir o escopo
+globs: "app/**/*.{ts,tsx},components/**/*.{ts,tsx},lib/**/*.ts,emails/**/*.tsx,proxy.ts"
+alwaysApply: false
+---
+
+# Qualidade de código
+
+Antes de considerar a implementação concluída, verificar:
+
+- responsabilidade única
+- duplicação
+- naming
+- acoplamento
+- complexidade desnecessária
+- tratamento de erros
+- tipagem
+- validação de entrada
+- segurança
+- testes
+- dead code
+- abstrações prematuras
+
+Não aprovar código só porque "funciona".
+
+Não fazer refactors não relacionados à tarefa.
+
+```text
+Leave the code touched by the task better than you found it, without expanding the scope unnecessarily.
+```

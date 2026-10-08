@@ -63,7 +63,7 @@ export function ContactForm() {
       <Field label="Website / Instagram" error={form.formState.errors.website?.message}><Input {...form.register("website")} /></Field>
       <Field label="Mensagem" error={form.formState.errors.message?.message}><Textarea rows={6} {...form.register("message")} /></Field>
       <div className="flex items-center justify-between gap-4 pt-2">
-        <p className="label hidden text-muted-foreground sm:block">Lemos todas as mensagens</p>
+        <p className="label hidden sm:block">Lemos todas as mensagens</p>
         <Button type="submit" disabled={loading} className="ml-auto bg-primary text-primary-foreground hover:bg-primary/90">
           {loading ? <Loader2 className="animate-spin" /> : null} Enviar <ArrowUpRight />
         </Button>

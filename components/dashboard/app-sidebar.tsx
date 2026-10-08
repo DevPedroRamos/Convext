@@ -1,11 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { LayoutDashboard, Settings, UserRound } from "lucide-react";
+import { Briefcase, LayoutDashboard, Settings, UserRound } from "lucide-react";
 import { UserMenu } from "@/components/dashboard/user-menu";
 import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/app", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/app/cases", label: "Cases", icon: Briefcase },
   { href: "/app/perfil", label: "Perfil", icon: UserRound },
   { href: "/app/configuracoes", label: "Configurações", icon: Settings },
 ];

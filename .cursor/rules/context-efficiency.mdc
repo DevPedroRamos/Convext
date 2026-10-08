@@ -1,0 +1,36 @@
+---
+description: Reduzir leitura, reescrita e geração desnecessária de contexto
+alwaysApply: true
+---
+
+# Economia de contexto
+
+Antes de alterar:
+
+```text
+1. Localizar
+2. Entender
+3. Planejar
+4. Alterar
+5. Testar
+```
+
+## Não ler o projeto inteiro
+
+Antes de abrir arquivos: identificar os que participam da tarefa, pesquisar referências, abrir só o necessário, expandir o contexto progressivamente.
+
+Não carregar dezenas de arquivos "para entender o projeto".
+
+## Não reescrever sem necessidade
+
+Alteração de poucas linhas: patch / diff / edição localizada. Não reescrever o arquivo inteiro.
+
+## Respostas
+
+Ir direto ao diagnóstico, plano, diff, implementação ou resultado dos testes.
+
+Não usar introduções como "Claro!", "Com certeza!", "Vou ajudá-lo..." ou "Aqui está a solução...".
+
+## Não adivinhar
+
+Se uma decisão relevante não puder ser inferida do código ou da SPEC, fazer no máximo 3 perguntas objetivas. Não interromper por detalhes triviais inferíveis no próprio projeto.

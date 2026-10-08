@@ -1,0 +1,23 @@
+---
+description: Convenções do App Router Next.js 16 neste repositório
+globs: "app/**/*.{ts,tsx},components/**/*.{ts,tsx},proxy.ts"
+alwaysApply: false
+---
+
+# Next.js 16
+
+Antes de escrever código Next, ler o guia em `node_modules/next/dist/docs/` (este Next tem breaking changes em relação ao treinamento). Respeitar depreciações.
+
+## Convenções deste repo
+
+- App Router. Rotas em `app/`. Gate de sessão em `proxy.ts` (não criar `middleware.ts`).
+- Server Components por padrão. `"use client"` só quando houver estado, evento ou API de browser.
+- Route Handlers em `app/api` orquestram: validar, chamar `lib/`, responder. Não acumular domínio no handler.
+- Componentes em `components/` não contêm regra de negócio; formulários delegam validação a `lib/validations`.
+- Auth e cookies via `@supabase/ssr` em `lib/supabase`, não instanciar o cliente ad hoc nas páginas.
+
+## React neste projeto
+
+- Componentes funcionais.
+- Hooks só para UI/estado local; persistência e Auth ficam em `lib/` ou Route Handlers.
+- shadcn/ui em `components/ui` — alterar com o mesmo padrão dos arquivos existentes.

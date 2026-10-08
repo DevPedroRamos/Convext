@@ -1,0 +1,39 @@
+---
+description: Spec antes de mudanças grandes; fluxo curto para alterações pequenas
+alwaysApply: true
+---
+
+# Spec-driven
+
+## Alterações pequenas
+
+```text
+Pedido → Análise → Implementação → Testes
+```
+
+## Alterações grandes
+
+Usar o fluxo longo quando a mudança envolver mais de 2–3 módulos, arquitetura, banco, API nova, feature relevante, integração externa ou fluxo complexo:
+
+```text
+REQUISITO → REFINAMENTO → SPEC → PLANO → IMPLEMENTAÇÃO → TESTES → REVIEW
+```
+
+Não começar implementações grandes sem SPEC mínima.
+
+Specs grandes em `docs/specs/<feature>.md`. ADR, quando necessário, em `docs/adr/`.
+
+A SPEC define: problema, objetivo, escopo, não-escopo, comportamento esperado, arquitetura afetada, arquivos/módulos, interfaces, banco, critérios de aceite, estratégia de testes, riscos.
+
+## Hierarquia em conflito
+
+```text
+1. Requisito explícito do usuário
+2. SPEC da feature
+3. Arquitetura existente válida
+4. Cursor Rules do projeto
+5. Agent Skills
+6. Convenções genéricas
+```
+
+Uma Skill não sobrescreve a SPEC. Uma regra genérica não destrói um padrão arquitetural válido já existente.

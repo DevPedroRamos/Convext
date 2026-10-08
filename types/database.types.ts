@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      cases: {
+        Row: {
+          concept: string | null
+          cover_url: string | null
+          created_at: string
+          fronts: string[]
+          id: string
+          identities: Json
+          location: string | null
+          logo_url: string
+          name: string
+          published: boolean
+          segment: string
+          slug: string
+          sort_order: number
+          summary: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          concept?: string | null
+          cover_url?: string | null
+          created_at?: string
+          fronts?: string[]
+          id?: string
+          identities?: Json
+          location?: string | null
+          logo_url: string
+          name: string
+          published?: boolean
+          segment: string
+          slug: string
+          sort_order?: number
+          summary: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          concept?: string | null
+          cover_url?: string | null
+          created_at?: string
+          fronts?: string[]
+          id?: string
+          identities?: Json
+          location?: string | null
+          logo_url?: string
+          name?: string
+          published?: boolean
+          segment?: string
+          slug?: string
+          sort_order?: number
+          summary?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           company: string | null

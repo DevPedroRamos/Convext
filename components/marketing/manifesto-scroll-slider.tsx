@@ -83,7 +83,7 @@ export function ManifestoScrollSlider() {
     <section ref={sectionRef} id="sobre" className="relative min-h-screen overflow-hidden bg-primary text-primary-foreground">
       <Container className="flex min-h-screen flex-col justify-between py-10 sm:py-14 lg:py-16">
         <div className="flex items-center justify-between gap-6">
-          <p className="label text-black/50">Manifesto</p>
+          <p className="label">Manifesto</p>
           <p className="font-mono text-xs uppercase tracking-[0.18em] text-black/45">
             <span ref={counterRef}>01</span> / {String(manifestoLines.length).padStart(2, "0")}
           </p>
