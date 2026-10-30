@@ -6,7 +6,7 @@ export default function MarketingLayout({ children }: Readonly<{ children: React
   return (
     <>
       <Header />
-      <PageTransition />
+      <PageTransition subtle />
       <main>{children}</main>
       <Footer />
     </>

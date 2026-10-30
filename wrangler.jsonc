@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "convext",
+  "account_id": "45bd6a6b6682c23aa4f990107b241da6",
+  "compatibility_date": "2026-10-10",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "main": "vinext/server/fetch-handler",
+  "workers_dev": true,
+  "assets": {
+    "directory": "dist/client",
+    "not_found_handling": "none",
+    "binding": "ASSETS"
+  },
+  "routes": [
+    { "pattern": "convextmidias.com.br/*", "zone_name": "convextmidias.com.br" },
+    { "pattern": "www.convextmidias.com.br/*", "zone_name": "convextmidias.com.br" }
+  ],
+  "vars": {
+    "NEXT_PUBLIC_APP_URL": "https://convextmidias.com.br",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://kfhxiljdzgwylruinrve.supabase.co"
+  }
+}

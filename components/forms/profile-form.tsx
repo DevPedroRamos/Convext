@@ -13,9 +13,9 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/browser";
 import { profileSchema, type ProfileValues } from "@/lib/validations/profile";
 
-type ProfileFormProps = { userId: string; email: string; defaultValues: ProfileValues };
+type ProfileFormProps = { userId: string; email: string; cargo?: string | null; defaultValues: ProfileValues };
 
-export function ProfileForm({ userId, email, defaultValues }: ProfileFormProps) {
+export function ProfileForm({ userId, email, cargo, defaultValues }: ProfileFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
@@ -60,8 +60,7 @@ export function ProfileForm({ userId, email, defaultValues }: ProfileFormProps) 
         <Field label="Sobrenome" error={form.formState.errors.lastName?.message}><Input {...form.register("lastName")} /></Field>
         <Field label="E-mail"><Input value={email} readOnly /></Field>
         <Field label="Telefone" error={form.formState.errors.phone?.message}><Input {...form.register("phone")} /></Field>
-        <Field label="Cargo" error={form.formState.errors.role?.message}><Input {...form.register("role")} /></Field>
-        <Field label="Empresa" error={form.formState.errors.company?.message}><Input {...form.register("company")} /></Field>
+        <Field label="Cargo"><Input value={cargo || "—"} readOnly /></Field>
       </div>
       <Button disabled={loading} className="w-fit bg-primary text-primary-foreground hover:bg-primary/90">{loading ? <Loader2 className="animate-spin" /> : null} Salvar alterações</Button>
     </form>

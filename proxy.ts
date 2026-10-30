@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import { canAccessPath } from "@/lib/access";
 import { getPublicSupabaseEnv } from "@/lib/env";
 
 export async function proxy(request: NextRequest) {
@@ -31,6 +32,24 @@ export async function proxy(request: NextRequest) {
 
   if (user && isAuth) {
     return NextResponse.redirect(new URL("/app", request.url));
+  }
+
+  if (user && isProtected) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarding_completed, role")
+      .eq("id", user.id)
+      .maybeSingle();
+    const onboarded = Boolean(profile?.onboarding_completed);
+    if (!onboarded && pathname !== "/app/onboarding") {
+      return NextResponse.redirect(new URL("/app/onboarding", request.url));
+    }
+    if (onboarded && pathname === "/app/onboarding") {
+      return NextResponse.redirect(new URL("/app", request.url));
+    }
+    if (onboarded && !canAccessPath(profile?.role, pathname)) {
+      return NextResponse.redirect(new URL("/app", request.url));
+    }
   }
 
   return response;

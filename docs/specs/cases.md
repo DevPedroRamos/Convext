@@ -12,7 +12,7 @@ Cadastrar cases no admin, exibi-los como cards no site e abrir `/cases/[id]` com
 
 - Admin autenticado em `/app/cases` (lista, criar, editar, excluir).
 - Card na home: nome, segmento, resumo, logo; capa opcional; clique → `/cases/[id]`.
-- Página individual com conceito, localização, frentes, vídeo, identidades e prev/next.
+- Página individual: resumo no topo; conceito em artigo após o CTA; localização, frentes, vídeo, identidades e prev/next.
 - Tabela `cases`, bucket `cases`, RLS de leitura pública (publicados) e escrita autenticada.
 
 ## Não-escopo
@@ -28,16 +28,19 @@ Cadastrar cases no admin, exibi-los como cards no site e abrir `/cases/[id]` com
 - `[id]` aceita uuid ou slug.
 - Sem cases publicados, a seção permanece com o título e um estado vazio.
 - CTA da página individual aponta para `/contato`.
+- O hero mostra o resumo. O conceito aparece como artigo depois do botão; se vazio, a seção some.
+- Conceito é HTML sanitizado (títulos, listas, ênfase, citação, links http/https), editado no admin.
 
 ## Arquitetura
 
 ```text
 lib/validations/case.ts  domínio
 lib/cases.ts             consultas / slug / embed
+lib/concept-html.ts      sanitização do conceito
 app/api/cases            adapters autenticados
 app/(dashboard)/app/cases
 app/(marketing)/cases/[id]
-components/marketing + components/forms
+components/marketing + components/forms + concept-editor
 ```
 
 ## Banco

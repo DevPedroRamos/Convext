@@ -3,7 +3,8 @@
 import { Loader2, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { ConceptEditor } from "@/components/forms/concept-editor";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -181,7 +182,11 @@ export function CaseForm({ userId, record }: CaseFormProps) {
         </Field>
         <div className="md:col-span-2">
           <Field label="Conceito">
-            <Textarea rows={5} {...form.register("concept")} placeholder="Texto da página individual. Se vazio, o resumo entra no lugar." />
+            <Controller
+              control={form.control}
+              name="concept"
+              render={({ field }) => <ConceptEditor value={field.value ?? ""} onChange={field.onChange} />}
+            />
           </Field>
         </div>
         <Field label="Vídeo (YouTube ou Vimeo)">

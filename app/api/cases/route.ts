@@ -1,21 +1,19 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { createCase, listAllCases } from "@/lib/cases";
-import { createClient } from "@/lib/supabase/server";
+import { requireAreaAccess } from "@/lib/profile";
 import { caseSchema } from "@/lib/validations/case";
 
 export async function GET() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+  const { response } = await requireAreaAccess("cases");
+  if (response) return response;
   const cases = await listAllCases();
   return NextResponse.json({ cases });
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+  const { response } = await requireAreaAccess("cases");
+  if (response) return response;
   const body = await request.json().catch(() => null);
   const parsed = caseSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Dados inválidos.", issues: parsed.error.flatten() }, { status: 400 });

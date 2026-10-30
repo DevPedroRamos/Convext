@@ -5,7 +5,7 @@ import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-type MobileNavProps = { name: string; email: string; avatarUrl?: string | null };
+type MobileNavProps = { name: string; email: string; avatarUrl?: string | null; role?: string | null };
 
 export function MobileNav(props: MobileNavProps) {
   return (

@@ -38,7 +38,11 @@ yarn-error.log*
 
 # supabase local cli cache
 supabase/.temp/
+.supabase-home/
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/dist/
+.vinext/
+.wrangler/

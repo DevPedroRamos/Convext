@@ -10,13 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Container } from "@/components/layout/container";
 import type { CaseRecord } from "@/lib/case-model";
 import { videoEmbedSrc } from "@/lib/case-model";
+import { prepareConceptHtml } from "@/lib/concept-html";
 
 gsap.registerPlugin(useGSAP);
 
 export function CaseStudy({ current, prev, next }: { current: CaseRecord; prev: CaseRecord | null; next: CaseRecord | null }) {
   const ref = useRef<HTMLDivElement>(null);
   const embed = videoEmbedSrc(current.videoUrl);
-  const concept = current.concept?.trim() || current.summary;
+  const conceptHtml = prepareConceptHtml(current.concept);
   const media = current.coverUrl || current.logoUrl;
 
   useGSAP(() => {
@@ -29,7 +30,7 @@ export function CaseStudy({ current, prev, next }: { current: CaseRecord; prev: 
       <Container className="pb-24 pt-10">
         <div className="grid gap-10 lg:grid-cols-[.95fr_1.05fr] lg:items-end">
           <h1 className="max-w-3xl font-display text-h1">{current.name}</h1>
-          <p className="max-w-xl text-lg leading-relaxed text-foreground/70">{concept}</p>
+          <p className="max-w-xl text-lg leading-relaxed text-foreground/70">{current.summary}</p>
         </div>
 
         <dl className="mt-14 grid gap-8 border-y border-border py-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -49,6 +50,10 @@ export function CaseStudy({ current, prev, next }: { current: CaseRecord; prev: 
         <Button asChild size="lg" className="mt-10 rounded-full bg-primary px-6 text-primary-foreground hover:bg-primary/90">
           <Link href="/contato">Fale com a Convext <ArrowUpRight /></Link>
         </Button>
+
+        {conceptHtml ? (
+          <article className="case-prose mt-16 max-w-3xl" dangerouslySetInnerHTML={{ __html: conceptHtml }} />
+        ) : null}
 
         <div className="case-study-media relative mt-16 overflow-hidden rounded-[28px] border border-border bg-card">
           {embed ? (

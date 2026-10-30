@@ -1,3 +1,4 @@
+import { persistConcept, prepareConceptHtml } from "@/lib/concept-html";
 import { siteConfig } from "@/lib/site";
 import type { CaseIdentity, CaseValues } from "@/lib/validations/case";
 import type { Database, Json } from "@/types/database.types";
@@ -61,7 +62,7 @@ export function mapCase(row: CaseRow): CaseRecord {
     summary: row.summary,
     logoUrl: row.logo_url,
     coverUrl: row.cover_url || "",
-    concept: row.concept || "",
+    concept: prepareConceptHtml(row.concept),
     location: row.location || "",
     fronts: row.fronts ?? [],
     videoUrl: row.video_url || "",
@@ -80,7 +81,7 @@ export function toCaseRow(values: CaseValues, slug: string) {
     summary: values.summary.trim(),
     logo_url: values.logoUrl,
     cover_url: values.coverUrl || null,
-    concept: values.concept?.trim() || null,
+    concept: persistConcept(values.concept),
     location: values.location?.trim() || null,
     fronts: values.fronts.map((item) => item.trim()).filter(Boolean),
     video_url: values.videoUrl || null,

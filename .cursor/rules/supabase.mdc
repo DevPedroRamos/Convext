@@ -6,6 +6,8 @@ alwaysApply: false
 
 # Supabase
 
+CLI e MCP deste diretório usam o projeto Convext Mídias (`kfhxiljdzgwylruinrve`, conta `fduran1901@gmail.com`). Comandos: `npm run supabase -- <comando>` (isola o login em `.supabase-home/`). Não usar o login global da Advocacia Turbo.
+
 ## Clientes
 
 - Browser: `lib/supabase/browser.ts`
