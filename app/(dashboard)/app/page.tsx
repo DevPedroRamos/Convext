@@ -74,7 +74,7 @@ export default async function AppHomePage() {
           <>
             <StatCard title="Clientes" value={clients.length} hint="total" href="/app/clientes" />
             <StatCard title="Cases" value={cases.length} hint="total" href="/app/cases" />
-            <StatCard title="Equipe" value={team.length} hint="total" />
+            <StatCard title="Equipe" value={team.length} hint="total" href="/app/equipe" />
           </>
         ) : null}
       </div>

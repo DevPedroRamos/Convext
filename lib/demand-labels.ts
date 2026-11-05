@@ -1,7 +1,9 @@
 import type { DemandKind, DemandPriority, DemandStatus } from "@/lib/validations/demand";
 
 export function demandKindLabel(kind: DemandKind) {
-  return kind === "midia" ? "Mídia" : "Feedback";
+  if (kind === "midia") return "Mídia";
+  if (kind === "creator") return "Criativo";
+  return "Feedback";
 }
 
 export function demandStatusLabel(status: DemandStatus) {

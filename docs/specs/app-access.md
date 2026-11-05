@@ -18,7 +18,7 @@ Cada role só alcança as áreas que lhe cabem. Admin tem tudo. Coordinator oper
 
 ## Não-escopo
 
-- Novas roles ou tela de equipe.
+- Novas roles. Equipe, presença e status estão em `docs/specs/equipe.md`.
 - Mudar a visibilidade de Demandas (ADR 0002).
 - Site público, login, onboarding.
 - Destacar o item ativo no sidebar.
@@ -34,6 +34,8 @@ Cada role só alcança as áreas que lhe cabem. Admin tem tudo. Coordinator oper
 | Feedback | sim | sim | não | não |
 | Cases | sim | sim | não | não |
 | Perfil | sim | sim | sim | sim |
+| Equipe | sim | não | não | não |
+| Gestão | sim | não | não | não |
 
 - Perfil continua só no menu do usuário.
 - Delete de cliente e feedback continua só admin.

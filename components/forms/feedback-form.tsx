@@ -2,51 +2,88 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { ClientSuggest } from "@/components/forms/client-suggest";
+import { CreatorDemandFields } from "@/components/forms/creator-demand-fields";
 import { DatePartsField } from "@/components/forms/date-parts-field";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { ClientRecord } from "@/lib/clients";
 import { demandPriorityLabel } from "@/lib/demand-labels";
-import { createFeedbackSchema, demandPriorities, type CreateFeedbackValues } from "@/lib/validations/demand";
+import type { FeedbackType } from "@/lib/feedback-types";
+import type { CreatorOption } from "@/lib/profile";
+import { uploadDemandFiles } from "@/lib/upload-demand-file";
+import {
+  createCreatorDemandSchema,
+  createFeedbackSchema,
+  demandPriorities,
+  type CreateCreatorDemandValues,
+  type CreateFeedbackValues,
+} from "@/lib/validations/demand";
 
 type FeedbackFormProps = {
   clients: ClientRecord[];
+  types: FeedbackType[];
+  creators: CreatorOption[];
   onSuccess: () => void;
   onCancel: () => void;
 };
 
-export function FeedbackForm({ clients, onSuccess, onCancel }: FeedbackFormProps) {
+export function FeedbackForm({ clients, types, creators, onSuccess, onCancel }: FeedbackFormProps) {
   const [loading, setLoading] = useState(false);
+  const [selected, setSelected] = useState<ClientRecord | null>(null);
+  const [typeId, setTypeId] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
   const form = useForm<CreateFeedbackValues>({
     resolver: zodResolver(createFeedbackSchema),
-    defaultValues: { clientId: "", description: "", priority: "medium", dueOn: "" },
+    defaultValues: { clientId: "", typeId: "", description: "", priority: "medium", dueOn: "" },
   });
-  const [selected, setSelected] = useState<ClientRecord | null>(null);
+  const creatorForm = useForm<CreateCreatorDemandValues>({
+    resolver: zodResolver(createCreatorDemandSchema),
+    defaultValues: { clientId: "", title: "", creatorId: "", briefing: "", description: "", referenceFileIds: [] },
+  });
+  const selectedType = types.find((type) => type.id === typeId) || null;
 
   async function onSubmit(values: CreateFeedbackValues) {
+    let creator: CreateCreatorDemandValues | undefined;
+    if (selectedType?.spawnsCreator) {
+      const valid = await creatorForm.trigger(["title", "creatorId", "briefing"]);
+      if (!valid || !selected) return;
+      creator = { ...creatorForm.getValues(), clientId: selected.id };
+    }
+
     setLoading(true);
     const response = await fetch("/api/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         clientId: values.clientId,
+        typeId: values.typeId,
         description: values.description,
         priority: values.priority,
         dueOn: values.dueOn,
+        creator,
       }),
     });
     const payload = await response.json().catch(() => ({}));
-    setLoading(false);
     if (!response.ok) {
+      setLoading(false);
       toast.error(payload.error || "Não foi possível cadastrar.");
       return;
     }
+    if (payload.creatorDemand?.id && files.length) {
+      const uploaded = await uploadDemandFiles(payload.creatorDemand.id, files, "reference");
+      if (uploaded.error) {
+        setLoading(false);
+        toast.error(uploaded.error);
+        return;
+      }
+    }
+    setLoading(false);
     toast.success("Feedback cadastrado.");
     onSuccess();
   }
@@ -61,6 +98,7 @@ export function FeedbackForm({ clients, onSuccess, onCancel }: FeedbackFormProps
           onChange={(client) => {
             setSelected(client);
             form.setValue("clientId", client?.id || "", { shouldValidate: true });
+            creatorForm.setValue("clientId", client?.id || "", { shouldValidate: true });
           }}
         />
         {form.formState.errors.clientId?.message ? (
@@ -71,6 +109,35 @@ export function FeedbackForm({ clients, onSuccess, onCancel }: FeedbackFormProps
         <p className="text-sm text-muted-foreground">
           Responsável: <span className="text-foreground">{selected.responsibleName || "Sem responsável"}</span>
         </p>
+      ) : null}
+      <div className="grid gap-2">
+        <Label>Tipo</Label>
+        <Controller
+          control={form.control}
+          name="typeId"
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={(value) => {
+              field.onChange(value);
+              setTypeId(value);
+            }}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
+              <SelectContent>
+                {types.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {form.formState.errors.typeId?.message ? (
+          <p className="text-xs text-destructive">{form.formState.errors.typeId.message}</p>
+        ) : null}
+      </div>
+      {selectedType ? (
+        <div className="grid gap-2 rounded-lg border border-border bg-muted/40 p-3">
+          <Label>Solução</Label>
+          <p className="text-sm text-muted-foreground">{selectedType.solution || "Sem solução cadastrada"}</p>
+        </div>
       ) : null}
       <div className="grid gap-2">
         <Label>Prioridade</Label>
@@ -109,6 +176,20 @@ export function FeedbackForm({ clients, onSuccess, onCancel }: FeedbackFormProps
           <p className="text-xs text-destructive">{form.formState.errors.description.message}</p>
         ) : null}
       </div>
+      {selectedType?.spawnsCreator ? (
+        <div className="grid gap-4 rounded-lg border border-border p-3">
+          <p className="text-sm font-medium">Demanda para o designer</p>
+          <CreatorDemandFields
+            creators={creators}
+            register={creatorForm.register}
+            control={creatorForm.control}
+            errors={creatorForm.formState.errors}
+            files={files}
+            keptFiles={[]}
+            onFiles={setFiles}
+          />
+        </div>
+      ) : null}
       <div className="flex flex-wrap justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
         <Button disabled={loading} className="bg-primary text-primary-foreground hover:bg-primary/90">
@@ -117,71 +198,5 @@ export function FeedbackForm({ clients, onSuccess, onCancel }: FeedbackFormProps
         </Button>
       </div>
     </form>
-  );
-}
-
-function ClientSuggest({
-  clients,
-  value,
-  onChange,
-}: {
-  clients: ClientRecord[];
-  value: ClientRecord | null;
-  onChange: (client: ClientRecord | null) => void;
-}) {
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-
-  const matches = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    const list = term
-      ? clients.filter((client) => {
-          const haystack = [client.name, client.whatsapp, client.company].filter(Boolean).join(" ").toLowerCase();
-          return haystack.includes(term);
-        })
-      : clients;
-    return list.slice(0, 8);
-  }, [clients, query]);
-
-  return (
-    <div className="relative">
-      <Input
-        value={value && !open ? `${value.name} · ${value.company}` : query}
-        onChange={(event) => {
-          setQuery(event.target.value);
-          if (value) onChange(null);
-          setOpen(true);
-        }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => window.setTimeout(() => setOpen(false), 120)}
-        placeholder="Buscar por nome, número ou empresa"
-      />
-      {open ? (
-        <div className="mt-1 max-h-64 w-full overflow-auto rounded-lg border border-border bg-popover p-1 shadow-md">
-          {matches.length === 0 ? (
-            <p className="px-2 py-2 text-sm text-muted-foreground">Nenhum cliente encontrado.</p>
-          ) : (
-            matches.map((client) => (
-              <button
-                key={client.id}
-                type="button"
-                className="grid w-full rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => {
-                  onChange(client);
-                  setQuery("");
-                  setOpen(false);
-                }}
-              >
-                <span className="font-medium">{client.name}</span>
-                <span className="text-xs text-muted-foreground">
-                  {[client.company, client.whatsapp].filter(Boolean).join(" · ")}
-                </span>
-              </button>
-            ))
-          )}
-        </div>
-      ) : null}
-    </div>
   );
 }

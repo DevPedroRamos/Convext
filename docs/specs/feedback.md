@@ -37,7 +37,7 @@ Na área autenticada, cadastrar e consultar Feedbacks. Cada um é uma Demanda `k
 - A tela diz **Feedback**. A entidade é **Demanda**. Cadastrar nesta página grava `kind = feedback` e `status = new`.
 - Lista mostra cliente, responsável (nome do profile copiado na demanda), tipo, status e descrição. A página lista só Feedbacks.
 - Modal: autosuggest de cliente (nome, WhatsApp ou empresa) sobre a lista já carregada. Ao selecionar, mostra o responsável do cliente. Descrição é obrigatória; prioridade e prazo entram no cadastro.
-- O formulário não escolhe responsável, tipo nem status. O servidor copia o responsável do cliente e fixa `feedback` e `new`.
+- O formulário escolhe o tipo de feedback (catálogo do admin). A solução do tipo aparece só leitura e é copiada na demanda. Não escolhe responsável nem status. O servidor copia o responsável do cliente e fixa `feedback` e `new`. Tipo com `spawns_creator` pede também a demanda de criativo (spec Criativos).
 - Cliente sem responsável gera demanda com responsável nulo; a lista e o filtro "Sem responsável" cobrem esse caso.
 - Se o cliente mudar de responsável depois, o Feedback antigo permanece com quem respondia na data.
 - Filtros de responsável e empresa combinam entre si e com a busca. Busca local por nome do cliente, WhatsApp, empresa, descrição e nome do responsável.

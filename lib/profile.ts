@@ -32,21 +32,80 @@ export function isOperations(profile: { role?: string | null } | null) {
   return isAdmin(profile) || isCoordinator(profile);
 }
 
-export type TeamProfile = { id: string; firstName: string | null; lastName: string | null; cargo: string | null };
+export type TeamProfile = {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  cargo: string | null;
+  email: string | null;
+  avatarUrl: string | null;
+  available: boolean;
+  statusId: string | null;
+  statusName: string | null;
+  statusIcon: string | null;
+};
 
-export async function listTeamProfiles(): Promise<TeamProfile[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, first_name, last_name, cargo")
-    .order("first_name", { ascending: true });
-  if (error || !data) return [];
-  return data.map((row) => ({
+export type CreatorOption = {
+  id: string;
+  name: string;
+};
+
+type TeamProfileRow = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  cargo: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  available: boolean | null;
+  status_id: string | null;
+  status: { name: string; icon: string } | { name: string; icon: string }[] | null;
+};
+
+function mapTeamProfile(row: TeamProfileRow): TeamProfile {
+  const status = Array.isArray(row.status) ? row.status[0] : row.status;
+  return {
     id: row.id,
     firstName: row.first_name,
     lastName: row.last_name,
     cargo: row.cargo,
+    email: row.email,
+    avatarUrl: row.avatar_url,
+    available: Boolean(row.available),
+    statusId: row.status_id,
+    statusName: status?.name ?? null,
+    statusIcon: status?.icon ?? null,
+  };
+}
+
+export async function listCreators(): Promise<CreatorOption[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, first_name, last_name, email")
+    .eq("role", "creator")
+    .order("first_name", { ascending: true });
+  if (error || !data) return [];
+  return data.map((row) => ({
+    id: row.id,
+    name: profileName({ first_name: row.first_name, last_name: row.last_name }, row.email),
   }));
+}
+
+export async function listTeamProfiles(): Promise<TeamProfile[]> {
+  const supabase = await createClient();
+  const query = await supabase
+    .from("profiles")
+    .select("id, first_name, last_name, cargo, email, avatar_url, available, status_id, status:team_statuses(name, icon)")
+    .order("first_name", { ascending: true });
+  if (!query.error && query.data) return query.data.map((row) => mapTeamProfile(row as TeamProfileRow));
+
+  const fallback = await supabase
+    .from("profiles")
+    .select("id, first_name, last_name, cargo, email, avatar_url")
+    .order("first_name", { ascending: true });
+  if (fallback.error || !fallback.data) return [];
+  return fallback.data.map((row) => mapTeamProfile({ ...row, available: false, status_id: null, status: null }));
 }
 
 export async function requireOnboardedUser() {

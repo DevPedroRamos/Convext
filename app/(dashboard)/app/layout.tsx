@@ -4,9 +4,12 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/dashboard/app-header";
 import { AppQuickActions } from "@/components/dashboard/app-quick-actions";
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
+import { PresencePrompt } from "@/components/dashboard/presence-prompt";
 import { PageTransition } from "@/components/motion/page-transition";
 import { listClients } from "@/lib/clients";
-import { getCurrentUserProfile, isOnboardingComplete, isOperations, listTeamProfiles, profileName } from "@/lib/profile";
+import { listFeedbackTypes } from "@/lib/feedback-types";
+import { getCurrentUserProfile, isOnboardingComplete, isOperations, listCreators, listTeamProfiles, profileName } from "@/lib/profile";
+import { listTeamStatuses } from "@/lib/team-status";
 
 export default async function DashboardLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const { user, profile } = await getCurrentUserProfile();
@@ -33,21 +36,31 @@ export default async function DashboardLayout({ children }: Readonly<{ children:
 
   const role = profile?.role;
   const showQuickActions = isOperations(profile);
-  const [clients, team] = showQuickActions
-    ? await Promise.all([listClients(), listTeamProfiles()])
-    : [[], []];
+  const [clients, team, statuses, types, creators] = await Promise.all([
+    showQuickActions ? listClients() : Promise.resolve([]),
+    showQuickActions ? listTeamProfiles() : Promise.resolve([]),
+    listTeamStatuses(),
+    showQuickActions ? listFeedbackTypes() : Promise.resolve([]),
+    showQuickActions ? listCreators() : Promise.resolve([]),
+  ]);
+  const presence = {
+    available: Boolean(profile?.available),
+    statusId: profile?.status_id ?? null,
+    statuses,
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <PageTransition subtle />
       <div className="grid min-h-screen lg:grid-cols-[288px_1fr]">
-        <AppSidebar name={name} email={email} avatarUrl={avatarUrl} role={role} className="sticky top-0 hidden h-screen lg:flex" />
+        <AppSidebar name={name} email={email} avatarUrl={avatarUrl} role={role} className="sticky top-0 hidden h-screen lg:flex" {...presence} />
         <div className="min-w-0">
-          <AppHeader name={name} email={email} avatarUrl={avatarUrl} role={role} />
+          <AppHeader name={name} email={email} avatarUrl={avatarUrl} role={role} {...presence} />
           <main className="p-4 sm:p-6 lg:p-8">{children}</main>
         </div>
       </div>
-      {showQuickActions ? <AppQuickActions clients={clients} team={team} /> : null}
+      {showQuickActions ? <AppQuickActions clients={clients} team={team} types={types} creators={creators} /> : null}
+      <PresencePrompt />
     </div>
   );
 }

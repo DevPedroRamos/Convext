@@ -1,10 +1,17 @@
 import { demandPriorityRank } from "@/lib/demand-labels";
+import { copyDemandFiles } from "@/lib/demand-files";
+import { getFeedbackTypeById } from "@/lib/feedback-types";
+
+export { canRequestCreative, canUploadCreatives } from "@/lib/demand-access";
 import { createClient } from "@/lib/supabase/server";
 import type {
+  CreateCreatorDemandValues,
   CreateFeedbackValues,
+  CreatorDemandFields,
   DemandKind,
   DemandPriority,
   DemandStatus,
+  RequestVariationValues,
   UpdateDemandValues,
   UpdateFeedbackValues,
 } from "@/lib/validations/demand";
@@ -13,7 +20,8 @@ import type { Database } from "@/types/database.types";
 type DemandRow = Database["public"]["Tables"]["demands"]["Row"];
 type ClientJoin = { id: string; name: string; company: string; whatsapp: string | null } | null;
 type ResponsibleJoin = { id: string; first_name: string | null; last_name: string | null } | null;
-type DemandQueryRow = DemandRow & { client: ClientJoin; responsible: ResponsibleJoin };
+type FeedbackTypeJoin = { id: string; name: string } | { id: string; name: string }[] | null;
+type DemandQueryRow = DemandRow & { client: ClientJoin; responsible: ResponsibleJoin; feedback_type: FeedbackTypeJoin };
 
 export type DemandRecord = {
   id: string;
@@ -27,14 +35,22 @@ export type DemandRecord = {
   status: DemandStatus;
   priority: DemandPriority;
   dueOn: string | null;
+  title: string | null;
   description: string;
+  briefing: string | null;
+  typeId: string | null;
+  typeName: string | null;
+  solution: string | null;
+  sourceDemandId: string | null;
+  variationNote: string | null;
+  createdBy: string | null;
   createdAt: string;
   updatedAt: string;
 };
 
 export type FeedbackRecord = DemandRecord;
 
-const demandSelect = "*, client:clients!demands_client_id_fkey(id, name, company, whatsapp), responsible:profiles!demands_responsible_id_fkey(id, first_name, last_name)";
+const demandSelect = "*, client:clients!demands_client_id_fkey(id, name, company, whatsapp), responsible:profiles!demands_responsible_id_fkey(id, first_name, last_name), feedback_type:feedback_types!demands_feedback_type_id_fkey(id, name)";
 
 function profileName(profile: ResponsibleJoin) {
   if (!profile) return null;
@@ -43,7 +59,9 @@ function profileName(profile: ResponsibleJoin) {
 }
 
 function asDemandKind(value: string): DemandKind {
-  return value === "midia" ? "midia" : "feedback";
+  if (value === "midia") return "midia";
+  if (value === "creator") return "creator";
+  return "feedback";
 }
 
 function asDemandStatus(value: string): DemandStatus {
@@ -69,7 +87,15 @@ function mapDemand(row: DemandQueryRow): DemandRecord {
     status: asDemandStatus(row.status),
     priority: asDemandPriority(row.priority),
     dueOn: row.due_on,
+    title: row.title,
     description: row.description,
+    briefing: row.briefing,
+    typeId: row.feedback_type_id,
+    typeName: (Array.isArray(row.feedback_type) ? row.feedback_type[0] : row.feedback_type)?.name || null,
+    solution: row.solution,
+    sourceDemandId: row.source_demand_id,
+    variationNote: row.variation_note,
+    createdBy: row.created_by,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -88,6 +114,50 @@ function sortDemands(records: DemandRecord[]) {
 
 function dueOnValue(value?: string) {
   return value?.trim() || null;
+}
+
+async function assertCreator(creatorId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase.from("profiles").select("id, role").eq("id", creatorId).maybeSingle();
+  return data?.role === "creator";
+}
+
+async function insertCreatorDemand(values: CreateCreatorDemandValues, userId: string) {
+  if (!(await assertCreator(values.creatorId))) {
+    return { demand: null, error: "Selecione um creator válido." };
+  }
+
+  const supabase = await createClient();
+  const { data: client, error: clientError } = await supabase
+    .from("clients")
+    .select("id")
+    .eq("id", values.clientId)
+    .maybeSingle();
+  if (clientError || !client) return { demand: null, error: "Cliente não encontrado." };
+
+  const { data, error } = await supabase
+    .from("demands")
+    .insert({
+      client_id: client.id,
+      responsible_id: values.creatorId,
+      kind: "creator",
+      status: "new",
+      title: values.title.trim(),
+      description: values.description?.trim() || "",
+      briefing: values.briefing.trim(),
+      source_demand_id: values.sourceDemandId || null,
+      created_by: userId,
+    })
+    .select(demandSelect)
+    .single();
+  if (error || !data) return { demand: null, error: error?.message || "Não foi possível cadastrar a demanda." };
+
+  const demand = mapDemand(data as DemandQueryRow);
+  if (values.referenceFileIds?.length) {
+    const copied = await copyDemandFiles(values.referenceFileIds, demand.id, userId);
+    if (copied.error) return { demand, error: copied.error };
+  }
+  return { demand, error: null };
 }
 
 export async function listDemands(): Promise<DemandRecord[]> {
@@ -122,16 +192,26 @@ export async function getFeedbackById(id: string): Promise<FeedbackRecord | null
 }
 
 export async function createFeedback(values: CreateFeedbackValues) {
+  const type = await getFeedbackTypeById(values.typeId);
+  if (!type) return { feedback: null, creatorDemand: null, error: "Tipo de feedback não encontrado." };
+  if (type.spawnsCreator && !values.creator) {
+    return { feedback: null, creatorDemand: null, error: "Informe os dados da demanda de criativo." };
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { feedback: null, error: "Não autenticado." };
+  if (!user) return { feedback: null, creatorDemand: null, error: "Não autenticado." };
 
   const { data: client, error: clientError } = await supabase
     .from("clients")
     .select("id, responsible_id")
     .eq("id", values.clientId)
     .maybeSingle();
-  if (clientError || !client) return { feedback: null, error: "Cliente não encontrado." };
+  if (clientError || !client) return { feedback: null, creatorDemand: null, error: "Cliente não encontrado." };
+
+  if (values.creator && !(await assertCreator(values.creator.creatorId))) {
+    return { feedback: null, creatorDemand: null, error: "Selecione um creator válido." };
+  }
 
   const { data, error } = await supabase
     .from("demands")
@@ -143,12 +223,63 @@ export async function createFeedback(values: CreateFeedbackValues) {
       priority: values.priority || "medium",
       due_on: dueOnValue(values.dueOn),
       description: values.description.trim(),
+      feedback_type_id: type.id,
+      solution: type.solution,
       created_by: user.id,
     })
     .select(demandSelect)
     .single();
-  if (error || !data) return { feedback: null, error: error?.message || "Não foi possível cadastrar o feedback." };
-  return { feedback: mapDemand(data as DemandQueryRow), error: null };
+  if (error || !data) return { feedback: null, creatorDemand: null, error: error?.message || "Não foi possível cadastrar o feedback." };
+
+  const feedback = mapDemand(data as DemandQueryRow);
+  if (!type.spawnsCreator || !values.creator) return { feedback, creatorDemand: null, error: null };
+
+  const created = await insertCreatorDemand({
+    ...values.creator,
+    clientId: client.id,
+    sourceDemandId: feedback.id,
+  }, user.id);
+  if (created.error || !created.demand) {
+    return { feedback, creatorDemand: null, error: created.error || "Não foi possível criar a demanda de criativo." };
+  }
+  return { feedback, creatorDemand: created.demand, error: null };
+}
+
+export async function createCreatorDemand(values: CreateCreatorDemandValues) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { demand: null, error: "Não autenticado." };
+  return insertCreatorDemand(values, user.id);
+}
+
+export async function requestCreativeFromFeedback(sourceId: string, values: CreatorDemandFields) {
+  const source = await getFeedbackById(sourceId);
+  if (!source) return { demand: null, error: "Feedback não encontrado." };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { demand: null, error: "Não autenticado." };
+
+  return insertCreatorDemand({
+    ...values,
+    clientId: source.clientId,
+    sourceDemandId: source.id,
+  }, user.id);
+}
+
+export async function requestVariation(id: string, values: RequestVariationValues) {
+  const current = await getDemandById(id);
+  if (!current || current.kind !== "creator") return { demand: null, error: "Demanda de criativo não encontrada." };
+
+  const patch: Database["public"]["Tables"]["demands"]["Update"] = {
+    variation_note: values.note.trim(),
+  };
+  if (current.status === "completed") patch.status = "in_progress";
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("demands").update(patch).eq("id", id).eq("kind", "creator").select(demandSelect).single();
+  if (error || !data) return { demand: null, error: error?.message || "Não foi possível solicitar a variação." };
+  return { demand: mapDemand(data as DemandQueryRow), error: null };
 }
 
 export async function updateFeedback(id: string, values: UpdateFeedbackValues) {
@@ -172,7 +303,7 @@ export async function updateDemand(id: string, values: UpdateDemandValues) {
   if (!current) return { demand: null, error: "Demanda não encontrada." };
 
   const patch: Database["public"]["Tables"]["demands"]["Update"] = {};
-  if (values.description) patch.description = values.description.trim();
+  if (values.description !== undefined) patch.description = values.description.trim();
   if (values.status) patch.status = values.status;
   if (values.priority) patch.priority = values.priority;
   if (values.dueOn !== undefined) patch.due_on = dueOnValue(values.dueOn);

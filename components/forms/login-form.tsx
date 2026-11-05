@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { markPresencePrompt } from "@/lib/presence-session";
 import { createClient } from "@/lib/supabase/browser";
 import { loginSchema, type LoginValues } from "@/lib/validations/auth";
 
@@ -24,7 +25,9 @@ export function LoginForm() {
     const { error } = await supabase.auth.signInWithPassword(values);
     setLoading(false);
     if (error) { toast.error(error.message); return; }
-    router.push("/app");
+    markPresencePrompt();
+    const next = new URLSearchParams(window.location.search).get("next");
+    router.push(next?.startsWith("/app") ? next : "/app");
     router.refresh();
   }
 

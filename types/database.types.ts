@@ -151,45 +151,111 @@ export type Database = {
         }
         Relationships: []
       }
+      demand_files: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          demand_id: string
+          id: string
+          kind: string
+          mime: string
+          name: string
+          path: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          demand_id: string
+          id?: string
+          kind: string
+          mime: string
+          name: string
+          path: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          demand_id?: string
+          id?: string
+          kind?: string
+          mime?: string
+          name?: string
+          path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demand_files_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demand_files_demand_id_fkey"
+            columns: ["demand_id"]
+            isOneToOne: false
+            referencedRelation: "demands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demands: {
         Row: {
+          briefing: string | null
           client_id: string
           created_at: string
           created_by: string | null
           description: string
+          due_on: string | null
+          feedback_type_id: string | null
           id: string
           kind: string
           priority: string
           responsible_id: string | null
+          solution: string | null
+          source_demand_id: string | null
           status: string
-          due_on: string | null
+          title: string | null
           updated_at: string
+          variation_note: string | null
         }
         Insert: {
+          briefing?: string | null
           client_id: string
           created_at?: string
           created_by?: string | null
           description: string
           due_on?: string | null
+          feedback_type_id?: string | null
           id?: string
           kind: string
           priority?: string
           responsible_id?: string | null
+          solution?: string | null
+          source_demand_id?: string | null
           status?: string
+          title?: string | null
           updated_at?: string
+          variation_note?: string | null
         }
         Update: {
+          briefing?: string | null
           client_id?: string
           created_at?: string
           created_by?: string | null
           description?: string
           due_on?: string | null
+          feedback_type_id?: string | null
           id?: string
           kind?: string
           priority?: string
           responsible_id?: string | null
+          solution?: string | null
+          source_demand_id?: string | null
           status?: string
+          title?: string | null
           updated_at?: string
+          variation_note?: string | null
         }
         Relationships: [
           {
@@ -207,16 +273,61 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "demands_feedback_type_id_fkey"
+            columns: ["feedback_type_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_types"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "demands_responsible_id_fkey"
             columns: ["responsible_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "demands_source_demand_id_fkey"
+            columns: ["source_demand_id"]
+            isOneToOne: false
+            referencedRelation: "demands"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      feedback_types: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          solution: string
+          sort_order: number
+          spawns_creator: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          solution?: string
+          sort_order?: number
+          spawns_creator?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          solution?: string
+          sort_order?: number
+          spawns_creator?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
+          available: boolean
           avatar_url: string | null
           cargo: string | null
           company: string | null
@@ -228,9 +339,11 @@ export type Database = {
           onboarding_completed: boolean
           phone: string | null
           role: string | null
+          status_id: string | null
           updated_at: string
         }
         Insert: {
+          available?: boolean
           avatar_url?: string | null
           cargo?: string | null
           company?: string | null
@@ -242,9 +355,11 @@ export type Database = {
           onboarding_completed?: boolean
           phone?: string | null
           role?: string | null
+          status_id?: string | null
           updated_at?: string
         }
         Update: {
+          available?: boolean
           avatar_url?: string | null
           cargo?: string | null
           company?: string | null
@@ -256,6 +371,42 @@ export type Database = {
           onboarding_completed?: boolean
           phone?: string | null
           role?: string | null
+          status_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "team_statuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_statuses: {
+        Row: {
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          icon: string
+          id?: string
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []

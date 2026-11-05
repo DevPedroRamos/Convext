@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { signOutOffline } from "@/lib/presence-session";
 import { createClient } from "@/lib/supabase/browser";
 import { passwordChangeSchema, type PasswordChangeValues } from "@/lib/validations/profile";
 
@@ -28,8 +29,7 @@ export function SettingsForm() {
   }
 
   async function signOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await signOutOffline();
     router.push("/login");
     router.refresh();
   }

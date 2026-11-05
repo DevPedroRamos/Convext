@@ -4,8 +4,17 @@ import { Menu } from "lucide-react";
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import type { TeamStatus } from "@/lib/team-status-icons";
 
-type MobileNavProps = { name: string; email: string; avatarUrl?: string | null; role?: string | null };
+type MobileNavProps = {
+  name: string;
+  email: string;
+  avatarUrl?: string | null;
+  role?: string | null;
+  available?: boolean;
+  statusId?: string | null;
+  statuses?: TeamStatus[];
+};
 
 export function MobileNav(props: MobileNavProps) {
   return (

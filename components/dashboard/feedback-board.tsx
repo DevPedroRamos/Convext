@@ -17,6 +17,8 @@ import { Textarea } from "@/components/ui/textarea";
 import type { ClientRecord } from "@/lib/clients";
 import { demandKindLabel, demandPriorityLabel, demandStatusLabel, formatDueOn } from "@/lib/demand-labels";
 import type { FeedbackRecord } from "@/lib/demands";
+import type { FeedbackType } from "@/lib/feedback-types";
+import type { CreatorOption } from "@/lib/profile";
 
 const ALL = "all";
 const NONE = "none";
@@ -24,10 +26,14 @@ const NONE = "none";
 export function FeedbackBoard({
   feedbacks,
   clients,
+  types,
+  creators,
   canDelete,
 }: {
   feedbacks: FeedbackRecord[];
   clients: ClientRecord[];
+  types: FeedbackType[];
+  creators: CreatorOption[];
   canDelete: boolean;
 }) {
   const router = useRouter();
@@ -58,7 +64,7 @@ export function FeedbackBoard({
       if (responsible !== ALL && responsible !== NONE && item.responsibleId !== responsible) return false;
       if (company !== ALL && item.clientCompany !== company) return false;
       if (!term) return true;
-      const haystack = [item.clientName, item.clientWhatsapp, item.clientCompany, item.description, item.responsibleName]
+      const haystack = [item.clientName, item.clientWhatsapp, item.clientCompany, item.description, item.responsibleName, item.typeName, item.solution]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -134,6 +140,7 @@ export function FeedbackBoard({
                     <TableHead>Cliente</TableHead>
                     <TableHead>Responsável</TableHead>
                     <TableHead>Tipo</TableHead>
+                    <TableHead>Solução</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Prioridade</TableHead>
                     <TableHead>Prazo</TableHead>
@@ -149,7 +156,8 @@ export function FeedbackBoard({
                         <p className="text-xs text-muted-foreground">{item.clientCompany}</p>
                       </TableCell>
                       <TableCell className="text-muted-foreground">{item.responsibleName || "—"}</TableCell>
-                      <TableCell><Badge variant="secondary">{demandKindLabel(item.kind)}</Badge></TableCell>
+                      <TableCell><Badge variant="secondary">{item.typeName || demandKindLabel(item.kind)}</Badge></TableCell>
+                      <TableCell className="max-w-xs whitespace-normal text-muted-foreground">{item.solution || "—"}</TableCell>
                       <TableCell><Badge variant="outline">{demandStatusLabel(item.status)}</Badge></TableCell>
                       <TableCell><Badge variant="outline">{demandPriorityLabel(item.priority)}</Badge></TableCell>
                       <TableCell className="text-muted-foreground">{formatDueOn(item.dueOn)}</TableCell>
@@ -181,13 +189,15 @@ export function FeedbackBoard({
       )}
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-lg py-8">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl py-8">
           <DialogHeader>
             <DialogTitle>Cadastrar Feedback</DialogTitle>
             <DialogDescription>A demanda fica ligada ao cliente e herda o responsável atual.</DialogDescription>
           </DialogHeader>
           <FeedbackForm
             clients={clients}
+            types={types}
+            creators={creators}
             onCancel={() => setCreateOpen(false)}
             onSuccess={() => {
               setCreateOpen(false);

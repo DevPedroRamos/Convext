@@ -18,8 +18,11 @@ export async function POST(request: Request) {
   const parsed = createFeedbackSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Dados inválidos.", issues: parsed.error.flatten() }, { status: 400 });
   const result = await createFeedback(parsed.data);
-  if (result.error === "Cliente não encontrado.") return NextResponse.json({ error: result.error }, { status: 400 });
+  if (result.error === "Cliente não encontrado." || result.error === "Tipo de feedback não encontrado." || result.error === "Informe os dados da demanda de criativo." || result.error === "Selecione um creator válido.") {
+    return NextResponse.json({ error: result.error }, { status: 400 });
+  }
   if (result.error || !result.feedback) return NextResponse.json({ error: result.error }, { status: 500 });
   revalidatePath("/app/feedback");
-  return NextResponse.json({ feedback: result.feedback }, { status: 201 });
+  revalidatePath("/app/demandas");
+  return NextResponse.json({ feedback: result.feedback, creatorDemand: result.creatorDemand }, { status: 201 });
 }

@@ -1,12 +1,14 @@
 "use client";
 
-import { GripVertical, LayoutGrid, List } from "lucide-react";
+import { GripVertical, LayoutGrid, List, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { DemandDetailSheet } from "@/components/dashboard/demand-detail-sheet";
+import { CreatorDemandForm, type CreatorDemandPrefill } from "@/components/forms/creator-demand-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Kanban,
@@ -19,8 +21,11 @@ import {
 } from "@/components/ui/kanban";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { ClientRecord } from "@/lib/clients";
+import type { DemandFileRecord } from "@/lib/demand-files";
 import { demandKindLabel, demandPriorityLabel, demandStatusLabel, formatDueOn } from "@/lib/demand-labels";
 import type { DemandRecord } from "@/lib/demands";
+import type { CreatorOption } from "@/lib/profile";
 import { demandKinds, demandPriorities, demandStatuses, type DemandKind, type DemandPriority, type DemandStatus } from "@/lib/validations/demand";
 
 const ALL = "all";
@@ -51,10 +56,22 @@ function groupColumns(records: DemandRecord[]): Record<DemandStatus, DemandRecor
 
 export function DemandasBoard({
   demands,
+  clients,
+  creators,
+  currentUserId,
   canFilterResponsible,
+  canCreate,
+  isAdmin,
+  isOperations,
 }: {
   demands: DemandRecord[];
+  clients: ClientRecord[];
+  creators: CreatorOption[];
+  currentUserId?: string | null;
   canFilterResponsible: boolean;
+  canCreate: boolean;
+  isAdmin: boolean;
+  isOperations: boolean;
 }) {
   const router = useRouter();
   const [view, setView] = useState<"kanban" | "list">("kanban");
@@ -63,8 +80,11 @@ export function DemandasBoard({
   const [priority, setPriority] = useState(ALL);
   const [due, setDue] = useState<DueFilter>("all");
   const [responsible, setResponsible] = useState(ALL);
+  const [clientId, setClientId] = useState(ALL);
   const [selected, setSelected] = useState<DemandRecord | null>(null);
   const [columnOverride, setColumnOverride] = useState<Record<DemandStatus, DemandRecord[]> | null>(null);
+  const [createPrefill, setCreatePrefill] = useState<CreatorDemandPrefill | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const responsibles = useMemo(() => {
     const map = new Map<string, string>();
@@ -74,6 +94,13 @@ export function DemandasBoard({
     return [...map.entries()].sort((left, right) => left[1].localeCompare(right[1], "pt-BR"));
   }, [demands]);
 
+  const clientOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of demands) map.set(item.clientId, item.clientName);
+    for (const client of clients) map.set(client.id, client.name);
+    return [...map.entries()].sort((left, right) => left[1].localeCompare(right[1], "pt-BR"));
+  }, [clients, demands]);
+
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase();
     const today = todayIso();
@@ -81,16 +108,20 @@ export function DemandasBoard({
     return demands.filter((item) => {
       if (kind !== ALL && item.kind !== kind) return false;
       if (priority !== ALL && item.priority !== priority) return false;
+      if (clientId !== ALL && item.clientId !== clientId) return false;
       if (canFilterResponsible && responsible === NONE && item.responsibleId) return false;
       if (canFilterResponsible && responsible !== ALL && responsible !== NONE && item.responsibleId !== responsible) return false;
       if (due === "none" && item.dueOn) return false;
       if (due === "overdue" && (!item.dueOn || item.dueOn >= today)) return false;
       if (due === "week" && (!item.dueOn || item.dueOn < today || item.dueOn > weekEnd)) return false;
       if (!term) return true;
-      const haystack = [item.clientName, item.description, item.responsibleName, item.clientCompany].filter(Boolean).join(" ").toLowerCase();
+      const haystack = [item.clientName, item.description, item.responsibleName, item.clientCompany, item.title, item.briefing]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
       return haystack.includes(term);
     });
-  }, [canFilterResponsible, demands, due, kind, priority, query, responsible]);
+  }, [canFilterResponsible, clientId, demands, due, kind, priority, query, responsible]);
 
   const grouped = useMemo(() => groupColumns(filtered), [filtered]);
   const columns = columnOverride ?? grouped;
@@ -119,7 +150,15 @@ export function DemandasBoard({
           <p className="label text-primary">Demandas</p>
           <h2 className="mt-2 font-display text-h2">Quadro de trabalho.</h2>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {canCreate ? (
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => {
+              setCreatePrefill(null);
+              setCreateOpen(true);
+            }}>
+              <Plus /> Cadastrar demanda
+            </Button>
+          ) : null}
           <Button variant={view === "kanban" ? "default" : "outline"} onClick={() => setView("kanban")}>
             <LayoutGrid /> Kanban
           </Button>
@@ -129,8 +168,17 @@ export function DemandasBoard({
         </div>
       </div>
 
-      <div className={`grid gap-3 ${canFilterResponsible ? "xl:grid-cols-[minmax(0,1fr)_160px_160px_180px_220px]" : "xl:grid-cols-[minmax(0,1fr)_160px_160px_180px]"}`}>
-        <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por cliente, descrição ou responsável" />
+      <div className={`grid gap-3 ${canFilterResponsible ? "xl:grid-cols-[minmax(0,1fr)_180px_160px_160px_180px_220px]" : "xl:grid-cols-[minmax(0,1fr)_180px_160px_160px_180px]"}`}>
+        <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por cliente, nome, briefing ou responsável" />
+        <Select value={clientId} onValueChange={setClientId}>
+          <SelectTrigger className="w-full"><SelectValue placeholder="Cliente" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Todos os clientes</SelectItem>
+            {clientOptions.map(([id, name]) => (
+              <SelectItem key={id} value={id}>{name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Select value={kind} onValueChange={setKind}>
           <SelectTrigger className="w-full"><SelectValue placeholder="Tipo" /></SelectTrigger>
           <SelectContent>
@@ -210,7 +258,65 @@ export function DemandasBoard({
       )}
 
       <p className="text-xs text-muted-foreground">{filtered.length} de {demands.length} demandas</p>
-      <DemandDetailSheet demand={selected} onClose={() => setSelected(null)} />
+      <DemandDetailSheet
+        demand={selected}
+        currentUserId={currentUserId}
+        isAdmin={isAdmin}
+        isOperations={isOperations}
+        onClose={() => setSelected(null)}
+        onRequestCreative={(demand) => {
+          setSelected(null);
+          setCreatePrefill({
+            clientId: demand.clientId,
+            sourceDemandId: demand.id,
+            lockClient: true,
+            endpoint: `/api/demandas/${demand.id}/criativo`,
+          });
+          setCreateOpen(true);
+        }}
+        onReuseBriefing={(demand, files: DemandFileRecord[]) => {
+          setSelected(null);
+          setCreatePrefill({
+            clientId: demand.clientId,
+            title: demand.title || "",
+            description: demand.description,
+            briefing: demand.briefing || "",
+            creatorId: demand.responsibleId || "",
+            referenceFiles: files,
+          });
+          setCreateOpen(true);
+        }}
+      />
+      <Dialog open={createOpen} onOpenChange={(open) => {
+        setCreateOpen(open);
+        if (!open) setCreatePrefill(null);
+      }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl py-8">
+          <DialogHeader>
+            <DialogTitle>{createPrefill?.endpoint ? "Solicitar criativo" : createPrefill ? "Reaproveitar briefing" : "Cadastrar demanda"}</DialogTitle>
+            <DialogDescription>
+              {createPrefill?.endpoint
+                ? "Cria uma demanda de criativo ligada a este feedback."
+                : "Nome, cliente, creator, briefing e referências."}
+            </DialogDescription>
+          </DialogHeader>
+          <CreatorDemandForm
+            key={`${createPrefill?.sourceDemandId || "new"}-${createPrefill?.title || ""}`}
+            clients={clients}
+            creators={creators}
+            prefill={createPrefill}
+            onCancel={() => {
+              setCreateOpen(false);
+              setCreatePrefill(null);
+            }}
+            onSuccess={() => {
+              setCreateOpen(false);
+              setCreatePrefill(null);
+              router.refresh();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -232,8 +338,10 @@ function DemandCard({ item, onOpen }: { item: DemandRecord; onOpen: (item: Deman
       >
         <div className="flex items-start justify-between gap-2">
           <button type="button" className="min-w-0 text-left" onClick={() => onOpen(item)}>
-            <p className="truncate text-sm font-medium text-foreground">{item.clientName}</p>
-            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{item.description}</p>
+            <p className="truncate text-sm font-medium text-foreground">{item.title || item.clientName}</p>
+            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+              {item.title ? item.clientName : item.description}
+            </p>
           </button>
           <KanbanItemHandle className="text-muted-foreground" onClick={(event) => event.stopPropagation()}>
             <GripVertical className="size-4" />
