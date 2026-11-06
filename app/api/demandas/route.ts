@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
-import { createCreatorDemand, listDemands } from "@/lib/demands";
+import { createCreatorDemand, creatorAlreadyLinkedError, listDemands } from "@/lib/demands";
 import { isOperations, requireOnboardedUser } from "@/lib/profile";
 import { createCreatorDemandSchema } from "@/lib/validations/demand";
 
@@ -19,8 +19,11 @@ export async function POST(request: Request) {
   const parsed = createCreatorDemandSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Dados inválidos.", issues: parsed.error.flatten() }, { status: 400 });
   const result = await createCreatorDemand(parsed.data);
-  if (result.error === "Cliente não encontrado." || result.error === "Selecione um creator válido.") {
+  if (result.error === "Cliente não encontrado." || result.error === "Selecione um creator válido." || result.error === creatorAlreadyLinkedError) {
     return NextResponse.json({ error: result.error }, { status: 400 });
+  }
+  if (result.error && result.demand) {
+    return NextResponse.json({ demand: result.demand, error: result.error }, { status: 500 });
   }
   if (result.error || !result.demand) return NextResponse.json({ error: result.error }, { status: 500 });
   revalidatePath("/app/demandas");

@@ -3,6 +3,7 @@ import { copyDemandFiles } from "@/lib/demand-files";
 import { getFeedbackTypeById } from "@/lib/feedback-types";
 
 export { canRequestCreative, canUploadCreatives } from "@/lib/demand-access";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type {
   CreateCreatorDemandValues,
@@ -116,10 +117,34 @@ function dueOnValue(value?: string) {
   return value?.trim() || null;
 }
 
+export const creatorAlreadyLinkedError = "Já existe uma demanda de criativo para este feedback.";
+
 async function assertCreator(creatorId: string) {
   const supabase = await createClient();
   const { data } = await supabase.from("profiles").select("id, role").eq("id", creatorId).maybeSingle();
   return data?.role === "creator";
+}
+
+async function creatorSourceTaken(sourceId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("demands")
+    .select("id")
+    .eq("kind", "creator")
+    .eq("source_demand_id", sourceId)
+    .limit(1);
+  if (error) return false;
+  return (data?.length ?? 0) > 0;
+}
+
+async function removeDemand(id: string) {
+  try {
+    const admin = createAdminClient();
+    const { error } = await admin.from("demands").delete().eq("id", id);
+    return error?.message ?? null;
+  } catch (err) {
+    return err instanceof Error ? err.message : "Não foi possível desfazer a demanda.";
+  }
 }
 
 async function insertCreatorDemand(values: CreateCreatorDemandValues, userId: string) {
@@ -134,6 +159,10 @@ async function insertCreatorDemand(values: CreateCreatorDemandValues, userId: st
     .eq("id", values.clientId)
     .maybeSingle();
   if (clientError || !client) return { demand: null, error: "Cliente não encontrado." };
+
+  if (values.sourceDemandId && await creatorSourceTaken(values.sourceDemandId)) {
+    return { demand: null, error: creatorAlreadyLinkedError };
+  }
 
   const { data, error } = await supabase
     .from("demands")
@@ -150,12 +179,26 @@ async function insertCreatorDemand(values: CreateCreatorDemandValues, userId: st
     })
     .select(demandSelect)
     .single();
-  if (error || !data) return { demand: null, error: error?.message || "Não foi possível cadastrar a demanda." };
+  if (error || !data) {
+    if (error?.code === "23505" && values.sourceDemandId) {
+      return { demand: null, error: creatorAlreadyLinkedError };
+    }
+    return { demand: null, error: error?.message || "Não foi possível cadastrar a demanda." };
+  }
 
   const demand = mapDemand(data as DemandQueryRow);
   if (values.referenceFileIds?.length) {
-    const copied = await copyDemandFiles(values.referenceFileIds, demand.id, userId);
-    if (copied.error) return { demand, error: copied.error };
+    try {
+      const copied = await copyDemandFiles(values.referenceFileIds, demand.id, userId);
+      if (copied.error) {
+        const rollbackError = await removeDemand(demand.id);
+        return { demand: rollbackError ? demand : null, error: copied.error };
+      }
+    } catch (err) {
+      const rollbackError = await removeDemand(demand.id);
+      const message = err instanceof Error ? err.message : "Não foi possível copiar as referências.";
+      return { demand: rollbackError ? demand : null, error: message };
+    }
   }
   return { demand, error: null };
 }
@@ -240,7 +283,17 @@ export async function createFeedback(values: CreateFeedbackValues) {
     sourceDemandId: feedback.id,
   }, user.id);
   if (created.error || !created.demand) {
-    return { feedback, creatorDemand: null, error: created.error || "Não foi possível criar a demanda de criativo." };
+    const creatorRollback = created.demand ? await removeDemand(created.demand.id) : null;
+    const rollbackError = await removeDemand(feedback.id);
+    const error = created.error || "Não foi possível criar a demanda de criativo.";
+    if (rollbackError) {
+      return {
+        feedback,
+        creatorDemand: creatorRollback ? created.demand : null,
+        error: `${error} Não foi possível desfazer o feedback.`,
+      };
+    }
+    return { feedback: null, creatorDemand: null, error };
   }
   return { feedback, creatorDemand: created.demand, error: null };
 }

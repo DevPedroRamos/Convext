@@ -74,13 +74,15 @@ export function CreatorDemandForm({
     if (!response.ok || !payload.demand?.id) {
       setLoading(false);
       toast.error(payload.error || "Não foi possível cadastrar a demanda.");
+      if (payload.demand?.id) onSuccess();
       return;
     }
     if (files.length) {
       const uploaded = await uploadDemandFiles(payload.demand.id, files, "reference");
       if (uploaded.error) {
         setLoading(false);
-        toast.error(uploaded.error);
+        toast.warning(`Demanda cadastrada, mas as referências não foram anexadas. ${uploaded.error}`);
+        onSuccess();
         return;
       }
     }

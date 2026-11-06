@@ -73,13 +73,15 @@ export function FeedbackForm({ clients, types, creators, onSuccess, onCancel }: 
     if (!response.ok) {
       setLoading(false);
       toast.error(payload.error || "Não foi possível cadastrar.");
+      if (payload.feedback?.id) onSuccess();
       return;
     }
     if (payload.creatorDemand?.id && files.length) {
       const uploaded = await uploadDemandFiles(payload.creatorDemand.id, files, "reference");
       if (uploaded.error) {
         setLoading(false);
-        toast.error(uploaded.error);
+        toast.warning(`Feedback cadastrado, mas as referências não foram anexadas. ${uploaded.error}`);
+        onSuccess();
         return;
       }
     }

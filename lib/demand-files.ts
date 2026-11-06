@@ -71,6 +71,11 @@ export async function createDemandFile(demandId: string, values: CreateDemandFil
   return { file: mapFile(data), error: null };
 }
 
+function storageCopyName(name: string) {
+  const cleaned = name.replace(/[^\w.\-]+/g, "-").replace(/-+/g, "-").slice(0, 80);
+  return cleaned || "arquivo";
+}
+
 export async function copyDemandFiles(sourceIds: string[], targetDemandId: string, userId: string, kind: DemandFileKind = "reference") {
   if (sourceIds.length === 0) return { files: [] as DemandFileRecord[], error: null };
   const supabase = await createClient();
@@ -82,9 +87,21 @@ export async function copyDemandFiles(sourceIds: string[], targetDemandId: strin
   if (sourceError) return { files: [] as DemandFileRecord[], error: sourceError.message };
   if (!source?.length) return { files: [] as DemandFileRecord[], error: null };
 
+  const bucket = createAdminClient().storage.from("demand-files");
+  const staged: { kind: string; path: string; name: string; mime: string }[] = [];
+  for (const file of source) {
+    const path = `${targetDemandId}/${kind}/${crypto.randomUUID()}-${storageCopyName(file.name)}`;
+    const { error: copyError } = await bucket.copy(file.path, path);
+    if (copyError) {
+      if (staged.length) await bucket.remove(staged.map((item) => item.path));
+      return { files: [] as DemandFileRecord[], error: copyError.message || "Não foi possível copiar as referências." };
+    }
+    staged.push({ kind: file.kind, path, name: file.name, mime: file.mime });
+  }
+
   const { data, error } = await supabase
     .from("demand_files")
-    .insert(source.map((file) => ({
+    .insert(staged.map((file) => ({
       demand_id: targetDemandId,
       kind: file.kind,
       path: file.path,
@@ -93,7 +110,10 @@ export async function copyDemandFiles(sourceIds: string[], targetDemandId: strin
       created_by: userId,
     })))
     .select("id, demand_id, kind, path, name, mime, created_at");
-  if (error || !data) return { files: [] as DemandFileRecord[], error: error?.message || "Não foi possível copiar as referências." };
+  if (error || !data) {
+    await bucket.remove(staged.map((item) => item.path));
+    return { files: [] as DemandFileRecord[], error: error?.message || "Não foi possível copiar as referências." };
+  }
   return { files: data.map(mapFile), error: null };
 }
 

@@ -14,19 +14,27 @@ export async function uploadDemandFile(demandId: string, file: File, kind: Deman
   });
   if (error) return { error: error.message };
 
-  const response = await fetch(`/api/demandas/${demandId}/files`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      kind,
-      path,
-      name: file.name,
-      mime: file.type || "application/octet-stream",
-    }),
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) return { error: payload.error || "Não foi possível anexar o arquivo." };
-  return { error: null };
+  try {
+    const response = await fetch(`/api/demandas/${demandId}/files`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        kind,
+        path,
+        name: file.name,
+        mime: file.type || "application/octet-stream",
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      await supabase.storage.from("demand-files").remove([path]);
+      return { error: payload.error || "Não foi possível anexar o arquivo." };
+    }
+    return { error: null };
+  } catch {
+    await supabase.storage.from("demand-files").remove([path]);
+    return { error: "Não foi possível anexar o arquivo." };
+  }
 }
 
 export async function uploadDemandFiles(demandId: string, files: File[], kind: DemandFileKind) {

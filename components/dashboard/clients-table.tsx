@@ -193,7 +193,7 @@ export function ClientsTable({ clients, canDelete = false }: ClientsTableProps) 
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} style={{ width: header.column.columnDef.size }} className="h-11">
+                  <TableHead key={header.id} style={{ width: (header.column.columnDef as { size?: number }).size }} className="h-11">
                     {header.isPlaceholder ? null : header.column.getCanSort() ? (
                       <button
                         type="button"
