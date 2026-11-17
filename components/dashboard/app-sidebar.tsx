@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Briefcase, Kanban, LayoutDashboard, MessageSquare, Settings2, Users, UsersRound } from "lucide-react";
+import { Briefcase, Headphones, Kanban, LayoutDashboard, MessageSquare, Settings2, Users, UsersRound } from "lucide-react";
 import { UserMenu } from "@/components/dashboard/user-menu";
 import { canAccessPath } from "@/lib/access";
 import type { TeamStatus } from "@/lib/team-status-icons";
@@ -11,6 +11,7 @@ const items = [
   { href: "/app/clientes", label: "Clientes", icon: Users },
   { href: "/app/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/app/demandas", label: "Demandas", icon: Kanban },
+  { href: "/app/salas", label: "Salas", icon: Headphones },
   { href: "/app/cases", label: "Cases", icon: Briefcase },
   { href: "/app/equipe", label: "Equipe", icon: UsersRound },
   { href: "/app/gestao", label: "Gestão da plataforma", icon: Settings2 },

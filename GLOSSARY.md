@@ -43,3 +43,29 @@ _Avoid_: staff, manager
 **Case**:
 Peça pública do site sobre um cliente.
 _Avoid_: Cliente
+
+## Comunicação em tempo real
+
+**Sala**:
+Espaço persistente em que membros autorizados da equipe podem conversar por voz, vídeo e compartilhamento de tela. Pode estar vazio sem deixar de existir.
+_Avoid_: Chamada como sinônimo de Sala
+
+**Sessão de sala**:
+Encontro que ocorre em uma Sala, desde sua abertura até seu encerramento. Uma Sala pode receber várias sessões ao longo do tempo.
+_Avoid_: Sala como sinônimo de encontro em andamento
+
+**Chamada direta**:
+Convite para uma conversa temporária entre duas ou mais pessoas da equipe, com aceite individual e sem criar uma Sala permanente.
+_Avoid_: Mensagem direta, Sala permanente
+
+**Participação**:
+Presença de uma pessoa em uma sessão de comunicação. Ter acesso a uma Sala não significa estar participando dela.
+_Avoid_: Membership como sinônimo de presença em chamada
+
+**Apresentação**:
+Compartilhamento ao vivo de uma tela, janela ou aba durante uma sessão de comunicação.
+_Avoid_: Case, gravação
+
+**Disponibilidade**:
+Indicação manual de disponível ou ausente escolhida pelo membro da equipe; independente de estar conectado ou em chamada.
+_Avoid_: Online, Em chamada como equivalentes
