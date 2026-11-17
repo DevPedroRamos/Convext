@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { CommunicationPrototype } from "@/components/communication/communication-prototype";
+import { RoomDirectory } from "@/components/communication/room-directory";
 
-export const metadata: Metadata = { title: "Salas — Protótipo" };
+export const metadata: Metadata = { title: "Salas" };
 
-export default function SalasPrototypePage() {
-  return <CommunicationPrototype />;
+export default function SalasPage() {
+  return <RoomDirectory />;
 }

@@ -18,6 +18,19 @@ export function clearPresencePrompt() {
 
 export async function signOutOffline() {
   try {
+    const stored = sessionStorage.getItem("convext:last-join");
+    if (stored) {
+      const join = JSON.parse(stored) as { sessionId: string; participationId: string; generation: number };
+      await fetch(`/api/communication/sessions/${join.sessionId}/leave`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ participationId: join.participationId, generation: join.generation }),
+      });
+    }
+  } catch {
+    // segue o logout
+  }
+  try {
     await fetch("/api/me/presence", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },

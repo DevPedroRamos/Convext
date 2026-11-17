@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/dashboard/app-header";
 import { AppQuickActions } from "@/components/dashboard/app-quick-actions";
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
+import { CommunicationShell } from "@/components/communication/communication-shell";
 import { PresencePrompt } from "@/components/dashboard/presence-prompt";
 import { PageTransition } from "@/components/motion/page-transition";
 import { listClients } from "@/lib/clients";
@@ -50,17 +51,19 @@ export default async function DashboardLayout({ children }: Readonly<{ children:
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <PageTransition subtle />
-      <div className="grid min-h-screen lg:grid-cols-[288px_1fr]">
-        <AppSidebar name={name} email={email} avatarUrl={avatarUrl} role={role} className="sticky top-0 hidden h-screen lg:flex" {...presence} />
-        <div className="min-w-0">
-          <AppHeader name={name} email={email} avatarUrl={avatarUrl} role={role} {...presence} />
-          <main className="p-4 sm:p-6 lg:p-8">{children}</main>
+    <CommunicationShell>
+      <div className="min-h-screen bg-background">
+        <PageTransition subtle />
+        <div className="grid min-h-screen lg:grid-cols-[288px_1fr]">
+          <AppSidebar name={name} email={email} avatarUrl={avatarUrl} role={role} className="sticky top-0 hidden h-screen lg:flex" {...presence} />
+          <div className="min-w-0">
+            <AppHeader name={name} email={email} avatarUrl={avatarUrl} role={role} {...presence} />
+            <main className="p-4 pb-[calc(1rem+var(--call-dock-offset,0px))] sm:p-6 sm:pb-[calc(1.5rem+var(--call-dock-offset,0px))] lg:p-8 lg:pb-[calc(2rem+var(--call-dock-offset,0px))]">{children}</main>
+          </div>
         </div>
+        {showQuickActions ? <AppQuickActions clients={clients} team={team} types={types} creators={creators} /> : null}
+        <PresencePrompt />
       </div>
-      {showQuickActions ? <AppQuickActions clients={clients} team={team} types={types} creators={creators} /> : null}
-      <PresencePrompt />
-    </div>
+    </CommunicationShell>
   );
 }
