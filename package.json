@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
     "frames:hero": "node scripts/extract-hero-frames.mjs",
     "email": "email dev --dir emails --port 3001",
     "supabase": "supabase",
@@ -46,6 +47,8 @@
     "clsx": "^2.1.1",
     "cn": "^0.4.0",
     "gsap": "^3.15.0",
+    "livekit-client": "^2.24.1",
+    "livekit-server-sdk": "^2.20.0",
     "lucide-react": "^1.48.0",
     "next": "16.3.6",
     "next-themes": "^0.4.6",
@@ -80,6 +83,7 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^8.3.4",
+    "vitest": "^5.1.0",
     "wrangler": "^4.149.0"
   },
   "type": "module"

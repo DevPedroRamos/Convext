@@ -23,13 +23,14 @@ const titles: Record<string, string> = {
   "/app/feedback": "Feedback",
   "/app/demandas": "Demandas",
   "/app/salas": "Salas",
+  "/app/chamadas": "Chamada",
   "/app/equipe": "Equipe",
   "/app/gestao": "Gestão da plataforma",
 };
 
 export function AppHeader({ title, eyebrow = "Área Convext", name, email, avatarUrl, role, available, statusId, statuses }: HeaderProps) {
   const pathname = usePathname();
-  const currentTitle = title || titles[pathname] || (pathname.startsWith("/app/clientes") ? "Clientes" : pathname.startsWith("/app/salas") ? "Salas" : "Dashboard");
+  const currentTitle = title || titles[pathname] || (pathname.startsWith("/app/clientes") ? "Clientes" : pathname.startsWith("/app/salas") ? "Salas" : pathname.startsWith("/app/chamadas") ? "Chamada" : "Dashboard");
 
   return (
     <header className="sticky top-0 z-20 flex min-h-20 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-xl sm:px-6 lg:px-8">

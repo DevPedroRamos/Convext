@@ -428,6 +428,36 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      communication_begin_idempotency: { Args: { p_operation: string; p_key: string; p_body_hash: string }; Returns: Json }
+      communication_complete_idempotency: { Args: { p_id: string; p_response: Json }; Returns: Json }
+      communication_create_room: { Args: { p_name: string; p_description: string; p_access: string; p_invitee_ids: string[] }; Returns: Json }
+      communication_update_room: { Args: Record<string, unknown>; Returns: Json }
+      communication_archive_room: { Args: Record<string, unknown>; Returns: Json }
+      communication_invite_to_room: { Args: Record<string, unknown>; Returns: Json }
+      communication_respond_room_invite: { Args: Record<string, unknown>; Returns: Json }
+      communication_remove_member: { Args: Record<string, unknown>; Returns: Json }
+      communication_patch_member_role: { Args: Record<string, unknown>; Returns: Json }
+      communication_transfer_room: { Args: Record<string, unknown>; Returns: Json }
+      communication_create_call: { Args: Record<string, unknown>; Returns: Json }
+      communication_invite_to_call: { Args: Record<string, unknown>; Returns: Json }
+      communication_respond_call_invite: { Args: Record<string, unknown>; Returns: Json }
+      communication_cancel_call: { Args: Record<string, unknown>; Returns: Json }
+      communication_join: { Args: Record<string, unknown>; Returns: Json }
+      communication_takeover: { Args: Record<string, unknown>; Returns: Json }
+      communication_mark_joined: { Args: Record<string, unknown>; Returns: Json }
+      communication_leave: { Args: Record<string, unknown>; Returns: Json }
+      communication_renew: { Args: Record<string, unknown>; Returns: Json }
+      communication_reserve_publication: { Args: Record<string, unknown>; Returns: Json }
+      communication_release_publication: { Args: Record<string, unknown>; Returns: Json }
+      communication_publish_ok: { Args: Record<string, unknown>; Returns: Json }
+      communication_moderate: { Args: Record<string, unknown>; Returns: Json }
+      communication_end_session: { Args: Record<string, unknown>; Returns: Json }
+      communication_list_people: { Args: Record<PropertyKey, never>; Returns: Json }
+      communication_read_notification: { Args: Record<string, unknown>; Returns: Json }
+      communication_tick: { Args: Record<PropertyKey, never>; Returns: Json }
+      communication_record_provider_event: { Args: Record<string, unknown>; Returns: Json }
+      communication_finish_provider_event: { Args: Record<string, unknown>; Returns: undefined }
+      communication_confirm_joined_service: { Args: Record<string, unknown>; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

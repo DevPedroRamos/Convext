@@ -58,7 +58,7 @@ export function AppQuickActions({
 
   return (
     <>
-      <div className="fixed right-6 bottom-6 z-40 size-[4.5rem] overflow-visible">
+      <div className="fixed right-6 bottom-[calc(1.5rem+var(--call-dock-offset,0px))] z-40 size-[4.5rem] overflow-visible">
         <CircularNavigation items={items} isOpen={open} onClose={() => setOpen(false)} />
         <PearlButton
           open={open}
