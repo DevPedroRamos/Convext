@@ -151,6 +151,76 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_records: {
+        Row: {
+          additional_amount_cents: number | null
+          commission_percent: number | null
+          contract_type: string | null
+          created_at: string
+          created_by: string | null
+          employment_status: string
+          fixed_amount_cents: number | null
+          hired_on: string | null
+          payment_day: number | null
+          payment_model: string | null
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          additional_amount_cents?: number | null
+          commission_percent?: number | null
+          contract_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          employment_status?: string
+          fixed_amount_cents?: number | null
+          hired_on?: string | null
+          payment_day?: number | null
+          payment_model?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          additional_amount_cents?: number | null
+          commission_percent?: number | null
+          contract_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          employment_status?: string
+          fixed_amount_cents?: number | null
+          hired_on?: string | null
+          payment_day?: number | null
+          payment_model?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_records_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_records_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_records_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demand_files: {
         Row: {
           created_at: string
@@ -417,6 +487,10 @@ export type Database = {
     }
     Functions: {
       complete_profile_onboarding: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      employee_access_is_active: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }

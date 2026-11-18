@@ -51,3 +51,16 @@ export function shouldRepublish(source: keyof LocalSources, previous: LocalSourc
 export function navigationKeepsSession(pathname: string) {
   return pathname.startsWith("/app");
 }
+
+export async function retryIdempotent(task: () => Promise<unknown>, attempts = 2) {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      await task();
+      return;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError;
+}

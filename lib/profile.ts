@@ -124,6 +124,22 @@ export async function requireOnboardedUser() {
       response: NextResponse.json({ error: "Complete o primeiro acesso." }, { status: 403 }),
     };
   }
+  const supabase = await createClient();
+  const { data: accessActive, error: accessError } = await supabase.rpc("employee_access_is_active");
+  if (accessError) {
+    return {
+      user,
+      profile,
+      response: NextResponse.json({ error: "Não foi possível validar o acesso do funcionário." }, { status: 503 }),
+    };
+  }
+  if (!accessActive) {
+    return {
+      user,
+      profile,
+      response: NextResponse.json({ error: "Este funcionário está inativo." }, { status: 403 }),
+    };
+  }
   return { user, profile, response: null };
 }
 

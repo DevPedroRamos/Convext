@@ -38,7 +38,7 @@ export const communicationApi = {
   respondCall: (id: string, action: "accept" | "decline") =>
     request(`/api/communication/call-invites/${id}/respond`, { method: "POST", body: JSON.stringify({ action }), idempotent: true }),
   cancelCall: (id: string) => request(`/api/communication/calls/${id}/cancel`, { method: "POST", body: "{}" }),
-  join: (body: { roomId?: string; sessionId?: string; takeover?: boolean }) =>
+  join: (body: { roomId?: string; sessionId?: string; takeover?: boolean; microphone?: boolean; camera?: boolean }) =>
     request<JoinResult>("/api/communication/join", {
       method: "POST",
       body: JSON.stringify({ ...body, deviceSessionId: deviceSessionId(), operationId: crypto.randomUUID() }),

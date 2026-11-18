@@ -10,7 +10,7 @@
     "test": "vitest run",
     "frames:hero": "node scripts/extract-hero-frames.mjs",
     "email": "email dev --dir emails --port 3001",
-    "supabase": "supabase",
+    "supabase": "node scripts/supabase-cli.mjs",
     "dev:vinext": "vite dev --port 8080",
     "build:vinext": "vite build",
     "start:vinext": "wrangler dev --profile convext --config dist/server/wrangler.json",
@@ -76,15 +76,23 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.1.2",
     "@vitejs/plugin-rsc": "^0.5.36",
+    "dotenv": "^18.0.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
     "ffmpeg-static": "^5.3.0",
     "ffprobe-static": "^3.1.0",
+    "supabase": "3.2.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^8.3.4",
     "vitest": "^5.1.0",
     "wrangler": "^4.149.0"
   },
-  "type": "module"
+  "type": "module",
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "ffmpeg-static@5.3.0": true,
+    "unrs-resolver@1.12.2": true,
+    "workerd@1.20261006.1": true
+  }
 }

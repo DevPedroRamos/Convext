@@ -9,7 +9,12 @@ export async function POST(request: Request) {
   try {
     const event = await verifyLiveKitWebhook(raw, request.headers.get("authorization"));
     const admin = createAdminClient();
-    const result = await handleProviderEvent(admin as any, event as { id?: string; event?: string; participant?: { identity?: string } });
+    const result = await handleProviderEvent(admin as unknown as Parameters<typeof handleProviderEvent>[0], event as {
+      id?: string;
+      event?: string;
+      room?: { name?: string };
+      participant?: { identity?: string };
+    });
     return jsonOk(result);
   } catch {
     return jsonError("ACTION_DENIED", "Webhook inválido.", requestId);

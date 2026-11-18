@@ -40,6 +40,9 @@ export const joinSchema = z.object({
   sessionId: z.string().uuid().optional(),
   deviceSessionId: z.string().min(8).max(120),
   operationId: z.string().min(8).max(120),
+  takeover: z.boolean().optional(),
+  microphone: z.boolean().optional(),
+  camera: z.boolean().optional(),
 }).refine((value) => Boolean(value.roomId || value.sessionId), {
   message: "Informe roomId ou sessionId.",
 });

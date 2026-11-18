@@ -46,19 +46,24 @@ function roomClient() {
   return new RoomServiceClient(config.url, config.apiKey, config.apiSecret);
 }
 
+function providerResourceMissing(error: unknown) {
+  const candidate = error as { status?: number; statusCode?: number; code?: string } | null;
+  return candidate?.status === 404 || candidate?.statusCode === 404 || candidate?.code === "not_found";
+}
+
 export async function removeProviderParticipant(roomName: string, identity: string) {
   try {
     await roomClient().removeParticipant(roomName, identity);
-  } catch {
-    // reconciliação trata ausência
+  } catch (error) {
+    if (!providerResourceMissing(error)) throw error;
   }
 }
 
 export async function endProviderRoom(roomName: string) {
   try {
     await roomClient().deleteRoom(roomName);
-  } catch {
-    // sala já encerrada
+  } catch (error) {
+    if (!providerResourceMissing(error)) throw error;
   }
 }
 
@@ -71,8 +76,8 @@ export async function mutePublishedTrack(roomName: string, identity: string, sou
       return item.source === TrackSource.SCREEN_SHARE || item.source === TrackSource.SCREEN_SHARE_AUDIO;
     });
     if (track?.sid) await roomClient().mutePublishedTrack(roomName, identity, track.sid, true);
-  } catch {
-    // retry via outbox
+  } catch (error) {
+    if (!providerResourceMissing(error)) throw error;
   }
 }
 

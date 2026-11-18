@@ -1,4 +1,4 @@
-export type AppRole = "admin" | "coordinator" | "traffic" | "creator";
+export type AppRole = "admin" | "coordinator" | "traffic" | "creator" | "commercial";
 export type AppArea = "dashboard" | "demandas" | "clientes" | "feedback" | "cases" | "salas" | "perfil" | "equipe" | "gestao";
 
 const operations: AppRole[] = ["admin", "coordinator"];
@@ -8,10 +8,11 @@ const areasByRole: Record<AppRole, readonly AppArea[]> = {
   coordinator: ["dashboard", "demandas", "clientes", "feedback", "cases", "salas", "perfil"],
   traffic: ["dashboard", "demandas", "salas", "perfil"],
   creator: ["dashboard", "demandas", "salas", "perfil"],
+  commercial: ["dashboard", "salas", "perfil"],
 };
 
 export function resolveAppRole(role?: string | null): AppRole {
-  if (role === "admin" || role === "coordinator" || role === "traffic" || role === "creator") return role;
+  if (role === "admin" || role === "coordinator" || role === "traffic" || role === "creator" || role === "commercial") return role;
   return "creator";
 }
 

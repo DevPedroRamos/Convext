@@ -41,6 +41,13 @@ export async function proxy(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
     const onboarded = Boolean(profile?.onboarding_completed);
+    const { data: accessActive, error: accessError } = await supabase.rpc("employee_access_is_active");
+    if (onboarded && (!accessActive || accessError)) {
+      await supabase.auth.signOut();
+      const redirectResponse = NextResponse.redirect(new URL("/login?error=inactive", request.url));
+      response.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
+      return redirectResponse;
+    }
     if (!onboarded && pathname !== "/app/onboarding") {
       return NextResponse.redirect(new URL("/app/onboarding", request.url));
     }

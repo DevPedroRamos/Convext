@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Camera, CameraOff, ChevronDown, LockKeyhole, Mic, MicOff, Users } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useCommunication } from "@/components/communication/communication-provider";
 import type { RoomRecord } from "@/types/communication";
@@ -24,34 +25,60 @@ export function PrejoinPanel({
   const [mic, setMic] = useState(false);
   const [camera, setCamera] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
+  const microphoneStreamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     return () => {
-      streamRef.current?.getTracks().forEach((track) => track.stop());
+      cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+      microphoneStreamRef.current?.getTracks().forEach((track) => track.stop());
     };
   }, []);
 
+  async function toggleMicrophone() {
+    if (mic) {
+      microphoneStreamRef.current?.getTracks().forEach((track) => track.stop());
+      microphoneStreamRef.current = null;
+      setMic(false);
+      return;
+    }
+    try {
+      microphoneStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setMic(true);
+    } catch (error) {
+      setMic(false);
+      const denied = error instanceof DOMException && error.name === "NotAllowedError";
+      toast.error(denied ? "Permissão de microfone negada." : "Microfone indisponível.", {
+        description: "Você ainda pode entrar apenas para ouvir.",
+      });
+    }
+  }
+
   async function toggleCamera() {
     if (camera) {
-      streamRef.current?.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
+      cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+      cameraStreamRef.current = null;
       setCamera(false);
       return;
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      streamRef.current = stream;
+      cameraStreamRef.current = stream;
       if (videoRef.current) videoRef.current.srcObject = stream;
       setCamera(true);
-    } catch {
+    } catch (error) {
       setCamera(false);
+      const denied = error instanceof DOMException && error.name === "NotAllowedError";
+      toast.error(denied ? "Permissão de câmera negada." : "Câmera indisponível.");
     }
   }
 
   async function enter(listenOnly: boolean) {
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    await connect({ roomId, sessionId, title, listenOnly });
+    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    microphoneStreamRef.current?.getTracks().forEach((track) => track.stop());
+    cameraStreamRef.current = null;
+    microphoneStreamRef.current = null;
+    await connect({ roomId, sessionId, title, listenOnly, microphone: !listenOnly && mic, camera: !listenOnly && camera });
   }
 
   if (state === "connected" && join) {
@@ -79,7 +106,7 @@ export function PrejoinPanel({
           <video ref={videoRef} autoPlay muted playsInline className={camera ? "absolute inset-0 size-full -scale-x-100 object-cover" : "hidden"} />
           {!camera ? <p className="text-sm text-muted-foreground">Sua câmera está desligada</p> : null}
           <div className="absolute bottom-4 left-4 flex gap-2">
-            <Button size="icon-lg" className="min-h-11 min-w-11" variant={mic ? "secondary" : "destructive"} onClick={() => setMic((value) => !value)} aria-pressed={mic} aria-label={mic ? "Desligar microfone" : "Ligar microfone"}>{mic ? <Mic /> : <MicOff />}</Button>
+            <Button size="icon-lg" className="min-h-11 min-w-11" variant={mic ? "secondary" : "destructive"} onClick={() => void toggleMicrophone()} aria-pressed={mic} aria-label={mic ? "Desligar microfone" : "Ligar microfone"}>{mic ? <Mic /> : <MicOff />}</Button>
             <Button size="icon-lg" className="min-h-11 min-w-11" variant={camera ? "secondary" : "destructive"} onClick={() => void toggleCamera()} aria-pressed={camera} aria-label={camera ? "Desligar câmera" : "Ligar câmera"}>{camera ? <Camera /> : <CameraOff />}</Button>
           </div>
         </div>

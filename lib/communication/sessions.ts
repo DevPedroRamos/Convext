@@ -5,6 +5,8 @@ import type { JoinResult } from "@/types/communication";
 
 type AnyClient = {
   rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+  // Supabase's fluent query builder is intentionally structural at this adapter boundary.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   from: (table: string) => any;
 };
 
@@ -40,12 +42,15 @@ async function tokenFor(join: JoinRpc, userId: string, extra: Array<"microphone"
 export async function joinSession(
   client: AnyClient,
   userId: string,
-  input: { roomId?: string; sessionId?: string; deviceSessionId: string; takeover?: boolean },
+  input: { roomId?: string; sessionId?: string; deviceSessionId: string; takeover?: boolean; microphone?: boolean; camera?: boolean },
 ): Promise<JoinResult> {
   const join = await callRpc<JoinRpc>(client, input.takeover ? "communication_takeover" : "communication_join", input.takeover
     ? { p_room_id: input.roomId ?? null, p_session_id: input.sessionId ?? null, p_device_session_id: input.deviceSessionId }
     : { p_room_id: input.roomId ?? null, p_session_id: input.sessionId ?? null, p_device_session_id: input.deviceSessionId, p_takeover: false });
-  return tokenFor(join, userId, join.capabilities.microphone ? ["microphone"] : []);
+  const sources: Array<"microphone" | "camera"> = [];
+  if (join.capabilities.microphone) sources.push("microphone");
+  if (input.camera && join.capabilities.camera) sources.push("camera");
+  return tokenFor(join, userId, sources);
 }
 
 export async function markJoined(client: AnyClient, participationId: string, generation: number, connectionId: string) {

@@ -1,12 +1,27 @@
 ---
-description: Clientes Supabase, RLS e migrations como fonte do schema
-globs: "lib/supabase/**/*.ts,supabase/**/*.sql,types/database*.ts,app/api/**/*.ts"
-alwaysApply: false
+description: Conexão isolada, clientes Supabase, RLS e migrations como fonte do schema
+alwaysApply: true
 ---
 
 # Supabase
 
-CLI e MCP deste diretório usam o projeto Convext Mídias (`kfhxiljdzgwylruinrve`, conta `fduran1901@gmail.com`). Comandos: `npm run supabase -- <comando>` (isola o login em `.supabase-home/`). Não usar o login global da Advocacia Turbo.
+Este repositório usa somente o projeto Convext Mídias (`kfhxiljdzgwylruinrve`, conta `fduran1901@gmail.com`).
+
+## Conexão isolada
+
+- Credenciais ficam apenas no `.env.local` ignorado pelo Git: `SUPABASE_TOKEN`, `SUPABASE_DB_PASSWORD` e, opcionalmente, `SUPABASE_PROJECT_ID=kfhxiljdzgwylruinrve`.
+- Nunca executar `supabase login`, `supabase logout`, `npx supabase` ou o binário global. Nunca imprimir, registrar ou copiar os valores do `.env.local`.
+- Executar exclusivamente `npm run supabase -- <comando>`. O wrapper carrega o `.env.local`, traduz `SUPABASE_TOKEN` para `SUPABASE_ACCESS_TOKEN` somente no processo filho, usa o CLI instalado no projeto, isola o diretório de credenciais em `.supabase-home/` e recusa outro project ref.
+- Para o primeiro vínculo local, executar `npm run supabase -- link`; o wrapper acrescenta e valida o project ref. O estado do vínculo fica em `supabase/.temp/` e não é versionado.
+- Antes de qualquer operação remota, confirmar o alvo com `npm run supabase -- projects list` e o vínculo com `npm run supabase -- migration list`.
+- Descobrir a sintaxe da versão instalada com `npm run supabase -- <grupo> --help`; não presumir comandos ou flags.
+
+## Auditorias, consultas e migrations
+
+- Auditorias de logs e consultas começam em modo somente leitura. Limitar período, colunas e quantidade de resultados; não incluir tokens, senhas ou dados pessoais na resposta.
+- Quando o CLI não oferecer a operação de leitura necessária, o MCP Supabase pode ser usado somente após confirmar que aponta para `kfhxiljdzgwylruinrve`; a autenticação do MCP é independente do `.env.local`.
+- `supabase/migrations/` é a fonte do schema. Criar migrations com `npm run supabase -- migration new <nome>`; não inventar timestamps.
+- Antes de `db push`, revisar o SQL pendente, confirmar o project ref e executar advisors/testes aplicáveis. Não aplicar migration remota sem autorização explícita para a alteração.
 
 ## Clientes
 
@@ -18,7 +33,7 @@ Não criar um quarto cliente sem motivo concreto.
 
 ## Schema e segurança
 
-- `supabase/migrations/` é a fonte do schema. Alteração de tabela, policy ou função = nova migration.
+- Alteração de tabela, policy ou função = nova migration.
 - Não editar tipos gerados à mão como substituto de migration.
 - RLS permanece a barreira de acesso. Route Handlers autenticados usam o cliente de servidor; service role só quando a operação não puder correr no contexto do usuário.
 - Nunca expor `SUPABASE_SERVICE_ROLE_KEY` ao browser.

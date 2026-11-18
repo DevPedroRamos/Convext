@@ -88,6 +88,36 @@ describe("contratos RPC e HTTP", () => {
     await expect(handleProviderEvent(admin as never, { id: "evt-1", event: "room_finished" })).resolves.toEqual({ duplicate: true });
   });
 
+  it("webhook de saída encerra somente a geração vinculada à sala do provedor", async () => {
+    const calls: { fn: string; args?: Record<string, unknown> }[] = [];
+    const admin = {
+      rpc: async (fn: string, args?: Record<string, unknown>) => {
+        calls.push({ fn, args });
+        if (fn === "communication_record_provider_event") {
+          return { data: { ok: true, data: { duplicate: false } }, error: null };
+        }
+        return { data: { ok: true }, error: null };
+      },
+      from: () => ({}),
+    };
+
+    await handleProviderEvent(admin as never, {
+      id: "evt-left",
+      event: "participant_left",
+      room: { name: "room-provider-1" },
+      participant: { identity: "user-1:3" },
+    });
+
+    expect(calls).toContainEqual({
+      fn: "communication_leave_provider_service",
+      args: {
+        p_provider_room_name: "room-provider-1",
+        p_connection_id: "user-1:3",
+        p_generation: 3,
+      },
+    });
+  });
+
   it("outbox permanece pendente quando o provedor não está configurado", async () => {
     const updates: unknown[] = [];
     const admin = {
@@ -128,5 +158,14 @@ describe("schema", () => {
     expect(sql).toContain("enable row level security");
     expect(sql).toContain("communication_tick");
     expect(sql).toContain("cron.schedule");
+  });
+
+  it("expira presença sem lease e reconcilia saída do provedor por geração", () => {
+    const sql = readFileSync("supabase/migrations/20261118192700_fix_audio_room_presence.sql", "utf8");
+    expect(sql).toContain("leave_reason = 'lease_expired'");
+    expect(sql).toContain("l.expires_at > now()");
+    expect(sql).toContain("communication_leave_provider_service");
+    expect(sql).toContain("p.connection_id = p_connection_id");
+    expect(sql).toContain("p.generation = p_generation");
   });
 });

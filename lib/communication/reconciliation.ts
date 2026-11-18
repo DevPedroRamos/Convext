@@ -3,8 +3,33 @@ import { hasLiveKitConfig } from "@/lib/communication/config";
 
 type AdminClient = {
   rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+  // Supabase's fluent query builder is intentionally structural at this adapter boundary.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   from: (table: string) => any;
 };
+
+async function providerIdentity(admin: AdminClient, payload: Record<string, unknown>) {
+  const userId = String(payload.userId || "");
+  const sessionId = String(payload.sessionId || "");
+  if (!userId || !sessionId) throw new Error("PARTICIPANT_IDENTITY_MISSING");
+  const { data, error } = await admin
+    .from("communication_participations")
+    .select("connection_id")
+    .eq("session_id", sessionId)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+  if (error) throw new Error(error.message);
+  const connectionId = ((data || []) as { connection_id?: string }[])[0]?.connection_id;
+  if (!connectionId?.includes(":")) throw new Error("PARTICIPANT_IDENTITY_MISSING");
+  return connectionId;
+}
+
+async function rpcOrThrow(admin: AdminClient, fn: string, args: Record<string, unknown>) {
+  const result = await admin.rpc(fn, args);
+  if (result.error) throw new Error(result.error.message);
+  return result.data;
+}
 
 export async function processOutbox(admin: AdminClient) {
   const { data } = await admin
@@ -27,11 +52,15 @@ export async function processOutbox(admin: AdminClient) {
       }
       const payload = (row.payload || {}) as Record<string, unknown>;
       if (row.operation === "remove_participant" && payload.userId) {
-        await removeProviderParticipant(String(row.target_id), `${payload.userId}`);
+        await removeProviderParticipant(String(row.target_id), await providerIdentity(admin, payload));
       } else if (row.operation === "end_provider_room") {
         await endProviderRoom(String(row.target_id));
       } else if (row.operation === "mute_published_track" && payload.userId) {
-        await mutePublishedTrack(String(row.target_id), String(payload.userId), String(payload.source || "microphone"));
+        await mutePublishedTrack(
+          String(row.target_id),
+          await providerIdentity(admin, payload),
+          String(payload.source || "microphone"),
+        );
       }
       await admin.from("communication_outbox").update({ state: "done" }).eq("id", row.id);
     } catch (error) {
@@ -51,22 +80,33 @@ export async function reconcile(admin: AdminClient) {
 
 export async function handleProviderEvent(admin: AdminClient, event: { id?: string; event?: string; room?: { name?: string }; participant?: { identity?: string } }) {
   const eventId = event.id || `${event.event}-${event.participant?.identity || ""}-${Date.now()}`;
-  const recorded = await admin.rpc("communication_record_provider_event", { p_event_id: eventId, p_type: event.event || "unknown" });
-  const envelope = recorded.data as { ok?: boolean; data?: { duplicate?: boolean } } | null;
+  const recorded = await rpcOrThrow(admin, "communication_record_provider_event", {
+    p_event_id: eventId,
+    p_type: event.event || "unknown",
+  });
+  const envelope = recorded as { ok?: boolean; data?: { duplicate?: boolean } } | null;
   if (envelope?.data?.duplicate) return { duplicate: true };
   const identity = event.participant?.identity || "";
-  const [userId, generation] = identity.split(":");
-  if (event.event === "participant_joined" && userId && generation) {
-    const { data } = await admin.from("communication_participations").select("id").eq("user_id", userId).eq("generation", Number(generation)).order("created_at", { ascending: false }).limit(1);
-    const participation = ((data || []) as { id: string }[])[0];
-    if (participation) {
-      await admin.rpc("communication_confirm_joined_service", {
-        p_participation_id: participation.id,
-        p_generation: Number(generation),
-        p_connection_id: identity,
-      });
-    }
+  const separator = identity.lastIndexOf(":");
+  const generation = Number(identity.slice(separator + 1));
+  const roomName = event.room?.name || "";
+  if (event.event === "participant_joined" && separator > 0 && Number.isInteger(generation) && roomName) {
+    await rpcOrThrow(admin, "communication_confirm_joined_provider_service", {
+      p_provider_room_name: roomName,
+      p_connection_id: identity,
+      p_generation: generation,
+    });
+  } else if (event.event === "participant_left" && separator > 0 && Number.isInteger(generation) && roomName) {
+    await rpcOrThrow(admin, "communication_leave_provider_service", {
+      p_provider_room_name: roomName,
+      p_connection_id: identity,
+      p_generation: generation,
+    });
+  } else if (event.event === "room_finished" && roomName) {
+    await rpcOrThrow(admin, "communication_finish_room_provider_service", {
+      p_provider_room_name: roomName,
+    });
   }
-  await admin.rpc("communication_finish_provider_event", { p_event_id: eventId, p_outcome: "ok" });
+  await rpcOrThrow(admin, "communication_finish_provider_event", { p_event_id: eventId, p_outcome: "ok" });
   return { duplicate: false };
 }
