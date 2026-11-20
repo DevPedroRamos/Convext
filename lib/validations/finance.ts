@@ -101,13 +101,15 @@ export const contractSchema = z
     endDate: optionalDate,
     dueDay: z.coerce.number().int().min(1).max(31),
     notes: optionalText,
-    items: z.array(lineItemSchema.extend({ firstDueDate: optionalDate })).min(1, "Adicione ao menos um item."),
+    items: z.array(lineItemSchema.extend({ id: z.string().uuid().optional(), firstDueDate: optionalDate })).min(1, "Adicione ao menos um item."),
   })
   .refine((values) => !values.endDate || values.endDate >= values.startDate, {
     path: ["endDate"],
     message: "O fim deve ser depois do início.",
   });
 export type ContractValues = z.infer<typeof contractSchema>;
+
+export const proposalStatusSchema = z.object({ status: z.enum(["draft", "sent", "rejected", "expired"]) });
 
 export const contractStatusSchema = z.object({ status: z.enum(CONTRACT_STATUSES), endDate: optionalDate });
 
