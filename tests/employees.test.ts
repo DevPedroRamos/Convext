@@ -21,7 +21,7 @@ const validEmployee = {
 };
 
 describe("gestão de funcionários", () => {
-  it("limita Comercial a Dashboard, Salas e Perfil", () => {
+  it("limita Comercial a Dashboard, Salas, Perfil e Financeiro comercial", () => {
     expect(canAccessArea("commercial", "dashboard")).toBe(true);
     expect(canAccessArea("commercial", "salas")).toBe(true);
     expect(canAccessArea("commercial", "perfil")).toBe(true);
@@ -29,6 +29,8 @@ describe("gestão de funcionários", () => {
     expect(canAccessArea("commercial", "clientes")).toBe(false);
     expect(canAccessArea("commercial", "equipe")).toBe(false);
     expect(canAccessArea("commercial", "gestao")).toBe(false);
+    expect(canAccessArea("commercial", "financeiro_comercial")).toBe(true);
+    expect(canAccessArea("commercial", "financeiro_admin")).toBe(false);
   });
 
   it("aceita o contrato financeiro estruturado", () => {
