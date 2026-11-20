@@ -1,4 +1,4 @@
-import { createMediaToken } from "@/lib/communication/livekit";
+import { createMediaToken, updateParticipantSources } from "@/lib/communication/livekit";
 import { callRpc } from "@/lib/communication/rpc";
 import { CommunicationError } from "@/lib/communication/errors";
 import type { JoinResult } from "@/types/communication";
@@ -89,11 +89,16 @@ export async function reservePublication(client: AnyClient, userId: string, sess
   if (!roomName) throw new CommunicationError("ROOM_UNAVAILABLE", "Sessão indisponível.");
   const generationRow = await client.from("communication_participations").select("generation").eq("id", participationId).maybeSingle();
   const generation = Number((generationRow.data as { generation?: number } | null)?.generation || 1);
+  const sources: Array<"microphone" | "camera" | "screen"> = source === "screen"
+    ? ["microphone", "camera", "screen"]
+    : ["microphone", "camera"];
+  const identity = `${userId}:${generation}`;
+  await updateParticipantSources(roomName, identity, sources);
   const media = await createMediaToken({
-    identity: `${userId}:${generation}`,
+    identity,
     roomName,
     canPublish: true,
-    sources: source === "screen" ? ["screen", "microphone"] : ["camera", "microphone"],
+    sources,
   });
   return { lease, ...media };
 }

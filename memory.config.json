@@ -1,0 +1,9 @@
+{
+  "project": "convext",
+  "vault": "docs",
+  "include": ["docs/**/*.md", "GLOSSARY.md", "PRODUCT.md", "convext-spec.md"],
+  "exclude": ["docs/.obsidian/**"],
+  "pinned": ["GLOSSARY.md", "PRODUCT.md"],
+  "graphify": "graphify-out/graph.json",
+  "goldenSet": "tests/memory/golden-set.json"
+}

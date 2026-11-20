@@ -6,6 +6,7 @@ import { AppQuickActions } from "@/components/dashboard/app-quick-actions";
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import { CommunicationShell } from "@/components/communication/communication-shell";
 import { PresencePrompt } from "@/components/dashboard/presence-prompt";
+import { PresenceRuntime } from "@/components/dashboard/presence-runtime";
 import { PageTransition } from "@/components/motion/page-transition";
 import { listClients } from "@/lib/clients";
 import { listFeedbackTypes } from "@/lib/feedback-types";
@@ -46,12 +47,14 @@ export default async function DashboardLayout({ children }: Readonly<{ children:
   ]);
   const presence = {
     available: Boolean(profile?.available),
+    lastSeenAt: profile?.last_seen_at ?? null,
     statusId: profile?.status_id ?? null,
     statuses,
   };
 
   return (
     <CommunicationShell>
+      <PresenceRuntime selfId={user.id} lastSeenAt={profile?.last_seen_at ?? null}>
       <div className="min-h-screen bg-background">
         <PageTransition subtle />
         <div className="grid min-h-screen lg:grid-cols-[288px_1fr]">
@@ -64,6 +67,7 @@ export default async function DashboardLayout({ children }: Readonly<{ children:
         {showQuickActions ? <AppQuickActions clients={clients} team={team} types={types} creators={creators} /> : null}
         <PresencePrompt />
       </div>
+      </PresenceRuntime>
     </CommunicationShell>
   );
 }

@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePresenceSignals } from "@/components/dashboard/presence-runtime";
 import { communicationApi } from "@/lib/communication/api";
+import { isOnline, presenceLabel } from "@/lib/presence";
 import { cn } from "@/lib/utils";
 import type { DirectoryPerson, RoomRecord } from "@/types/communication";
 
@@ -177,23 +179,14 @@ export function RoomDirectory() {
             }}><PhoneCall /> Chamar {selectedPeople.length || ""}</Button>
           </div>
           <div className="divide-y divide-border overflow-hidden rounded-2xl bg-card ring-1 ring-border">
-            {filteredPeople.map((person) => {
-              const selected = selectedPeople.includes(person.id);
-              const name = [person.firstName, person.lastName].filter(Boolean).join(" ") || "Colega";
-              return (
-                <button key={person.id} type="button" aria-pressed={selected} onClick={() => setSelectedPeople((current) => current.includes(person.id) ? current.filter((id) => id !== person.id) : [...current, person.id])} className="flex w-full items-center gap-4 px-5 py-4 text-left transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
-                  <span className="relative">
-                    <Avatar size="lg"><AvatarImage src={person.avatarUrl || undefined} /><AvatarFallback>{initials(name)}</AvatarFallback></Avatar>
-                    <span aria-hidden className={cn("absolute bottom-0 right-0 size-3 rounded-full ring-2 ring-card", person.available ? "bg-emerald-400" : "bg-zinc-500")} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{name}</span>
-                    <span className="block truncate text-sm text-muted-foreground">{person.available ? "Disponível" : "Ausente"}{person.inCall ? " · Em chamada" : ""}</span>
-                  </span>
-                  <span className={cn("grid size-7 place-items-center rounded-full ring-1", selected ? "bg-primary text-primary-foreground ring-primary" : "text-muted-foreground ring-border")}>{selected ? <Check className="size-4" /> : null}</span>
-                </button>
-              );
-            })}
+            {filteredPeople.map((person) => (
+              <DirectoryPersonRow
+                key={person.id}
+                person={person}
+                selected={selectedPeople.includes(person.id)}
+                onToggle={() => setSelectedPeople((current) => current.includes(person.id) ? current.filter((id) => id !== person.id) : [...current, person.id])}
+              />
+            ))}
           </div>
         </TabsContent>
         <TabsContent value="invites" className="grid gap-3">
@@ -214,5 +207,32 @@ export function RoomDirectory() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function DirectoryPersonRow({
+  person,
+  selected,
+  onToggle,
+}: {
+  person: DirectoryPerson;
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  const name = [person.firstName, person.lastName].filter(Boolean).join(" ") || "Colega";
+  const live = usePresenceSignals(person.id, { available: person.available, lastSeenAt: person.lastSeenAt });
+  const online = isOnline(live);
+  return (
+    <button type="button" aria-pressed={selected} onClick={onToggle} className="flex w-full items-center gap-4 px-5 py-4 text-left transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+      <span className="relative">
+        <Avatar size="lg"><AvatarImage src={person.avatarUrl || undefined} /><AvatarFallback>{initials(name)}</AvatarFallback></Avatar>
+        <span aria-hidden className={cn("absolute bottom-0 right-0 size-3 rounded-full ring-2 ring-card", online ? "bg-emerald-400" : "bg-zinc-500")} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate font-medium">{name}</span>
+        <span className="block truncate text-sm text-muted-foreground">{presenceLabel(live)}{person.inCall ? " · Em chamada" : ""}</span>
+      </span>
+      <span className={cn("grid size-7 place-items-center rounded-full ring-1", selected ? "bg-primary text-primary-foreground ring-primary" : "text-muted-foreground ring-border")}>{selected ? <Check className="size-4" /> : null}</span>
+    </button>
   );
 }

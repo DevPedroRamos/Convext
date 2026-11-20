@@ -1,0 +1,100 @@
+[
+  {
+    "id": "visibilidade-demandas",
+    "query": "Quem pode ver e atualizar demandas? Traffic e creator enxergam todas?",
+    "agent": "review",
+    "relevant": ["docs/adr/0002-visibilidade-demandas.md", "docs/specs/demandas.md"],
+    "mustInclude": ["responsible_id", "coordinator"]
+  },
+  {
+    "id": "tabela-unica-demandas",
+    "query": "Por que as demandas usam uma tabela única com kind em vez de uma tabela feedbacks?",
+    "agent": "spec",
+    "relevant": ["docs/adr/0001-demandas-por-tipo.md"],
+    "mustInclude": ["kind"]
+  },
+  {
+    "id": "acesso-comercial",
+    "query": "Quais áreas do /app a role commercial pode acessar?",
+    "agent": "code",
+    "relevant": ["docs/specs/equipe.md"],
+    "mustInclude": ["Dashboard", "Salas", "Perfil"]
+  },
+  {
+    "id": "presenca-heartbeat",
+    "query": "Como a presença online é calculada? Quando alguém vira offline?",
+    "agent": "code",
+    "relevant": ["docs/specs/equipe.md"],
+    "mustInclude": ["last_seen_at", "5 minutos"]
+  },
+  {
+    "id": "convite-funcionario",
+    "query": "Como funciona o convite de um novo funcionário e o primeiro acesso?",
+    "agent": "code",
+    "relevant": ["docs/specs/equipe.md"],
+    "mustInclude": ["Resend", "/app/confirmar"]
+  },
+  {
+    "id": "chamada-direta",
+    "query": "Fluxo de chamada direta entre duas pessoas da equipe e convite para sala privada",
+    "agent": "spec",
+    "relevant": ["docs/specs/comunicacao-tempo-real.md"],
+    "mustInclude": []
+  },
+  {
+    "id": "wireframe-apresentacao",
+    "query": "Wireframe da tela de apresentação e do dock durante o trabalho",
+    "agent": "default",
+    "relevant": ["docs/specs/comunicacao-wireframes.md"],
+    "mustInclude": []
+  },
+  {
+    "id": "cases-slug",
+    "query": "A página de um case aceita slug ou uuid? O que aparece no card da home?",
+    "agent": "code",
+    "relevant": ["docs/specs/cases.md"],
+    "mustInclude": ["slug", "logo"]
+  },
+  {
+    "id": "tipos-feedback-criativo",
+    "query": "Quais tipos de feedback geram demanda de criativo para o designer?",
+    "agent": "spec",
+    "relevant": ["docs/specs/criativos.md"],
+    "mustInclude": ["spawns_creator"]
+  },
+  {
+    "id": "cliente-whatsapp",
+    "query": "Quais campos tem o cadastro de cliente e quem é o responsável?",
+    "agent": "spec",
+    "relevant": ["docs/specs/clients.md", "GLOSSARY.md"],
+    "mustInclude": ["WhatsApp"]
+  },
+  {
+    "id": "deploy-cloudflare",
+    "query": "Como fazer deploy no Cloudflare Workers e onde ficam as variáveis públicas?",
+    "agent": "default",
+    "relevant": ["docs/deploy-checklist.md"],
+    "mustInclude": ["deploy:vinext", "wrangler.jsonc"]
+  },
+  {
+    "id": "cores-marca",
+    "query": "Qual é a cor principal da marca e os tokens de superfície e borda?",
+    "agent": "default",
+    "relevant": ["convext-spec.md"],
+    "mustInclude": ["#F35703"]
+  },
+  {
+    "id": "prazo-prioridade",
+    "query": "Onde ficam prazo e prioridade das demandas e quais valores de prioridade existem?",
+    "agent": "code",
+    "relevant": ["docs/specs/demandas.md", "docs/specs/feedback.md"],
+    "mustInclude": ["due_on"]
+  },
+  {
+    "id": "onboarding-papeis",
+    "query": "Onboarding da equipe: quais papéis existem e o que é pedido depois do convite?",
+    "agent": "spec",
+    "relevant": ["docs/specs/team-onboarding.md", "docs/specs/equipe.md"],
+    "mustInclude": []
+  }
+]

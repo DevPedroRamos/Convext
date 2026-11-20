@@ -34,11 +34,28 @@ export async function createMediaToken(grants: TokenGrants) {
     canSubscribe: true,
     canPublish: grants.canPublish,
     canPublishData: true,
-    canPublishSources: grants.sources.map((source) => sourceMap[source]),
+    canPublishSources: liveKitSources(grants.sources),
   });
   const jwt = await token.toJwt();
   const expiresAt = new Date(Date.now() + communicationLimits.tokenTtlSeconds * 1000).toISOString();
   return { serverUrl: config.url, token: jwt, expiresAt };
+}
+
+function liveKitSources(sources: TokenGrants["sources"]) {
+  const mapped = sources.map((source) => sourceMap[source]);
+  if (sources.includes("screen")) mapped.push(TrackSource.SCREEN_SHARE_AUDIO);
+  return mapped;
+}
+
+export async function updateParticipantSources(roomName: string, identity: string, sources: TokenGrants["sources"]) {
+  await roomClient().updateParticipant(roomName, identity, {
+    permission: {
+      canSubscribe: true,
+      canPublish: sources.length > 0,
+      canPublishData: true,
+      canPublishSources: liveKitSources(sources),
+    },
+  });
 }
 
 function roomClient() {

@@ -30,7 +30,7 @@ export function areaFromPath(pathname: string): AppArea | null {
   if (pathname.startsWith("/app/equipe")) return "equipe";
   if (pathname.startsWith("/app/gestao")) return "gestao";
   if (pathname.startsWith("/app/perfil") || pathname.startsWith("/app/configuracoes")) return "perfil";
-  if (pathname.startsWith("/app/onboarding")) return null;
+  if (pathname.startsWith("/app/onboarding") || pathname.startsWith("/app/confirmar")) return null;
   if (pathname.startsWith("/app")) return "dashboard";
   return null;
 }

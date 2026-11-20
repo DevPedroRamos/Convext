@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
+import { useSelfPresence } from "@/components/dashboard/presence-runtime";
+import { isOnline, shouldShowStatus } from "@/lib/presence";
 import { signOutOffline } from "@/lib/presence-session";
 import { teamStatusIcon, type TeamStatus } from "@/lib/team-status-icons";
 import { cn } from "@/lib/utils";
@@ -17,6 +19,7 @@ type UserMenuProps = {
   email: string;
   avatarUrl?: string | null;
   available?: boolean;
+  lastSeenAt?: string | null;
   statusId?: string | null;
   statuses?: TeamStatus[];
 };
@@ -26,6 +29,7 @@ export function UserMenu({
   email,
   avatarUrl,
   available = false,
+  lastSeenAt = null,
   statusId = null,
   statuses = [],
 }: UserMenuProps) {
@@ -33,8 +37,10 @@ export function UserMenu({
   const [pending, startTransition] = useTransition();
   const [presence, setPresence] = useState(available);
   const [currentStatusId, setCurrentStatusId] = useState(statusId || "none");
+  const live = useSelfPresence({ available, lastSeenAt });
+  const online = isOnline({ available: presence, lastSeenAt: live.lastSeenAt });
   const currentStatus = statuses.find((item) => item.id === (currentStatusId === "none" ? null : currentStatusId));
-  const StatusIcon = currentStatus ? teamStatusIcon(currentStatus.icon) : null;
+  const StatusIcon = currentStatus && shouldShowStatus(live.lastSeenAt) ? teamStatusIcon(currentStatus.icon) : null;
 
   useEffect(() => {
     setPresence(available);
@@ -94,11 +100,11 @@ export function UserMenu({
             <AvatarImage src={avatarUrl || undefined} />
             <AvatarFallback>{name.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <span className={cn("absolute right-0 bottom-0 size-2.5 rounded-full ring-2 ring-sidebar", presence ? "bg-emerald-400" : "bg-zinc-500")} />
+          <span className={cn("absolute right-0 bottom-0 size-2.5 rounded-full ring-2 ring-sidebar", online ? "bg-emerald-400" : "bg-zinc-500")} />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm">{name}</span>
-          {currentStatus && StatusIcon ? (
+          {currentStatus && StatusIcon && shouldShowStatus(live.lastSeenAt) ? (
             <span className="mt-0.5 flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
               <StatusIcon className="size-3 shrink-0" />
               <span className="truncate">{currentStatus.name}</span>

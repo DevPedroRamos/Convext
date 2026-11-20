@@ -12,6 +12,7 @@ type MobileNavProps = {
   avatarUrl?: string | null;
   role?: string | null;
   available?: boolean;
+  lastSeenAt?: string | null;
   statusId?: string | null;
   statuses?: TeamStatus[];
 };

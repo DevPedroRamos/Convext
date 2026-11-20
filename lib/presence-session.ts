@@ -36,6 +36,12 @@ export async function signOutOffline() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ available: false }),
     });
+    await fetch("/api/me/heartbeat?leaving=1", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ leaving: true }),
+      keepalive: true,
+    });
   } catch {
     // encerrar a sessão mesmo se a presença não gravar
   }

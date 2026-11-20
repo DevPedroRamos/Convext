@@ -23,6 +23,7 @@ export type SidebarProps = {
   avatarUrl?: string | null;
   role?: string | null;
   available?: boolean;
+  lastSeenAt?: string | null;
   statusId?: string | null;
   statuses?: TeamStatus[];
   className?: string;
@@ -34,6 +35,7 @@ export function AppSidebar({
   avatarUrl,
   role,
   available,
+  lastSeenAt,
   statusId,
   statuses,
   className,
@@ -53,7 +55,7 @@ export function AppSidebar({
         ))}
       </nav>
       <div className="mt-auto min-w-0 overflow-hidden">
-        <UserMenu name={name} email={email} avatarUrl={avatarUrl} available={available} statusId={statusId} statuses={statuses} />
+        <UserMenu name={name} email={email} avatarUrl={avatarUrl} available={available} lastSeenAt={lastSeenAt} statusId={statusId} statuses={statuses} />
       </div>
     </aside>
   );

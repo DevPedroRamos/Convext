@@ -49,6 +49,12 @@ describe("gestão de funcionários", () => {
     expect(canManageEmployeeRole("commercial")).toBe(true);
   });
 
+  it("grava last_seen_at para presença real", () => {
+    const sql = readFileSync("supabase/migrations/20261119232905_team_presence_last_seen.sql", "utf8");
+    expect(sql).toContain("last_seen_at timestamptz");
+    expect(sql).toContain("'lastSeenAt', p.last_seen_at");
+  });
+
   it("protege admins e dados financeiros na migration", () => {
     const sql = readFileSync("supabase/migrations/20261118222248_employee_management.sql", "utf8");
     expect(sql).toContain("create table public.employee_records");

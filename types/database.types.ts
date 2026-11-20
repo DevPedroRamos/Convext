@@ -406,6 +406,7 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
+          last_seen_at: string | null
           onboarding_completed: boolean
           phone: string | null
           role: string | null
@@ -422,6 +423,7 @@ export type Database = {
           first_name?: string | null
           id: string
           last_name?: string | null
+          last_seen_at?: string | null
           onboarding_completed?: boolean
           phone?: string | null
           role?: string | null
@@ -438,6 +440,7 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          last_seen_at?: string | null
           onboarding_completed?: boolean
           phone?: string | null
           role?: string | null

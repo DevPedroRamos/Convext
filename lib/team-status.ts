@@ -54,8 +54,41 @@ export async function updateOwnPresence(available: boolean) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Não autenticado." };
-  const { error } = await supabase.from("profiles").update({ available }).eq("id", user.id);
+  const { error } = await supabase.from("profiles").update({ available, last_seen_at: new Date().toISOString() }).eq("id", user.id);
   return { error: error?.message ?? null };
+}
+
+export async function touchOwnLastSeen() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Não autenticado." };
+  const { error } = await supabase.from("profiles").update({ last_seen_at: new Date().toISOString() }).eq("id", user.id);
+  return { error: error?.message ?? null };
+}
+
+export async function clearOwnLastSeen() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Não autenticado." };
+  const { error } = await supabase.from("profiles").update({ last_seen_at: null }).eq("id", user.id);
+  return { error: error?.message ?? null };
+}
+
+export type PresenceSnapshotMember = {
+  id: string;
+  available: boolean;
+  lastSeenAt: string | null;
+};
+
+export async function listPresenceSnapshot(): Promise<PresenceSnapshotMember[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("profiles").select("id, available, last_seen_at");
+  if (error || !data) return [];
+  return data.map((row) => ({
+    id: row.id,
+    available: Boolean(row.available),
+    lastSeenAt: row.last_seen_at ?? null,
+  }));
 }
 
 export async function updateOwnStatus(statusId: string | null) {

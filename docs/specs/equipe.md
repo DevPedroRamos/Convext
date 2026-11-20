@@ -6,11 +6,11 @@ A área precisa reunir o diretório do time, presença e a gestão administrativ
 
 ## Objetivo
 
-Cada pessoa marca Disponível/Ausente e escolhe um status atual. Admin vê a equipe, convida, edita e desativa funcionários não-admin, além de administrar os status.
+Cada pessoa marca Disponível/Ausente e escolhe um status atual. A bolinha verde só aparece se a pessoa está Disponível e com a área aberta. Admin vê a equipe, convida, edita e desativa funcionários não-admin, além de administrar os status.
 
 ## Escopo
 
-- Presença persistida (`available`): padrão Ausente. No login, popup para confirmar Disponível ou Ausente. Switch no popover do perfil. Bolinha no avatar. Sair volta a Ausente.
+- Presença em dois sinais: `available` (intenção no switch/popup) e `last_seen_at` (heartbeat da aba `/app`, inclusive em segundo plano). Verde = os dois. Fechar a última aba, crash ou 5 minutos sem sinal = Offline. Sair grava Ausente.
 - Status atual (`status_id`) escolhido pelo próprio usuário na lista criada pelo admin. Aparece no trigger do perfil. Pode ficar vazio.
 - Catálogo `team_statuses` com seed: Modo foco, Em reunião, Poucas demandas.
 - `/app/equipe` só admin: cards (avatar, nome, cargo, e-mail, presença, status). O CRUD do catálogo de status fica em `/app/gestao` (spec Criativos).
@@ -24,7 +24,7 @@ Cada pessoa marca Disponível/Ausente e escolhe um status atual. Admin vê a equ
 
 ## Não-escopo
 
-- Tempo real, heartbeat, auto-ausente por inatividade.
+- Auto-ausente por inatividade com a aba ainda aberta (timer em background continua Online).
 - Exclusão física de contas ou do histórico relacionado.
 - Coordinator na página Equipe.
 - Editar ou desativar usuários com role `admin`.
@@ -33,12 +33,15 @@ Cada pessoa marca Disponível/Ausente e escolhe um status atual. Admin vê a equ
 
 - Todo mundo começa Ausente (`available` default false).
 - Ao autenticar, a área mostra um popup obrigatório: escolher Disponível ou Ausente e confirmar. Sem confirmar, permanece Ausente.
-- Switch ligado = Disponível. Desligado = Ausente. Continua no menu depois do login.
-- Sair grava Ausente antes de encerrar a sessão.
+- Switch ligado = Disponível. Desligado = Ausente (cinza, ainda na plataforma). Continua no menu depois do login.
+- Heartbeat a cada ~60s. Equipe, Salas e menu atualizam a bolinha sem F5 (~20s). Fechar a última aba zera `last_seen_at`. Crash/sleep cai Offline em 5 minutos.
+- Voltar com `available` ainda true reacende o verde sem o popup. Sair grava Ausente e o popup volta no próximo login.
+- Offline esconde o status (Em reunião / Modo foco) e mostra o rótulo Offline.
 - Trocar presença ou status grava no próprio `profiles` e atualiza o menu.
 - Admin cria/edita/exclui status em Gestão da plataforma (nome + ícone Lucide). Excluir zera o `status_id` de quem usava.
 - Traffic/creator não veem Equipe no sidebar; `/app/equipe` cai no dashboard. O menu ainda troca presença e status.
-- Cadastro cria uma conta pelo Supabase Auth Admin e envia convite. O trigger cria `profiles`; a operação administrativa completa role, cargo e ficha funcional.
+- Cadastro cria a conta pelo Auth Admin, gera o link de convite e envia o e-mail pelo Resend. O trigger cria `profiles`; a operação administrativa completa role, cargo e ficha funcional.
+- O convite abre `/app/confirmar`: nome, e-mail e cargo somente leitura, mais a senha. Depois, `/app/onboarding` pede foto e telefone.
 - O cadastro tem etapas: dados pessoais e acesso; contrato; financeiro e revisão.
 - Edição de funcionário acontece no painel lateral e sincroniza o e-mail entre Auth e `profiles`.
 - Excluir é uma desativação lógica: status Inativo, presença Ausente e bloqueio no Auth. Reativar remove o bloqueio.
@@ -53,20 +56,23 @@ lib/team-status.ts               catálogo e labels
 lib/profile.ts                   sessão e gates
 lib/employees.ts                 gestão administrativa
 lib/validations/employee.ts      contratos de entrada
-app/api/me/presence|status
+lib/presence.ts                  online vs ausente vs offline
+app/api/me/presence|status|heartbeat
+app/api/presence/team
 app/api/team-statuses
 app/api/equipe
 app/(dashboard)/app/equipe
 components/dashboard/team-board
 components/dashboard/user-menu
 components/dashboard/presence-prompt
+components/dashboard/presence-runtime
 ```
 
 ## Banco
 
 `team_statuses`: id, name, icon, sort_order, timestamps.
 
-`profiles.available` boolean default false. `profiles.status_id` uuid nullable FK on delete set null.
+`profiles.available` boolean default false. `profiles.last_seen_at` timestamptz nullable. `profiles.status_id` uuid nullable FK on delete set null.
 
 `employee_records`: vínculo 1:1 com `profiles`, data de entrada, status funcional, tipo de contrato, modelo de pagamento, valores em centavos, comissão percentual, dia de pagamento e timestamps.
 
@@ -76,9 +82,10 @@ RLS: dados funcionais/financeiros somente para admin. Uma função restrita reto
 
 - Admin vê Equipe no sidebar, cards do time e consegue criar um status.
 - Login abre o popup de presença; confirmar grava Disponível ou Ausente.
+- Menu, Equipe e Salas mostram verde só com Disponível + heartbeat fresco; Offline esconde o status.
 - Menu mostra bolinha, status atual, switch e lista de status.
 - Traffic não abre `/app/equipe`. Continua alterando presença e status.
-- Admin cadastra em modal com etapas e o convite é enviado por e-mail.
+- Admin cadastra em modal com etapas e o convite é enviado pelo Resend.
 - Admin edita funcionário não-admin no painel lateral.
 - Admin não vê ações em cards de outros admins e a API também recusa essas operações.
 - Excluir torna o funcionário Inativo e bloqueia o acesso sem apagar histórico.
