@@ -1,0 +1,19 @@
+---
+description: Buscar contexto seletivo na memória do projeto antes de abrir specs inteiras
+alwaysApply: true
+---
+
+# Memória do projeto
+
+Antes de ler specs, ADRs ou a spec técnica inteiras, pedir o contexto selecionado:
+
+```bash
+npm run memory -- context "<tarefa>" --agent <code|spec|review>
+```
+
+A saída traz os trechos citáveis `[S#]`, as fontes e o custo em tokens. Abrir um arquivo inteiro
+só se os trechos não bastarem.
+
+- Decisão, fato ou lição que deve sobreviver à sessão: `npm run memory -- remember "<conteúdo>" --title "<título>" --type decision`.
+- Depois de editar `docs/`: `npm run memory -- sync`.
+- Spec da infraestrutura: `docs/specs/memoria-contexto.md`.

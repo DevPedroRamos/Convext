@@ -47,3 +47,10 @@ next-env.d.ts
 /dist/
 .vinext/
 .wrangler/
+
+# obsidian (vault em docs/): só a configuração compartilhada é versionada
+docs/.obsidian/workspace*.json
+docs/.obsidian/cache
+docs/.obsidian/plugins/
+# graphify (gerado localmente)
+graphify-out/
