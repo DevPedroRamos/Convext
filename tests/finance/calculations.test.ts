@@ -181,3 +181,13 @@ describe("validações", () => {
     expect(result.success).toBe(false);
   });
 });
+
+describe("patch da folha", () => {
+  it("não zera bônus e descontos quando só o pagamento muda", async () => {
+    const { payrollItemPatchSchema } = await import("@/lib/validations/finance");
+    const parsed = payrollItemPatchSchema.parse({ paidAt: "2026-11-20" });
+    expect(parsed.bonus).toBeUndefined();
+    expect(parsed.deduction).toBeUndefined();
+    expect(payrollItemPatchSchema.parse({ bonus: "", deduction: "12.5" })).toMatchObject({ bonus: null, deduction: 12.5 });
+  });
+});

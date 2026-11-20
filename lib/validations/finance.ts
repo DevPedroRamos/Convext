@@ -7,6 +7,8 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida.");
 const optionalDate = isoDate.optional().or(z.literal(""));
 const money = z.coerce.number({ invalid_type_error: "Informe um valor." }).min(0, "Valor não pode ser negativo.").max(100_000_000);
 const optionalMoney = z.preprocess((value) => (value === "" || value == null ? null : value), money.nullable());
+// Para PATCH: ausente fica undefined (não mexe); "" vira null.
+const patchMoney = z.preprocess((value) => (value === "" ? null : value), money.nullable().optional());
 const billingType = z.enum(["recurring", "one_off"]);
 
 export const leadSchema = z.object({
@@ -124,8 +126,8 @@ export const receivablePatchSchema = z.discriminatedUnion("action", [
 export const payrollBuildSchema = generateReceivablesSchema;
 
 export const payrollItemPatchSchema = z.object({
-  bonus: optionalMoney,
-  deduction: optionalMoney,
+  bonus: patchMoney,
+  deduction: patchMoney,
   notes: z.string().trim().max(2000).nullable().optional(),
   paidAt: isoDate.nullable().optional(),
 });
