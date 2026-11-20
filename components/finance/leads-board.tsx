@@ -7,7 +7,8 @@ import { useMemo, useState } from "react";
 import { financeRequest } from "@/components/finance/api";
 import { DataTable, type FinanceColumn } from "@/components/finance/data-table";
 import { ConvertLeadDialog, LeadDialog } from "@/components/finance/lead-dialog";
-import { nativeSelectClass, StatusBadge, type Tone } from "@/components/finance/ui";
+import { leadTone } from "@/components/finance/tones";
+import { nativeSelectClass, StatusBadge } from "@/components/finance/ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -19,16 +20,6 @@ import { formatCents } from "@/lib/finance/money";
 import type { Lead, LeadStatus, ProfileRef } from "@/lib/finance/types";
 
 const BOARD: LeadStatus[] = ["new", "contacted", "qualified", "proposal", "won", "lost"];
-
-export const leadTone: Record<LeadStatus, Tone> = {
-  new: "info",
-  contacted: "neutral",
-  qualified: "warning",
-  proposal: "warning",
-  won: "positive",
-  lost: "negative",
-  archived: "neutral",
-};
 
 function group(leads: Lead[]) {
   const columns = Object.fromEntries(BOARD.map((status) => [status, [] as Lead[]])) as Record<LeadStatus, Lead[]>;
