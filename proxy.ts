@@ -5,6 +5,15 @@ import { getPublicSupabaseEnv } from "@/lib/env";
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
+  const pathname = request.nextUrl.pathname;
+
+  // Rotas de API autenticam a si mesmas. Evita uma segunda ida ao Supabase
+  // aqui, que estoura o limite de CPU do Worker.
+  if (pathname.startsWith("/api/")) {
+    response.headers.set("Permissions-Policy", "camera=(self), microphone=(self), display-capture=(self)");
+    return response;
+  }
+
   const { url, anonKey } = getPublicSupabaseEnv();
 
   const supabase = createServerClient(url, anonKey, {
@@ -19,7 +28,6 @@ export async function proxy(request: NextRequest) {
   });
 
   const { data: { user } } = await supabase.auth.getUser();
-  const pathname = request.nextUrl.pathname;
   const isProtected = pathname.startsWith("/app");
   const isAuth = ["/login", "/esqueci-senha", "/redefinir-senha"].includes(pathname);
 
@@ -48,10 +56,14 @@ export async function proxy(request: NextRequest) {
       response.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
       return redirectResponse;
     }
-    if (!onboarded && pathname !== "/app/onboarding") {
+    const passwordSet = Boolean(user.user_metadata?.password_set);
+    if (!onboarded && !passwordSet && pathname !== "/app/confirmar") {
+      return NextResponse.redirect(new URL("/app/confirmar", request.url));
+    }
+    if (!onboarded && passwordSet && pathname !== "/app/onboarding") {
       return NextResponse.redirect(new URL("/app/onboarding", request.url));
     }
-    if (onboarded && pathname === "/app/onboarding") {
+    if (onboarded && (pathname === "/app/onboarding" || pathname === "/app/confirmar")) {
       return NextResponse.redirect(new URL("/app", request.url));
     }
     if (onboarded && !canAccessPath(profile?.role, pathname)) {
@@ -59,6 +71,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  response.headers.set("Permissions-Policy", "camera=(self), microphone=(self), display-capture=(self)");
   return response;
 }
 

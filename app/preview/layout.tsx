@@ -12,6 +12,7 @@ export default function PrototypePreviewLayout({ children }: { children: React.R
           email="preview@convext.local"
           role="admin"
           available
+          lastSeenAt={new Date().toISOString()}
           statuses={[]}
           className="sticky top-0 hidden h-screen lg:flex"
         />
@@ -22,6 +23,7 @@ export default function PrototypePreviewLayout({ children }: { children: React.R
             email="preview@convext.local"
             role="admin"
             available
+            lastSeenAt={new Date().toISOString()}
             statuses={[]}
           />
           <main className="p-4 sm:p-6 lg:p-8">{children}</main>

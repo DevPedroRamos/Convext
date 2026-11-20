@@ -1,3 +1,4 @@
+import { sendEmployeeInvite } from "@/lib/mail";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -31,6 +32,7 @@ type ManagedEmployeeRow = {
   cargo: string | null;
   avatar_url: string | null;
   available: boolean | null;
+  last_seen_at: string | null;
   status_id: string | null;
   status: { name: string; icon: string } | { name: string; icon: string }[] | null;
   employee: EmployeeRecordRow | EmployeeRecordRow[] | null;
@@ -46,6 +48,7 @@ export type ManagedEmployee = {
   cargo: string;
   avatarUrl: string | null;
   available: boolean;
+  lastSeenAt: string | null;
   statusId: string | null;
   statusName: string | null;
   statusIcon: string | null;
@@ -61,9 +64,9 @@ export type ManagedEmployee = {
 };
 
 const employeeSelect = `
-  id, first_name, last_name, email, phone, role, cargo, avatar_url, available, status_id,
+  id, first_name, last_name, email, phone, role, cargo, avatar_url, available, last_seen_at, status_id,
   status:team_statuses(name, icon),
-  employee:employee_records(
+  employee:employee_records!employee_records_user_id_fkey(
     user_id, hired_on, employment_status, contract_type, payment_model,
     fixed_amount_cents, commission_percent, additional_amount_cents, payment_day
   )
@@ -90,6 +93,7 @@ function mapEmployee(row: ManagedEmployeeRow): ManagedEmployee {
     cargo: row.cargo || "",
     avatarUrl: row.avatar_url,
     available: Boolean(row.available),
+    lastSeenAt: row.last_seen_at ?? null,
     statusId: row.status_id,
     statusName: status?.name ?? null,
     statusIcon: status?.icon ?? null,
@@ -103,6 +107,12 @@ function mapEmployee(row: ManagedEmployeeRow): ManagedEmployee {
     paymentDay: employee?.payment_day ?? null,
     manageable: canManageEmployeeRole(row.role),
   };
+}
+
+async function deleteCreatedUser(admin: ReturnType<typeof createAdminClient>, userId: string) {
+  await admin.from("employee_records").delete().eq("user_id", userId);
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  return error?.message ?? null;
 }
 
 function employeeRecord(values: EmployeeValues, actorId: string) {
@@ -125,19 +135,25 @@ export async function listManagedEmployees(): Promise<ManagedEmployee[]> {
     .from("profiles")
     .select(employeeSelect)
     .order("first_name", { ascending: true });
-  if (error || !data) return [];
+  if (error) throw new Error(error.message);
+  if (!data) return [];
   return data.map((row) => mapEmployee(row as unknown as ManagedEmployeeRow));
 }
 
 export async function createEmployee(values: EmployeeValues, actorId: string) {
   const admin = createAdminClient();
-  const redirectOrigin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:8080";
-  const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(values.email, {
-    redirectTo: `${redirectOrigin.replace(/\/$/, "")}/auth/callback?next=/app/onboarding`,
-    data: { first_name: values.firstName, last_name: values.lastName },
+  const redirectOrigin = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:8080").replace(/\/$/, "");
+  const { data: invited, error: inviteError } = await admin.auth.admin.generateLink({
+    type: "invite",
+    email: values.email,
+    options: {
+      redirectTo: `${redirectOrigin}/auth/callback?next=/app/confirmar`,
+      data: { first_name: values.firstName, last_name: values.lastName, password_set: false },
+    },
   });
-  if (inviteError || !invited.user) {
-    return { employee: null, error: inviteError?.message || "Não foi possível enviar o convite." };
+  const inviteUrl = invited?.properties?.action_link;
+  if (inviteError || !invited?.user || !inviteUrl) {
+    return { employee: null, error: inviteError?.message || "Não foi possível criar o convite." };
   }
 
   const userId = invited.user.id;
@@ -155,29 +171,71 @@ export async function createEmployee(values: EmployeeValues, actorId: string) {
     })
     .eq("id", userId);
 
-  const { error: employeeError } = profileError
-    ? { error: null }
-    : await admin.from("employee_records").insert({
-        user_id: userId,
-        ...employeeRecord(values, actorId),
-        created_by: actorId,
-      });
-
-  if (profileError || employeeError) {
-    await admin.auth.admin.deleteUser(userId);
-    return { employee: null, error: profileError?.message || employeeError?.message || "Não foi possível concluir o cadastro." };
+  if (profileError) {
+    await deleteCreatedUser(admin, userId);
+    return { employee: null, error: profileError.message || "Não foi possível concluir o cadastro." };
   }
 
   if (values.employmentStatus === "inactive") {
     const { error: banError } = await admin.auth.admin.updateUserById(userId, { ban_duration: "876000h" });
     if (banError) {
-      await admin.auth.admin.deleteUser(userId);
+      await deleteCreatedUser(admin, userId);
       return { employee: null, error: "O convite foi criado, mas não foi possível deixar o acesso inativo." };
+    }
+  } else {
+    const { error: emailError } = await sendEmployeeInvite({
+      userId,
+      email: values.email,
+      firstName: values.firstName,
+      inviteUrl,
+    });
+    if (emailError) {
+      await deleteCreatedUser(admin, userId);
+      return { employee: null, error: emailError };
     }
   }
 
+  const { error: employeeError } = await admin.from("employee_records").upsert({
+    user_id: userId,
+    ...employeeRecord(values, actorId),
+    created_by: actorId,
+  }, { onConflict: "user_id" });
+
+  if (employeeError) {
+    await deleteCreatedUser(admin, userId);
+    return { employee: null, error: employeeError.message || "Não foi possível concluir o cadastro." };
+  }
+
   const employee = await getManagedEmployee(userId);
-  return { employee, error: employee ? null : "Funcionário criado, mas não foi possível recarregar os dados." };
+  if (employee) return { employee, error: null };
+  return {
+    employee: mapEmployee({
+      id: userId,
+      first_name: values.firstName,
+      last_name: values.lastName || null,
+      email: values.email,
+      phone: values.phone || null,
+      role: values.role,
+      cargo: values.cargo,
+      avatar_url: null,
+      available: false,
+      last_seen_at: null,
+      status_id: null,
+      status: null,
+      employee: {
+        user_id: userId,
+        hired_on: values.hiredOn,
+        employment_status: values.employmentStatus,
+        contract_type: values.contractType,
+        payment_model: values.paymentModel,
+        fixed_amount_cents: values.fixedAmount == null ? null : Math.round(values.fixedAmount * 100),
+        commission_percent: values.commissionPercent,
+        additional_amount_cents: values.additionalAmount == null ? null : Math.round(values.additionalAmount * 100),
+        payment_day: values.paymentDay,
+      },
+    }),
+    error: null,
+  };
 }
 
 export async function getManagedEmployee(id: string): Promise<ManagedEmployee | null> {

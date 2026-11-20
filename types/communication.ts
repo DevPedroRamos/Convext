@@ -48,6 +48,7 @@ export type DirectoryPerson = {
   lastName: string | null;
   avatarUrl: string | null;
   available: boolean;
+  lastSeenAt: string | null;
   inCall: boolean;
 };
 

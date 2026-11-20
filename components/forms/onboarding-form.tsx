@@ -13,17 +13,25 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/browser";
 import { onboardingSchema, type OnboardingValues } from "@/lib/validations/profile";
 
-type OnboardingFormProps = { userId: string; email: string; cargo?: string | null; defaultValues: Pick<OnboardingValues, "firstName" | "lastName" | "phone" | "avatarUrl"> };
+type OnboardingFormProps = {
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  cargo?: string | null;
+  defaultValues: Pick<OnboardingValues, "phone" | "avatarUrl">;
+};
 
-export function OnboardingForm({ userId, email, cargo, defaultValues }: OnboardingFormProps) {
+export function OnboardingForm({ userId, email, firstName, lastName, cargo, defaultValues }: OnboardingFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const form = useForm<OnboardingValues>({
     resolver: zodResolver(onboardingSchema),
-    defaultValues: { ...defaultValues, password: "", confirmPassword: "" },
+    defaultValues: { firstName, lastName, ...defaultValues },
   });
   const avatarUrl = useWatch({ control: form.control, name: "avatarUrl" });
+  const name = [firstName, lastName].filter(Boolean).join(" ").trim() || firstName;
 
   async function uploadAvatar(file?: File) {
     if (!file) return;
@@ -54,10 +62,10 @@ export function OnboardingForm({ userId, email, cargo, defaultValues }: Onboardi
       <div>
         <p className="label text-primary">Primeiro acesso</p>
         <h1 className="mt-3 font-display text-4xl tracking-[-.08em] sm:text-5xl">Complete seu perfil.</h1>
-        <p className="mt-3 text-sm text-muted-foreground">Troque a senha temporária, envie sua foto e confirme seus dados para entrar na área Convext.</p>
+        <p className="mt-3 text-sm text-muted-foreground">Envie sua foto e informe o telefone para entrar na área Convext.</p>
       </div>
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-        <Avatar className="size-20"><AvatarImage src={avatarUrl || undefined} /><AvatarFallback>{defaultValues.firstName?.slice(0, 2).toUpperCase() || "CV"}</AvatarFallback></Avatar>
+        <Avatar className="size-20"><AvatarImage src={avatarUrl || undefined} /><AvatarFallback>{firstName?.slice(0, 2).toUpperCase() || "CV"}</AvatarFallback></Avatar>
         <div className="flex-1">
           <p className="text-lg">Foto de perfil</p>
           <p className="text-sm text-muted-foreground">Obrigatória no primeiro acesso.</p>
@@ -69,13 +77,10 @@ export function OnboardingForm({ userId, email, cargo, defaultValues }: Onboardi
         </Label>
       </div>
       <div className="grid gap-5 md:grid-cols-2">
-        <Field label="Nome" error={form.formState.errors.firstName?.message}><Input {...form.register("firstName")} /></Field>
-        <Field label="Sobrenome" error={form.formState.errors.lastName?.message}><Input {...form.register("lastName")} /></Field>
+        <Field label="Nome"><Input value={name} readOnly /></Field>
         <Field label="E-mail"><Input value={email} readOnly /></Field>
-        <Field label="Telefone" error={form.formState.errors.phone?.message}><Input {...form.register("phone")} placeholder="(11) 99999-9999" /></Field>
         <Field label="Cargo"><Input value={cargo || "—"} readOnly /></Field>
-        <Field label="Nova senha" error={form.formState.errors.password?.message}><Input type="password" autoComplete="new-password" {...form.register("password")} /></Field>
-        <Field label="Confirmar senha" error={form.formState.errors.confirmPassword?.message}><Input type="password" autoComplete="new-password" {...form.register("confirmPassword")} /></Field>
+        <Field label="Telefone" error={form.formState.errors.phone?.message}><Input {...form.register("phone")} placeholder="(11) 99999-9999" /></Field>
       </div>
       <Button disabled={loading || avatarLoading} className="h-11 w-fit bg-primary text-primary-foreground hover:bg-primary/90">
         {loading ? <Loader2 className="animate-spin" /> : null} Entrar na Convext

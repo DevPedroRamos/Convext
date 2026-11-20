@@ -11,7 +11,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { usePresenceSignals } from "@/components/dashboard/presence-runtime";
 import type { ManagedEmployee } from "@/lib/employees";
+import { isOnline, presenceLabel, shouldShowStatus } from "@/lib/presence";
 import { teamStatusIcon } from "@/lib/team-status-icons";
 import { cn } from "@/lib/utils";
 
@@ -49,58 +51,9 @@ export function TeamBoard({ employees }: { employees: ManagedEmployee[] }) {
       <section className="grid gap-4">
         <h3 className="text-sm font-medium">{employees.length} pessoas</h3>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {employees.map((employee) => {
-            const name = employeeName(employee);
-            const StatusIcon = employee.statusIcon ? teamStatusIcon(employee.statusIcon) : null;
-            return (
-              <Card key={employee.id}>
-                <CardContent className="grid gap-4 pt-1">
-                  <div className="flex gap-4">
-                    <span className="relative size-12 shrink-0">
-                      <Avatar className="size-12">
-                        <AvatarImage src={employee.avatarUrl || undefined} />
-                        <AvatarFallback>{name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <span className={cn("absolute right-0 bottom-0 size-3 rounded-full ring-2 ring-card", employee.available ? "bg-emerald-400" : "bg-zinc-500")} />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="truncate font-medium">{name}</p>
-                          <p className="truncate text-sm text-muted-foreground">{employee.cargo || "Cargo não informado"}</p>
-                        </div>
-                        {employee.manageable ? (
-                          <div className="flex shrink-0 gap-1">
-                            <Button variant="ghost" size="icon" aria-label={`Editar ${name}`} title="Editar" onClick={() => setSelected(employee)}>
-                              <Pencil />
-                            </Button>
-                            <Button variant="ghost" size="icon" aria-label={`Excluir ${name}`} title="Excluir" onClick={() => setDeleteTarget(employee)}>
-                              <Trash2 />
-                            </Button>
-                          </div>
-                        ) : (
-                          <span title="Administrador protegido"><ShieldCheck className="size-4 text-primary" /></span>
-                        )}
-                      </div>
-                      <p className="truncate text-xs text-muted-foreground">{employee.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span className={cn("rounded-full px-2 py-0.5", employee.employmentStatus === "active" ? "bg-emerald-400/15 text-emerald-300" : "bg-destructive/15 text-destructive")}>
-                      {employee.employmentStatus === "active" ? "Ativo" : "Inativo"}
-                    </span>
-                    <span className="rounded-full bg-secondary px-2 py-0.5">{employeeRoleLabel(employee.role)}</span>
-                    {employee.statusName && StatusIcon ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5">
-                        <StatusIcon className="size-3" />
-                        {employee.statusName}
-                      </span>
-                    ) : null}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {employees.map((employee) => (
+            <EmployeeCard key={employee.id} employee={employee} onEdit={setSelected} onDelete={setDeleteTarget} />
+          ))}
         </div>
       </section>
 
@@ -123,6 +76,71 @@ export function TeamBoard({ employees }: { employees: ManagedEmployee[] }) {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function EmployeeCard({
+  employee,
+  onEdit,
+  onDelete,
+}: {
+  employee: ManagedEmployee;
+  onEdit: (employee: ManagedEmployee) => void;
+  onDelete: (employee: ManagedEmployee) => void;
+}) {
+  const name = employeeName(employee);
+  const live = usePresenceSignals(employee.id, { available: employee.available, lastSeenAt: employee.lastSeenAt });
+  const online = isOnline(live);
+  const StatusIcon = employee.statusIcon && shouldShowStatus(live.lastSeenAt) ? teamStatusIcon(employee.statusIcon) : null;
+
+  return (
+    <Card>
+      <CardContent className="grid gap-4 pt-1">
+        <div className="flex gap-4">
+          <span className="relative size-12 shrink-0">
+            <Avatar className="size-12">
+              <AvatarImage src={employee.avatarUrl || undefined} />
+              <AvatarFallback>{name.slice(0, 2).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <span className={cn("absolute right-0 bottom-0 size-3 rounded-full ring-2 ring-card", online ? "bg-emerald-400" : "bg-zinc-500")} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="truncate font-medium">{name}</p>
+                <p className="truncate text-sm text-muted-foreground">{employee.cargo || "Cargo não informado"}</p>
+              </div>
+              {employee.manageable ? (
+                <div className="flex shrink-0 gap-1">
+                  <Button variant="ghost" size="icon" aria-label={`Editar ${name}`} title="Editar" onClick={() => onEdit(employee)}>
+                    <Pencil />
+                  </Button>
+                  <Button variant="ghost" size="icon" aria-label={`Excluir ${name}`} title="Excluir" onClick={() => onDelete(employee)}>
+                    <Trash2 />
+                  </Button>
+                </div>
+              ) : (
+                <span title="Administrador protegido"><ShieldCheck className="size-4 text-primary" /></span>
+              )}
+            </div>
+            <p className="truncate text-xs text-muted-foreground">{employee.email}</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className={cn("rounded-full px-2 py-0.5", employee.employmentStatus === "active" ? "bg-emerald-400/15 text-emerald-300" : "bg-destructive/15 text-destructive")}>
+            {employee.employmentStatus === "active" ? "Ativo" : "Inativo"}
+          </span>
+          <span className="rounded-full bg-secondary px-2 py-0.5">{employeeRoleLabel(employee.role)}</span>
+          <span className="rounded-full bg-secondary px-2 py-0.5">{presenceLabel(live)}</span>
+          {employee.statusName && StatusIcon ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5">
+              <StatusIcon className="size-3" />
+              {employee.statusName}
+            </span>
+          ) : null}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

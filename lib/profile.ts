@@ -20,6 +20,10 @@ export function isOnboardingComplete(profile: { onboarding_completed?: boolean |
   return Boolean(profile?.onboarding_completed);
 }
 
+export function hasPasswordSet(user: { user_metadata?: Record<string, unknown> | null } | null) {
+  return Boolean(user?.user_metadata?.password_set);
+}
+
 export function isAdmin(profile: { role?: string | null } | null) {
   return profile?.role === "admin";
 }
@@ -40,6 +44,7 @@ export type TeamProfile = {
   email: string | null;
   avatarUrl: string | null;
   available: boolean;
+  lastSeenAt: string | null;
   statusId: string | null;
   statusName: string | null;
   statusIcon: string | null;
@@ -58,6 +63,7 @@ type TeamProfileRow = {
   email: string | null;
   avatar_url: string | null;
   available: boolean | null;
+  last_seen_at: string | null;
   status_id: string | null;
   status: { name: string; icon: string } | { name: string; icon: string }[] | null;
 };
@@ -72,6 +78,7 @@ function mapTeamProfile(row: TeamProfileRow): TeamProfile {
     email: row.email,
     avatarUrl: row.avatar_url,
     available: Boolean(row.available),
+    lastSeenAt: row.last_seen_at ?? null,
     statusId: row.status_id,
     statusName: status?.name ?? null,
     statusIcon: status?.icon ?? null,
@@ -96,7 +103,7 @@ export async function listTeamProfiles(): Promise<TeamProfile[]> {
   const supabase = await createClient();
   const query = await supabase
     .from("profiles")
-    .select("id, first_name, last_name, cargo, email, avatar_url, available, status_id, status:team_statuses(name, icon)")
+    .select("id, first_name, last_name, cargo, email, avatar_url, available, last_seen_at, status_id, status:team_statuses(name, icon)")
     .order("first_name", { ascending: true });
   if (!query.error && query.data) return query.data.map((row) => mapTeamProfile(row as TeamProfileRow));
 
@@ -105,7 +112,7 @@ export async function listTeamProfiles(): Promise<TeamProfile[]> {
     .select("id, first_name, last_name, cargo, email, avatar_url")
     .order("first_name", { ascending: true });
   if (fallback.error || !fallback.data) return [];
-  return fallback.data.map((row) => mapTeamProfile({ ...row, available: false, status_id: null, status: null }));
+  return fallback.data.map((row) => mapTeamProfile({ ...row, available: false, last_seen_at: null, status_id: null, status: null }));
 }
 
 export async function requireOnboardedUser() {

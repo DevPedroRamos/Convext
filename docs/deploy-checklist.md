@@ -35,8 +35,28 @@ Projeto `kfhxiljdzgwylruinrve` (`fduran1901@gmail.com's Project`), ligado a este
 ## Resend
 
 - `RESEND_API_KEY` já está no Worker.
-- Verificar o domínio de envio `convextmidias.com.br` no Resend. Sem isso o contato grava no Supabase e `emailSent` fica `false`.
-- Enviar teste de contato em `https://convextmidias.com.br/contato`.
+- Remetente atual: `RESEND_FROM_EMAIL` (`Convext <contato@convextmidias.com.br>`), no domínio já verificado no Resend.
+- `convext.com.br` ainda não resolve em DNS público (NXDOMAIN). Quando existir DNS, os registros abaixo permitem voltar o remetente para `contato@convext.com.br`.
+
+Registros Resend para `convextmidias.com.br` (zona Cloudflare):
+
+| Tipo | Nome | Conteúdo | Prioridade |
+|------|------|----------|------------|
+| TXT | `resend._domainkey` | `p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQD0YkOiUkhrB9OnuCp52Brxt2PNxXrwqen9JC/YfzYXChXM4SEfeWYycfiPKaIwcb+bcbP5MiENoWpH+LPp/tc3lhVzotex6fideH1Ufa14xLh+rL6YvhlChKsuzSYMw5OGF74oOOWGTl1jcUGQEJ8rFaFTLs/MqlsMegxPT92jhQIDAQAB` | |
+| MX | `send` | `feedback-smtp.us-east-1.amazonses.com` | 10 |
+| TXT | `send` | `v=spf1 include:amazonses.com ~all` | |
+| CNAME | `rsend` | `send.forge.rmta.net` (DNS only, não proxied) | |
+
+Registros Resend para `convext.com.br` (quando o domínio tiver DNS):
+
+| Tipo | Nome | Conteúdo | Prioridade |
+|------|------|----------|------------|
+| TXT | `resend._domainkey` | `p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDphrwxYLpnfwAHPsr7BwKTPUA7x10zDWBYLgWK2GKiJZhY6AIzfqvSLpOk01DCZAGig9e/phQFjbbDSdcNZD/kGRMPL/pCGEnfycXrnOVBkFVgwwH0oVW/QRf1FcJLsoVjrli9ohW1e4IoQ6sQh3aYeEUyN4xsnmE0pevZfjuD/QIDAQAB` | |
+| MX | `send` | `feedback-smtp.us-east-1.amazonses.com` | 10 |
+| TXT | `send` | `v=spf1 include:amazonses.com ~all` | |
+| CNAME | `rsend` | `send.forge.rmta.net` | |
+
+Depois dos registros: verificar no Resend e testar contato em `https://convextmidias.com.br/contato`.
 
 ## Pós-deploy
 
