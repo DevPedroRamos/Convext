@@ -96,7 +96,7 @@ export function LeadsBoard({ leads, people, clients, currentUserId, canDelete }:
     <div className="grid gap-4">
       <div className="flex flex-wrap items-center gap-2">
         <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar lead, empresa ou telefone" className="w-full sm:w-72" aria-label="Buscar leads" />
-        <select className={`${nativeSelectClass} w-auto`} value={owner} onChange={(event) => setOwner(event.target.value)} aria-label="Responsável">
+        <select className={nativeSelectClass} value={owner} onChange={(event) => setOwner(event.target.value)} aria-label="Responsável">
           <option value="all">Todos os responsáveis</option>
           <option value="me">Meus leads</option>
           <option value="none">Sem responsável</option>

@@ -129,7 +129,7 @@ export function ProposalsManager({ proposals, customers, leads, products, people
         initialSort={[{ id: "validUntil", desc: false }]}
         toolbar={
           <>
-            <select className={`${nativeSelectClass} w-auto`} value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} aria-label="Filtrar status">
+            <select className={nativeSelectClass} value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} aria-label="Filtrar status">
               <option value="open">Em aberto</option>
               <option value="all">Todas</option>
               {PROPOSAL_STATUSES.map((status) => (

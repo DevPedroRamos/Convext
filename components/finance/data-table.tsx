@@ -15,6 +15,9 @@ import {
   rowPaginationFeature,
   rowSortingFeature,
   sortFn_alphanumeric,
+  sortFn_basic,
+  sortFn_datetime,
+  sortFn_text,
   tableFeatures,
   useTable,
 } from "@tanstack/react-table";
@@ -33,7 +36,7 @@ export const financeTableFeatures = tableFeatures({
   filteredRowModel: createFilteredRowModel(),
   sortedRowModel: createSortedRowModel(),
   paginatedRowModel: createPaginatedRowModel(),
-  sortFns: { alphanumeric: sortFn_alphanumeric },
+  sortFns: { alphanumeric: sortFn_alphanumeric, basic: sortFn_basic, datetime: sortFn_datetime, text: sortFn_text },
 });
 
 export type FinanceColumn<T extends RowData> = ColumnDef<typeof financeTableFeatures, T> & { className?: string };

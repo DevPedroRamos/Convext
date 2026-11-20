@@ -42,7 +42,7 @@ export function ContractsTable({ contracts }: { contracts: Contract[] }) {
       empty="Nenhum contrato neste filtro."
       initialSort={[{ id: "customerName", desc: false }]}
       toolbar={
-        <select className={`${nativeSelectClass} w-auto`} value={status} onChange={(event) => setStatus(event.target.value as typeof status)} aria-label="Filtrar status">
+        <select className={nativeSelectClass} value={status} onChange={(event) => setStatus(event.target.value as typeof status)} aria-label="Filtrar status">
           <option value="all">Todos</option>
           {CONTRACT_STATUSES.map((value) => (
             <option key={value} value={value}>{contractStatusLabels[value]}</option>

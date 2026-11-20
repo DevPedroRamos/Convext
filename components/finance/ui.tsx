@@ -23,7 +23,7 @@ export function StatCard({ title, value, hint, tone, href }: { title: string; va
       <p className="text-sm text-muted-foreground">{title}</p>
       <p
         className={cn(
-          "font-display text-2xl tracking-[-0.04em] tabular-nums sm:text-3xl",
+          "font-display text-2xl tracking-[-0.04em] whitespace-nowrap tabular-nums 2xl:text-3xl",
           tone === "positive" && "text-emerald-400",
           tone === "negative" && "text-destructive",
           tone === "warning" && "text-primary",
@@ -62,7 +62,7 @@ export function StatusBadge({ label, tone = "neutral" }: { label: string; tone?:
 
 export function Field({ label, error, children, className, hint }: { label: string; error?: string; children: ReactNode; className?: string; hint?: string }) {
   return (
-    <div className={cn("grid gap-2", className)}>
+    <div className={cn("grid content-start gap-2", className)}>
       <Label>{label}</Label>
       {children}
       {hint && !error ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
@@ -88,4 +88,4 @@ export function Section({ title, actions, children, className }: { title: string
 }
 
 export const nativeSelectClass =
-  "h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>option]:bg-background";
+  "h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>option]:bg-background";
