@@ -37,6 +37,8 @@ Cada role só alcança as áreas que lhe cabem. Admin tem tudo. Coordinator oper
 | Equipe | sim | não | não | não |
 | Gestão | sim | não | não | não |
 
+O workspace Financeiro e a role `commercial` estão em [[financeiro]].
+
 - Perfil continua só no menu do usuário.
 - Delete de cliente e feedback continua só admin.
 - FAB (Feedback, Cliente, Case) só para operação.
