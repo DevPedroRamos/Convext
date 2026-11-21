@@ -20,6 +20,7 @@ produto em `PRODUCT.md` (raiz do repositório; ambos fixados no contexto dos age
 - [[equipe]] — gestão de equipe, presença e status
 - [[comunicacao-tempo-real]] e [[comunicacao-wireframes]] — Salas e chamadas
 - [[memoria-contexto]] — memória, RAG híbrido e Context Builder
+- [[financeiro]] — workspace Financeiro: leads, propostas, contratos, folha e balanço
 
 ## Decisões (ADR)
 

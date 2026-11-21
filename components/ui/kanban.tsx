@@ -6,6 +6,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -196,6 +197,8 @@ function Kanban<T>({
     index: number;
   } | null>(null);
 
+  // id estável entre servidor e cliente: sem ele o dnd-kit gera aria-describedby diferentes e a hidratação falha.
+  const dndId = useId();
   const sensors = useSensors(
     useSensor(MouseSensor, MOUSE_SENSOR_OPTIONS),
     useSensor(TouchSensor, TOUCH_SENSOR_OPTIONS),
@@ -433,6 +436,7 @@ function Kanban<T>({
   return (
     <KanbanContext.Provider value={contextValue}>
       <DndContext
+        id={dndId}
         sensors={sensors}
         modifiers={modifiers}
         accessibility={accessibility}

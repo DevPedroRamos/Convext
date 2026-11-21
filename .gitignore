@@ -54,3 +54,8 @@ docs/.obsidian/cache
 docs/.obsidian/plugins/
 # graphify (gerado localmente)
 graphify-out/
+
+# artefatos locais de ferramentas (não versionar)
+.impeccable/
+.rea-tmp/
+/1

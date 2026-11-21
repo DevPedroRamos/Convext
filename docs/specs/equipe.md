@@ -19,7 +19,8 @@ Cada pessoa marca Disponível/Ausente e escolhe um status atual. A bolinha verde
 - Dados do funcionário: nome, sobrenome, e-mail, telefone, role, cargo, data de entrada, status Ativo/Inativo, tipo de contrato e financeiro.
 - Tipos de contrato: CLT, PJ, Freelancer e Sócio (adm).
 - Financeiro: modelo Fixo, Comissão, Fixo + comissão ou Personalizado; fixo em R$, comissão em %, adicional em R$ e dia mensal de pagamento.
-- Role `commercial`: acesso somente a Dashboard, Salas e Perfil. O cargo Comercial pode ser usado com essa role.
+- Role `commercial`: acesso a Dashboard, Salas, Perfil e à seção Comercial do Financeiro ([[financeiro]]). O cargo Comercial pode ser usado com essa role.
+- A remuneração cadastrada aqui gera a folha mensal em `/app/financeiro/admin/folha`.
 - Card Equipe do dashboard aponta para `/app/equipe`.
 
 ## Não-escopo

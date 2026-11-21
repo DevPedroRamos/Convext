@@ -27,11 +27,21 @@ const titles: Record<string, string> = {
   "/app/chamadas": "Chamada",
   "/app/equipe": "Equipe",
   "/app/gestao": "Gestão da plataforma",
+  "/app/financeiro": "Financeiro",
+  "/app/financeiro/comercial": "Propostas",
+  "/app/financeiro/leads": "Leads",
+  "/app/financeiro/contratos": "Contratos",
+  "/app/financeiro/clientes": "Clientes financeiros",
+  "/app/financeiro/produtos": "Produtos",
+  "/app/financeiro/admin": "Gerencial",
+  "/app/financeiro/admin/folha": "Folha",
+  "/app/financeiro/admin/balanco": "Balanço",
+  "/app/financeiro/admin/gestao": "Gestão financeira",
 };
 
 export function AppHeader({ title, eyebrow = "Área Convext", name, email, avatarUrl, role, available, lastSeenAt, statusId, statuses }: HeaderProps) {
   const pathname = usePathname();
-  const currentTitle = title || titles[pathname] || (pathname.startsWith("/app/clientes") ? "Clientes" : pathname.startsWith("/app/salas") ? "Salas" : pathname.startsWith("/app/chamadas") ? "Chamada" : "Dashboard");
+  const currentTitle = title || titles[pathname] || (pathname.startsWith("/app/financeiro/contratos") ? "Contrato" : pathname.startsWith("/app/financeiro") ? "Financeiro" : pathname.startsWith("/app/clientes") ? "Clientes" : pathname.startsWith("/app/salas") ? "Salas" : pathname.startsWith("/app/chamadas") ? "Chamada" : "Dashboard");
 
   return (
     <header className="sticky top-0 z-20 flex min-h-20 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
