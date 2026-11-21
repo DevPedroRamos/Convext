@@ -10,7 +10,7 @@ import { NewEmployeeDialog } from "@/components/dashboard/new-employee-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { usePresenceSignals } from "@/components/dashboard/presence-runtime";
 import type { ManagedEmployee } from "@/lib/employees";
 import { isOnline, presenceLabel, shouldShowStatus } from "@/lib/presence";
@@ -58,14 +58,14 @@ export function TeamBoard({ employees }: { employees: ManagedEmployee[] }) {
       </section>
 
       <EmployeeDetailSheet employee={selected} onClose={() => setSelected(null)} />
-      <Dialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && !deleting && setDeleteTarget(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Excluir funcionário?</DialogTitle>
-            <DialogDescription>
+      <Sheet open={Boolean(deleteTarget)} onOpenChange={(open) => !open && !deleting && setDeleteTarget(null)}>
+        <SheetContent size="panel">
+          <SheetHeader>
+            <SheetTitle>Excluir funcionário?</SheetTitle>
+            <SheetDescription>
               {deleteTarget ? `${deleteTarget.firstName || deleteTarget.email} ficará inativo e perderá o acesso. O histórico será preservado.` : ""}
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancelar</Button>
             <Button variant="destructive" onClick={deactivate} disabled={deleting}>
@@ -73,8 +73,8 @@ export function TeamBoard({ employees }: { employees: ManagedEmployee[] }) {
               Desativar
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

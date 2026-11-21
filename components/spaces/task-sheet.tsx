@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { spacesRequest } from "@/components/spaces/api";
 import { timeAgo } from "@/components/spaces/task-card";
-import { Field, nativeSelectClass } from "@/components/finance/ui";
+import { Field } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { ownerLabel } from "@/lib/spaces/roles";
@@ -20,7 +21,7 @@ type Props = { task: SpaceTask | null; space: Space | null; form: SpaceForm | nu
 export function TaskSheet({ task, space, form, viewer, onClose }: Props) {
   return (
     <Sheet open={Boolean(task)} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full overflow-y-auto pb-8 sm:max-w-xl">
+      <SheetContent size="panel">
         {task && space ? <TaskDetail key={`${task.id}:${task.stageId}:${task.updatedAt}`} task={task} space={space} form={form} viewer={viewer} onClose={onClose} /> : null}
       </SheetContent>
     </Sheet>
@@ -152,9 +153,12 @@ function TaskDetail({ task, space, form, viewer, onClose }: { task: SpaceTask; s
         <div className="grid gap-2 rounded-lg border border-border p-3">
           <p className="text-xs text-muted-foreground">Admin</p>
           <div className="flex flex-wrap items-center gap-2">
-            <select className={nativeSelectClass} value={moveTo} onChange={(event) => setMoveTo(event.target.value)} aria-label="Mover para a etapa">
-              {stages.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-            </select>
+            <Select value={moveTo} onValueChange={setMoveTo}>
+              <SelectTrigger className="w-full sm:w-52" aria-label="Mover para a etapa"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {stages.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
             <Button size="sm" variant="outline" disabled={moveTo === stage.id || busy === "move"} onClick={() => run("move", { action: "move", stageId: moveTo }, "Tarefa movida.")}>Mover</Button>
             <Button size="sm" variant="ghost" className="ml-auto text-destructive" onClick={remove}><Trash /> Excluir</Button>
           </div>

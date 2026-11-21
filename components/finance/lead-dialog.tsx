@@ -3,13 +3,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
 import { financeRequest } from "@/components/finance/api";
-import { Field, nativeSelectClass } from "@/components/finance/ui";
+import { Field } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { leadSourceLabels, leadStatusLabels } from "@/lib/finance/labels";
 import { centsToReais } from "@/lib/finance/money";
@@ -37,12 +38,12 @@ function defaults(lead?: Lead | null): FormInput {
 
 export function LeadDialog({ open, onOpenChange, lead, people, onSaved }: { open: boolean; onOpenChange: (open: boolean) => void; lead?: Lead | null; people: ProfileRef[]; onSaved: () => void }) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto py-8 sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle>{lead ? "Editar lead" : "Novo lead"}</DialogTitle>
-          <DialogDescription>{lead?.source === "landing" ? "Lead recebido pelo site." : "Indicação, WhatsApp ou contato direto."}</DialogDescription>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent size="panel">
+        <SheetHeader>
+          <SheetTitle>{lead ? "Editar lead" : "Novo lead"}</SheetTitle>
+          <SheetDescription>{lead?.source === "landing" ? "Lead recebido pelo site." : "Indicação, WhatsApp ou contato direto."}</SheetDescription>
+        </SheetHeader>
         <LeadForm
           key={lead?.id ?? "new"}
           lead={lead}
@@ -53,8 +54,8 @@ export function LeadDialog({ open, onOpenChange, lead, people, onSaved }: { open
             onSaved();
           }}
         />
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -89,26 +90,53 @@ function LeadForm({ lead, people, onCancel, onSaved }: { lead?: Lead | null; peo
         <Input type="email" {...form.register("email")} />
       </Field>
       <Field label="Origem" error={errors.source?.message}>
-        <select className={nativeSelectClass} {...form.register("source")}>
-          {LEAD_SOURCES.map((source) => (
-            <option key={source} value={source}>{leadSourceLabels[source]}</option>
-          ))}
-        </select>
+        <Controller
+          control={form.control}
+          name="source"
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {LEAD_SOURCES.map((source) => (
+                  <SelectItem key={source} value={source}>{leadSourceLabels[source]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </Field>
       <Field label="Etapa" error={errors.status?.message}>
-        <select className={nativeSelectClass} {...form.register("status")}>
-          {LEAD_STATUSES.map((value) => (
-            <option key={value} value={value}>{leadStatusLabels[value]}</option>
-          ))}
-        </select>
+        <Controller
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {LEAD_STATUSES.map((value) => (
+                  <SelectItem key={value} value={value}>{leadStatusLabels[value]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </Field>
       <Field label="Responsável" error={errors.assigneeId?.message}>
-        <select className={nativeSelectClass} {...form.register("assigneeId")}>
-          <option value="">Sem responsável</option>
-          {people.map((person) => (
-            <option key={person.id} value={person.id}>{person.name}</option>
-          ))}
-        </select>
+        <Controller
+          control={form.control}
+          name="assigneeId"
+          render={({ field }) => (
+            <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem responsável</SelectItem>
+                {people.map((person) => (
+                  <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </Field>
       <Field label="Valor estimado (R$/mês)" error={errors.estimatedValue?.message}>
         <Input type="number" step="0.01" min="0" inputMode="decimal" {...form.register("estimatedValue")} />
@@ -164,12 +192,12 @@ export function ConvertLeadDialog({ lead, clients, onOpenChange, onConverted }: 
   }
 
   return (
-    <Dialog open={Boolean(lead)} onOpenChange={onOpenChange}>
-      <DialogContent className="py-8 sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Converter em cliente</DialogTitle>
-          <DialogDescription>Cria o cadastro financeiro e marca o lead como ganho.</DialogDescription>
-        </DialogHeader>
+    <Sheet open={Boolean(lead)} onOpenChange={onOpenChange}>
+      <SheetContent size="panel">
+        <SheetHeader>
+          <SheetTitle>Converter em cliente</SheetTitle>
+          <SheetDescription>Cria o cadastro financeiro e marca o lead como ganho.</SheetDescription>
+        </SheetHeader>
         <form onSubmit={submit} className="grid gap-4">
           <Field label="Nome do cliente">
             <Input value={name} onChange={(event) => setName(event.target.value)} required minLength={2} />
@@ -178,19 +206,22 @@ export function ConvertLeadDialog({ lead, clients, onOpenChange, onConverted }: 
             <Input value={document} onChange={(event) => setDocument(event.target.value)} />
           </Field>
           <Field label="Conta operacional (opcional)" hint="Vincula ao cliente atendido em Demandas.">
-            <select className={nativeSelectClass} value={clientId} onChange={(event) => setClientId(event.target.value)}>
-              <option value="">Sem vínculo</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>{client.name}</option>
-              ))}
-            </select>
+            <Select value={clientId || "none"} onValueChange={(value) => setClientId(value === "none" ? "" : value)}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem vínculo</SelectItem>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
             <Button disabled={loading}>{loading ? <Loader2 className="animate-spin" /> : null}Converter</Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

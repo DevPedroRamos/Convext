@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { DataTable, type FinanceColumn } from "@/components/finance/data-table";
 import { contractTone } from "@/components/finance/tones";
-import { nativeSelectClass, StatusBadge } from "@/components/finance/ui";
+import { StatusBadge } from "@/components/finance/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDate } from "@/lib/finance/dates";
 import { contractStatusLabels } from "@/lib/finance/labels";
 import { formatCents } from "@/lib/finance/money";
@@ -42,12 +43,15 @@ export function ContractsTable({ contracts }: { contracts: Contract[] }) {
       empty="Nenhum contrato neste filtro."
       initialSort={[{ id: "customerName", desc: false }]}
       toolbar={
-        <select className={nativeSelectClass} value={status} onChange={(event) => setStatus(event.target.value as typeof status)} aria-label="Filtrar status">
-          <option value="all">Todos</option>
-          {CONTRACT_STATUSES.map((value) => (
-            <option key={value} value={value}>{contractStatusLabels[value]}</option>
-          ))}
-        </select>
+        <Select value={status} onValueChange={(value) => setStatus(value as typeof status)}>
+          <SelectTrigger className="w-full sm:w-44" aria-label="Filtrar status"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            {CONTRACT_STATUSES.map((value) => (
+              <SelectItem key={value} value={value}>{contractStatusLabels[value]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       }
     />
   );

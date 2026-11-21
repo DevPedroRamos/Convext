@@ -4,17 +4,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, Ellipsis, Loader2, Pencil, Plus, Send, Trash, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { type Control, type UseFormRegister, type UseFormSetValue, useForm } from "react-hook-form";
+import { Controller, type Control, type UseFormRegister, type UseFormSetValue, useForm } from "react-hook-form";
 import type { z } from "zod";
 import { financeRequest } from "@/components/finance/api";
 import { DataTable, type FinanceColumn } from "@/components/finance/data-table";
 import { emptyItem, type LineItemInput, LineItemsEditor } from "@/components/finance/line-items-editor";
 import { proposalTone as tone } from "@/components/finance/tones";
-import { Field, nativeSelectClass, StatusBadge } from "@/components/finance/ui";
+import { Field, StatusBadge } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDate, todayIso } from "@/lib/finance/dates";
 import { proposalStatusLabels } from "@/lib/finance/labels";
@@ -129,24 +130,27 @@ export function ProposalsManager({ proposals, customers, leads, products, people
         initialSort={[{ id: "validUntil", desc: false }]}
         toolbar={
           <>
-            <select className={nativeSelectClass} value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} aria-label="Filtrar status">
-              <option value="open">Em aberto</option>
-              <option value="all">Todas</option>
-              {PROPOSAL_STATUSES.map((status) => (
-                <option key={status} value={status}>{proposalStatusLabels[status]}</option>
-              ))}
-            </select>
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}>
+              <SelectTrigger className="w-full sm:w-44" aria-label="Filtrar status"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="open">Em aberto</SelectItem>
+                <SelectItem value="all">Todas</SelectItem>
+                {PROPOSAL_STATUSES.map((status) => (
+                  <SelectItem key={status} value={status}>{proposalStatusLabels[status]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button className="ml-auto" onClick={() => edit(null)}><Plus /> Nova proposta</Button>
           </>
         }
       />
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[92vh] overflow-y-auto py-8 sm:max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar proposta" : "Nova proposta"}</DialogTitle>
-            <DialogDescription>Itens mensais viram a mensalidade do contrato; avulsos podem ser parcelados.</DialogDescription>
-          </DialogHeader>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent size="panel">
+          <SheetHeader>
+            <SheetTitle>{editing ? "Editar proposta" : "Nova proposta"}</SheetTitle>
+            <SheetDescription>Itens mensais viram a mensalidade do contrato; avulsos podem ser parcelados.</SheetDescription>
+          </SheetHeader>
           <ProposalForm
             key={editing?.id ?? prefillLead?.id ?? "new"}
             proposal={editing}
@@ -163,8 +167,8 @@ export function ProposalsManager({ proposals, customers, leads, products, people
               router.refresh();
             }}
           />
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       <AcceptDialog proposal={accepting} people={people} defaultDueDay={defaultDueDay} onOpenChange={(value) => !value && setAccepting(null)} onAccepted={(contractId) => router.push(`/app/financeiro/contratos/${contractId}`)} />
     </>
@@ -222,34 +226,57 @@ function ProposalForm({ proposal, prefillLead, customers, leads, products, peopl
         <Input {...form.register("title")} autoFocus />
       </Field>
       <Field label="Para" error={errors.customerId?.message}>
-        <select className={nativeSelectClass} value={target} onChange={(event) => chooseTarget(event.target.value)}>
-          <option value="">Escolha cliente ou lead</option>
-          <optgroup label="Clientes">
-            {customers.map((customer) => (
-              <option key={customer.id} value={`c:${customer.id}`}>{customer.name}</option>
-            ))}
-          </optgroup>
-          <optgroup label="Leads">
-            {openLeads.map((lead) => (
-              <option key={lead.id} value={`l:${lead.id}`}>{lead.company ? `${lead.company} (${lead.name})` : lead.name}</option>
-            ))}
-          </optgroup>
-        </select>
+        <Select value={target || "none"} onValueChange={(value) => chooseTarget(value === "none" ? "" : value)}>
+          <SelectTrigger className="w-full"><SelectValue placeholder="Escolha cliente ou lead" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Escolha cliente ou lead</SelectItem>
+            <SelectGroup>
+              <SelectLabel>Clientes</SelectLabel>
+              {customers.map((customer) => (
+                <SelectItem key={customer.id} value={`c:${customer.id}`}>{customer.name}</SelectItem>
+              ))}
+            </SelectGroup>
+            <SelectGroup>
+              <SelectLabel>Leads</SelectLabel>
+              {openLeads.map((lead) => (
+                <SelectItem key={lead.id} value={`l:${lead.id}`}>{lead.company ? `${lead.company} (${lead.name})` : lead.name}</SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </Field>
       <Field label="Responsável" error={errors.ownerId?.message}>
-        <select className={nativeSelectClass} {...form.register("ownerId")}>
-          <option value="">Sem responsável</option>
-          {people.map((person) => (
-            <option key={person.id} value={person.id}>{person.name}</option>
-          ))}
-        </select>
+        <Controller
+          control={form.control}
+          name="ownerId"
+          render={({ field }) => (
+            <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem responsável</SelectItem>
+                {people.map((person) => (
+                  <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </Field>
       <Field label="Status" error={errors.status?.message}>
-        <select className={nativeSelectClass} {...form.register("status")}>
-          {(["draft", "sent", "rejected", "expired"] as const).map((status) => (
-            <option key={status} value={status}>{proposalStatusLabels[status]}</option>
-          ))}
-        </select>
+        <Controller
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {(["draft", "sent", "rejected", "expired"] as const).map((status) => (
+                  <SelectItem key={status} value={status}>{proposalStatusLabels[status]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </Field>
       <Field label="Válida até" error={errors.validUntil?.message}>
         <Input type="date" {...form.register("validUntil")} />
@@ -277,15 +304,15 @@ function ProposalForm({ proposal, prefillLead, customers, leads, products, peopl
 
 function AcceptDialog({ proposal, people, defaultDueDay, onOpenChange, onAccepted }: { proposal: Proposal | null; people: ProfileRef[]; defaultDueDay: number; onOpenChange: (open: boolean) => void; onAccepted: (contractId: string) => void }) {
   return (
-    <Dialog open={Boolean(proposal)} onOpenChange={onOpenChange}>
-      <DialogContent className="py-8 sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Aceitar proposta</DialogTitle>
-          <DialogDescription>Gera o contrato com os itens da proposta{proposal?.customerId ? "" : " e converte o lead em cliente"}.</DialogDescription>
-        </DialogHeader>
+    <Sheet open={Boolean(proposal)} onOpenChange={onOpenChange}>
+      <SheetContent size="panel">
+        <SheetHeader>
+          <SheetTitle>Aceitar proposta</SheetTitle>
+          <SheetDescription>Gera o contrato com os itens da proposta{proposal?.customerId ? "" : " e converte o lead em cliente"}.</SheetDescription>
+        </SheetHeader>
         {proposal ? <AcceptForm key={proposal.id} proposal={proposal} people={people} defaultDueDay={defaultDueDay} onCancel={() => onOpenChange(false)} onAccepted={onAccepted} /> : null}
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -318,12 +345,15 @@ function AcceptForm({ proposal, people, defaultDueDay, onCancel, onAccepted }: {
         <Input type="number" min={1} max={31} value={dueDay} onChange={(event) => setDueDay(Number(event.target.value))} required />
       </Field>
       <Field label="Vendedor (comissão)">
-        <select className={nativeSelectClass} value={sellerId} onChange={(event) => setSellerId(event.target.value)}>
-          <option value="">Sem vendedor</option>
-          {people.map((person) => (
-            <option key={person.id} value={person.id}>{person.name}</option>
-          ))}
-        </select>
+        <Select value={sellerId || "none"} onValueChange={(value) => setSellerId(value === "none" ? "" : value)}>
+          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Sem vendedor</SelectItem>
+            {people.map((person) => (
+              <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </Field>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>

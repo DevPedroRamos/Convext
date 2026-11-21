@@ -6,8 +6,8 @@ import { useState } from "react";
 import { ClientForm } from "@/components/forms/client-form";
 import { type ClientOption, TaskFormDialog } from "@/components/spaces/task-form-dialog";
 import { CircularNavigation, type CircularNavItem } from "@/components/ui/circular-navigation-bar";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PearlButton } from "@/components/ui/pearl-button";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { TeamProfile } from "@/lib/profile";
 import type { QuickAction, Space, SpaceForm } from "@/lib/spaces/types";
 
@@ -51,12 +51,12 @@ export function AppQuickActions({ actions, forms, spaces, clients, team }: Props
 
       <TaskFormDialog form={form} space={form ? spaces.find((space) => space.id === form.spaceId) ?? null : null} clients={clients} onOpenChange={(next) => !next && setForm(null)} />
 
-      <Dialog open={clientOpen} onOpenChange={setClientOpen}>
-        <DialogContent className="py-8 sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Novo cliente</DialogTitle>
-            <DialogDescription>Cadastre o contato comercial sem sair da página.</DialogDescription>
-          </DialogHeader>
+      <Sheet open={clientOpen} onOpenChange={setClientOpen}>
+        <SheetContent size="panel">
+          <SheetHeader>
+            <SheetTitle>Novo cliente</SheetTitle>
+            <SheetDescription>Cadastre o contato comercial sem sair da página.</SheetDescription>
+          </SheetHeader>
           <ClientForm
             team={team}
             onCancel={() => setClientOpen(false)}
@@ -65,8 +65,8 @@ export function AppQuickActions({ actions, forms, spaces, clients, team }: Props
               router.refresh();
             }}
           />
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

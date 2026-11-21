@@ -8,10 +8,11 @@ import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
 import { financeRequest } from "@/components/finance/api";
 import { DataTable, type FinanceColumn } from "@/components/finance/data-table";
-import { Field, nativeSelectClass, StatusBadge } from "@/components/finance/ui";
+import { Field, StatusBadge } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { billingTypeLabels } from "@/lib/finance/labels";
@@ -76,12 +77,12 @@ export function ProductsManager({ products, canDelete }: { products: Product[]; 
         initialSort={[{ id: "name", desc: false }]}
         toolbar={<Button className="ml-auto" onClick={() => edit(null)}><Plus /> Novo produto</Button>}
       />
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="py-8 sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar produto" : "Novo produto"}</DialogTitle>
-            <DialogDescription>Serviços vendidos nas propostas e contratos.</DialogDescription>
-          </DialogHeader>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent size="panel">
+          <SheetHeader>
+            <SheetTitle>{editing ? "Editar produto" : "Novo produto"}</SheetTitle>
+            <SheetDescription>Serviços vendidos nas propostas e contratos.</SheetDescription>
+          </SheetHeader>
           <ProductForm
             key={editing?.id ?? "new"}
             product={editing}
@@ -91,8 +92,8 @@ export function ProductsManager({ products, canDelete }: { products: Product[]; 
               router.refresh();
             }}
           />
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
@@ -124,10 +125,19 @@ function ProductForm({ product, onCancel, onSaved }: { product: Product | null; 
         <Input {...form.register("name")} autoFocus />
       </Field>
       <Field label="Cobrança" error={errors.billingType?.message}>
-        <select className={nativeSelectClass} {...form.register("billingType")}>
-          <option value="recurring">Mensal (recorrente)</option>
-          <option value="one_off">Avulso (pontual)</option>
-        </select>
+        <Controller
+          control={form.control}
+          name="billingType"
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recurring">Mensal (recorrente)</SelectItem>
+                <SelectItem value="one_off">Avulso (pontual)</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
       </Field>
       <Field label="Preço padrão (R$)" error={errors.defaultPrice?.message}>
         <Input type="number" step="0.01" min="0" inputMode="decimal" {...form.register("defaultPrice")} />

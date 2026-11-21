@@ -9,10 +9,11 @@ import { toast } from "sonner";
 import type { z } from "zod";
 import { financeRequest } from "@/components/finance/api";
 import { DataTable, type FinanceColumn } from "@/components/finance/data-table";
-import { Field, nativeSelectClass, StatusBadge } from "@/components/finance/ui";
+import { Field, StatusBadge } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDate, todayIso } from "@/lib/finance/dates";
@@ -121,12 +122,12 @@ export function ExpensesManager({ month, expenses, categories }: { month: string
           </div>
         }
       />
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto py-8 sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar despesa" : "Nova despesa"}</DialogTitle>
-            <DialogDescription>Entra no balanço pela data de pagamento.</DialogDescription>
-          </DialogHeader>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent size="panel">
+          <SheetHeader>
+            <SheetTitle>{editing ? "Editar despesa" : "Nova despesa"}</SheetTitle>
+            <SheetDescription>Entra no balanço pela data de pagamento.</SheetDescription>
+          </SheetHeader>
           <ExpenseForm
             key={editing?.id ?? "new"}
             expense={editing}
@@ -138,8 +139,8 @@ export function ExpensesManager({ month, expenses, categories }: { month: string
               router.refresh();
             }}
           />
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
@@ -168,12 +169,21 @@ function ExpenseForm({ expense, month, categories, onCancel, onSaved }: { expens
         <Input {...form.register("description")} autoFocus />
       </Field>
       <Field label="Categoria" error={errors.categoryId?.message}>
-        <select className={nativeSelectClass} {...form.register("categoryId")}>
-          <option value="">Sem categoria</option>
-          {active.map((category) => (
-            <option key={category.id} value={category.id}>{category.name}</option>
-          ))}
-        </select>
+        <Controller
+          control={form.control}
+          name="categoryId"
+          render={({ field }) => (
+            <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem categoria</SelectItem>
+                {active.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </Field>
       <Field label="Fornecedor" error={errors.supplier?.message}>
         <Input {...form.register("supplier")} />

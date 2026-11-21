@@ -4,10 +4,11 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { spacesRequest } from "@/components/spaces/api";
-import { Field, nativeSelectClass } from "@/components/finance/ui";
+import { Field } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { ownerLabel } from "@/lib/spaces/roles";
 import { firstMissingField, orderedStages, selectOptions } from "@/lib/spaces/rules";
@@ -25,20 +26,20 @@ type Props = {
 
 export function TaskFormDialog({ form, space, clients, onOpenChange, onSent }: Props) {
   return (
-    <Dialog open={Boolean(form)} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto py-8 sm:max-w-lg">
+    <Sheet open={Boolean(form)} onOpenChange={onOpenChange}>
+      <SheetContent size="panel">
         {form && space ? (
           <>
-            <DialogHeader>
+            <SheetHeader>
               <p className="label text-primary">{space.name}</p>
-              <DialogTitle>{form.name}</DialogTitle>
-              {form.description ? <DialogDescription>{form.description}</DialogDescription> : <DialogDescription>Preencha para abrir uma tarefa.</DialogDescription>}
-            </DialogHeader>
+              <SheetTitle>{form.name}</SheetTitle>
+              {form.description ? <SheetDescription>{form.description}</SheetDescription> : <SheetDescription>Preencha para abrir uma tarefa.</SheetDescription>}
+            </SheetHeader>
             <TaskForm key={form.id} form={form} space={space} clients={clients} onCancel={() => onOpenChange(false)} onSent={() => { onOpenChange(false); onSent?.(); }} />
           </>
         ) : null}
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -100,12 +101,15 @@ export function FieldInput({ field, value, clients, onChange, disabled }: { fiel
     const options = field.type === "client" ? clients.map((client) => ({ value: client.id, label: client.name })) : selectOptions(field).map((option) => ({ value: option, label: option }));
     return (
       <Field label={label}>
-        <select className={`${nativeSelectClass} w-full`} value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled}>
-          <option value="">Escolha</option>
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>{option.label}</option>
-          ))}
-        </select>
+        <Select value={value || "none"} onValueChange={(next) => onChange(next === "none" ? "" : next)} disabled={disabled}>
+          <SelectTrigger className="w-full"><SelectValue placeholder="Escolha" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Escolha</SelectItem>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </Field>
     );
   }

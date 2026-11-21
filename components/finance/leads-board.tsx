@@ -8,11 +8,12 @@ import { financeRequest } from "@/components/finance/api";
 import { DataTable, type FinanceColumn } from "@/components/finance/data-table";
 import { ConvertLeadDialog, LeadDialog } from "@/components/finance/lead-dialog";
 import { leadTone } from "@/components/finance/tones";
-import { nativeSelectClass, StatusBadge } from "@/components/finance/ui";
+import { StatusBadge } from "@/components/finance/ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Kanban, KanbanBoard, KanbanColumn, KanbanColumnContent, KanbanItem, KanbanItemHandle, KanbanOverlay } from "@/components/ui/kanban";
 import { formatDate } from "@/lib/finance/dates";
 import { leadSourceLabels, leadStatusLabels } from "@/lib/finance/labels";
@@ -96,11 +97,14 @@ export function LeadsBoard({ leads, people, clients, currentUserId, canDelete }:
     <div className="grid gap-4">
       <div className="flex flex-wrap items-center gap-2">
         <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar lead, empresa ou telefone" className="w-full sm:w-72" aria-label="Buscar leads" />
-        <select className={nativeSelectClass} value={owner} onChange={(event) => setOwner(event.target.value)} aria-label="Responsável">
-          <option value="all">Todos os responsáveis</option>
-          <option value="me">Meus leads</option>
-          <option value="none">Sem responsável</option>
-        </select>
+        <Select value={owner} onValueChange={setOwner}>
+          <SelectTrigger className="w-full sm:w-52" aria-label="Responsável"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os responsáveis</SelectItem>
+            <SelectItem value="me">Meus leads</SelectItem>
+            <SelectItem value="none">Sem responsável</SelectItem>
+          </SelectContent>
+        </Select>
         <Button type="button" variant={showArchived ? "default" : "outline"} onClick={() => setShowArchived((value) => !value)}>
           Arquivados
         </Button>

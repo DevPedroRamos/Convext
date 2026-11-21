@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePresenceSignals } from "@/components/dashboard/presence-runtime";
@@ -44,15 +44,15 @@ function CreateRoomDialog({ onCreated }: { onCreated: () => void }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         <Button size="lg"><Plus /> Criar sala</Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Criar uma sala</DialogTitle>
-          <DialogDescription>Salas privadas restringem o acesso a membros convidados. Isso não é criptografia ponta a ponta.</DialogDescription>
-        </DialogHeader>
+      </SheetTrigger>
+      <SheetContent size="panel">
+        <SheetHeader>
+          <SheetTitle>Criar uma sala</SheetTitle>
+          <SheetDescription>Salas privadas restringem o acesso a membros convidados. Isso não é criptografia ponta a ponta.</SheetDescription>
+        </SheetHeader>
         <div className="grid gap-5 py-2">
           <label className="grid gap-2 text-sm">
             <span className="font-medium">Nome</span>
@@ -70,12 +70,12 @@ function CreateRoomDialog({ onCreated }: { onCreated: () => void }) {
             </div>
           </div>
         </div>
-        <DialogFooter>
+        <SheetFooter className="mt-0 flex-row justify-end p-0">
           <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
           <Button onClick={submit} disabled={pending || name.trim().length < 2}>{pending ? "Criando..." : "Criar"}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
 

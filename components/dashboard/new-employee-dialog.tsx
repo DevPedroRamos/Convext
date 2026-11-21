@@ -13,7 +13,7 @@ import {
   employeeRoleLabel,
 } from "@/components/dashboard/employee-form-fields";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   employeeContractSchema,
   employeePersonalSchema,
@@ -103,12 +103,12 @@ export function NewEmployeeDialog() {
       <Button onClick={() => setOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90">
         <Plus /> Adicionar funcionário
       </Button>
-      <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? setOpen(true) : close())}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Adicionar funcionário</DialogTitle>
-            <DialogDescription>Preencha as etapas e envie o convite de acesso por e-mail.</DialogDescription>
-          </DialogHeader>
+      <Sheet open={open} onOpenChange={(nextOpen) => (nextOpen ? setOpen(true) : close())}>
+        <SheetContent size="panel">
+          <SheetHeader>
+            <SheetTitle>Adicionar funcionário</SheetTitle>
+            <SheetDescription>Preencha as etapas e envie o convite de acesso por e-mail.</SheetDescription>
+          </SheetHeader>
           <ol className="grid grid-cols-3 gap-2" aria-label="Etapas do cadastro">
             {steps.map((label, index) => (
               <li key={label} className="grid gap-1">
@@ -153,8 +153,8 @@ export function NewEmployeeDialog() {
               </Button>
             )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

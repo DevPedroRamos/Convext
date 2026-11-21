@@ -1,10 +1,10 @@
 "use client";
 
 import { Plus, Trash } from "lucide-react";
-import { type Control, type FieldErrors, type UseFormRegister, type UseFormSetValue, useFieldArray, useWatch } from "react-hook-form";
-import { nativeSelectClass } from "@/components/finance/ui";
+import { Controller, type Control, type FieldErrors, type UseFormRegister, type UseFormSetValue, useFieldArray, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { centsToReais, formatCents, reaisToCents } from "@/lib/finance/money";
 import type { BillingType, Product } from "@/lib/finance/types";
 
@@ -83,12 +83,15 @@ export function LineItemsEditor({ control, register, setValue, errors, products,
             <input type="hidden" {...register(`items.${index}.id`)} />
             <label className="grid gap-1 text-xs text-muted-foreground sm:col-span-4">
               Produto
-              <select className={nativeSelectClass} value={item?.productId ?? ""} onChange={(event) => applyProduct(index, event.target.value)}>
-                <option value="">Item livre</option>
-                {active.map((product) => (
-                  <option key={product.id} value={product.id}>{product.name}</option>
-                ))}
-              </select>
+              <Select value={item?.productId || "none"} onValueChange={(value) => applyProduct(index, value === "none" ? "" : value)}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Item livre</SelectItem>
+                  {active.map((product) => (
+                    <SelectItem key={product.id} value={product.id}>{product.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </label>
             <label className="grid gap-1 text-xs text-muted-foreground sm:col-span-5">
               Descrição
@@ -96,10 +99,19 @@ export function LineItemsEditor({ control, register, setValue, errors, products,
             </label>
             <label className="grid gap-1 text-xs text-muted-foreground sm:col-span-3">
               Cobrança
-              <select className={nativeSelectClass} {...register(`items.${index}.billingType`)}>
-                <option value="recurring">Mensal</option>
-                <option value="one_off">Avulso</option>
-              </select>
+              <Controller
+                control={control}
+                name={`items.${index}.billingType`}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recurring">Mensal</SelectItem>
+                      <SelectItem value="one_off">Avulso</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </label>
             <label className="grid gap-1 text-xs text-muted-foreground sm:col-span-2">
               Qtd.

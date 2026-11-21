@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ClientForm } from "@/components/forms/client-form";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { TeamProfile } from "@/lib/profile";
 
 export function NewClientDialog({ team }: { team: TeamProfile[] }) {
@@ -17,12 +17,12 @@ export function NewClientDialog({ team }: { team: TeamProfile[] }) {
       <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setOpen(true)}>
         <Plus /> Novo cliente
       </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-lg py-8">
-          <DialogHeader>
-            <DialogTitle>Novo cliente</DialogTitle>
-            <DialogDescription>Cadastre o contato comercial sem sair da lista.</DialogDescription>
-          </DialogHeader>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent size="panel">
+          <SheetHeader>
+            <SheetTitle>Novo cliente</SheetTitle>
+            <SheetDescription>Cadastre o contato comercial sem sair da lista.</SheetDescription>
+          </SheetHeader>
           <ClientForm
             team={team}
             onCancel={() => setOpen(false)}
@@ -31,8 +31,8 @@ export function NewClientDialog({ team }: { team: TeamProfile[] }) {
               router.refresh();
             }}
           />
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

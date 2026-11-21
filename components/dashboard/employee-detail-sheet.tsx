@@ -23,11 +23,7 @@ export function EmployeeDetailSheet({
 }) {
   return (
     <Sheet open={Boolean(employee)} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent
-        side="right"
-        overlayClassName="bg-black/40"
-        className="w-full overflow-y-auto sm:max-w-[50vw] data-[side=right]:sm:max-w-[50vw]"
-      >
+      <SheetContent side="right" size="panel">
         {employee ? <EmployeeEditForm key={employee.id} employee={employee} onClose={onClose} /> : null}
       </SheetContent>
     </Sheet>
@@ -70,7 +66,7 @@ function EmployeeEditForm({ employee, onClose }: { employee: ManagedEmployee; on
   }
 
   return (
-    <div className="grid gap-7 py-6">
+    <div className="grid gap-7">
       <SheetHeader>
         <SheetTitle>{[employee.firstName, employee.lastName].filter(Boolean).join(" ") || employee.email}</SheetTitle>
         <SheetDescription>Edite os dados pessoais, contratuais e financeiros do funcionário.</SheetDescription>

@@ -9,7 +9,7 @@ import { financeRequest } from "@/components/finance/api";
 import { DataTable, type FinanceColumn } from "@/components/finance/data-table";
 import { Field, StatusBadge, type Tone } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { formatDate, formatMonthShort, todayIso } from "@/lib/finance/dates";
@@ -131,12 +131,12 @@ export function ReceivablesTable({ receivables, showContract = true, empty = "Ne
         searchPlaceholder="Buscar cliente"
         rowClassName={(receivable) => (receivableDisplayStatus(receivable, today) === "overdue" ? "bg-destructive/5" : undefined)}
       />
-      <Dialog open={Boolean(paying)} onOpenChange={(open) => !open && setPaying(null)}>
-        <DialogContent className="py-8 sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Dar baixa</DialogTitle>
-            <DialogDescription>{paying ? `${paying.customerName ?? paying.contractTitle ?? ""} · vence ${formatDate(paying.dueDate)}` : ""}</DialogDescription>
-          </DialogHeader>
+      <Sheet open={Boolean(paying)} onOpenChange={(open) => !open && setPaying(null)}>
+        <SheetContent size="panel">
+          <SheetHeader>
+            <SheetTitle>Dar baixa</SheetTitle>
+            <SheetDescription>{paying ? `${paying.customerName ?? paying.contractTitle ?? ""} · vence ${formatDate(paying.dueDate)}` : ""}</SheetDescription>
+          </SheetHeader>
           {paying ? (
             <PayForm
               key={paying.id}
@@ -147,8 +147,8 @@ export function ReceivablesTable({ receivables, showContract = true, empty = "Ne
               }}
             />
           ) : null}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

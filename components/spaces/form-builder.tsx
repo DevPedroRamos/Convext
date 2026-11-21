@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { spacesRequest } from "@/components/spaces/api";
 import { FieldInput } from "@/components/spaces/task-form-dialog";
-import { Field, nativeSelectClass } from "@/components/finance/ui";
+import { Field } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import type { AppRole } from "@/lib/access";
 import { roleLabels, SPACE_ROLES } from "@/lib/spaces/roles";
@@ -85,9 +86,12 @@ export function FormBuilder({ forms, spaces, quickActions }: { forms: SpaceForm[
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Nome"><Input value={draft.name} onChange={(event) => patch({ name: event.target.value })} /></Field>
             <Field label="Cai no espaço">
-              <select className={`${nativeSelectClass} w-full`} value={draft.spaceId} onChange={(event) => patch({ spaceId: event.target.value })}>
-                {spaces.map((space) => <option key={space.id} value={space.id}>{space.name}</option>)}
-              </select>
+              <Select value={draft.spaceId} onValueChange={(spaceId) => patch({ spaceId })}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {spaces.map((space) => <SelectItem key={space.id} value={space.id}>{space.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </Field>
           </div>
           <Field label="Descrição"><Input value={draft.description} onChange={(event) => patch({ description: event.target.value })} placeholder="Aparece no topo do formulário" /></Field>
@@ -114,9 +118,12 @@ export function FormBuilder({ forms, spaces, quickActions }: { forms: SpaceForm[
                 <div key={field.key} className="grid gap-2 rounded-lg border border-border bg-background/40 p-3">
                   <div className="grid gap-2 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_auto_auto] sm:items-center">
                     <Input value={field.label} onChange={(event) => patchField(index, { label: event.target.value })} aria-label="Rótulo do campo" />
-                    <select className={`${nativeSelectClass} w-full`} value={field.type} disabled={fixed} onChange={(event) => patchField(index, { type: event.target.value as FieldType })} aria-label="Tipo do campo">
-                      {(Object.keys(FIELD_LABELS) as FieldType[]).map((type) => <option key={type} value={type}>{FIELD_LABELS[type]}</option>)}
-                    </select>
+                    <Select value={field.type} disabled={fixed} onValueChange={(value) => patchField(index, { type: value as FieldType })}>
+                      <SelectTrigger className="w-full" aria-label="Tipo do campo"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(FIELD_LABELS) as FieldType[]).map((type) => <SelectItem key={type} value={type}>{FIELD_LABELS[type]}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                     <label className="flex items-center gap-2 text-sm text-muted-foreground"><input type="checkbox" checked={field.required} disabled={fixed} onChange={(event) => patchField(index, { required: event.target.checked })} /> Obrigatório</label>
                     <div className="flex gap-1">
                       <Button size="icon" variant="ghost" aria-label="Subir campo" disabled={index < 2} onClick={() => patch({ fields: draft.fields.map((item, i, all) => (i === index - 1 ? all[index] : i === index ? all[index - 1] : item)) })}><ArrowUp /></Button>

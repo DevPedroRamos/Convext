@@ -4,8 +4,8 @@ import { ArrowUp, Loader2, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { spacesRequest } from "@/components/spaces/api";
-import { nativeSelectClass } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { AppRole } from "@/lib/access";
 import { roleLabels, SPACE_ROLES } from "@/lib/spaces/roles";
 import { type QuickAction, type Space, type SpaceForm, systemActionLabels } from "@/lib/spaces/types";
@@ -82,10 +82,13 @@ export function QuickActionsEditor({ actions, forms, spaces }: { actions: QuickA
         </table>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <select className={nativeSelectClass} value={adding} onChange={(event) => setAdding(event.target.value)} aria-label="Adicionar atalho">
-          <option value="">Adicionar formulário ou ação…</option>
-          {addable.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-        </select>
+        <Select value={adding || "none"} onValueChange={(value) => setAdding(value === "none" ? "" : value)}>
+          <SelectTrigger className="w-full sm:w-80" aria-label="Adicionar atalho"><SelectValue placeholder="Adicionar formulário ou ação…" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Adicionar formulário ou ação…</SelectItem>
+            {addable.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
         <Button variant="outline" onClick={add} disabled={!adding}><Plus /> Adicionar</Button>
         <Button className="ml-auto" onClick={save} disabled={saving}>{saving ? <Loader2 className="animate-spin" /> : null}Salvar atalhos</Button>
       </div>

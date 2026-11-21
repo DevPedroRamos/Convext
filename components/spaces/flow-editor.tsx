@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { spacesRequest } from "@/components/spaces/api";
-import { Field, nativeSelectClass } from "@/components/finance/ui";
+import { Field } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import type { AppRole } from "@/lib/access";
 import { ownerLabel, roleLabels, SPACE_ROLES, type StageOwner } from "@/lib/spaces/roles";
@@ -189,16 +190,22 @@ export function FlowEditor({ spaces, initialId }: { spaces: Space[]; initialId?:
               <div className="grid gap-2 sm:grid-cols-[24px_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center">
                 <span className="hidden text-center font-mono text-xs text-muted-foreground sm:block">{index + 1}</span>
                 <Input value={stage.name} onChange={(event) => patchStage(index, { name: event.target.value })} aria-label="Nome da etapa" />
-                <select className={`${nativeSelectClass} w-full`} value={stage.type} onChange={(event) => patchStage(index, { type: event.target.value as StageType })} aria-label="Tipo da etapa">
-                  <option value="normal">Etapa</option>
-                  <option value="approval">Aprovação</option>
-                  <option value="done">Concluída</option>
-                </select>
-                <select className={`${nativeSelectClass} w-full`} value={stage.ownerRole ?? ""} disabled={stage.type === "done"} onChange={(event) => patchStage(index, { ownerRole: (event.target.value || null) as StageOwner | null })} aria-label="Dono da etapa">
-                  <option value="">—</option>
-                  {SPACE_ROLES.map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}
-                  <option value="requester">Quem solicitou</option>
-                </select>
+                <Select value={stage.type} onValueChange={(value) => patchStage(index, { type: value as StageType })}>
+                  <SelectTrigger className="w-full" aria-label="Tipo da etapa"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">Etapa</SelectItem>
+                    <SelectItem value="approval">Aprovação</SelectItem>
+                    <SelectItem value="done">Concluída</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={stage.ownerRole ?? "none"} disabled={stage.type === "done"} onValueChange={(value) => patchStage(index, { ownerRole: value === "none" ? null : value as StageOwner })}>
+                  <SelectTrigger className="w-full" aria-label="Dono da etapa"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">—</SelectItem>
+                    {SPACE_ROLES.map((role) => <SelectItem key={role} value={role}>{roleLabels[role]}</SelectItem>)}
+                    <SelectItem value="requester">Quem solicitou</SelectItem>
+                  </SelectContent>
+                </Select>
                 <div className="flex gap-1">
                   <Button size="icon" variant="ghost" aria-label="Subir" disabled={index === 0} onClick={() => moveStage(index, -1)}><ArrowUp /></Button>
                   <Button size="icon" variant="ghost" aria-label="Descer" disabled={index === draft.stages.length - 1} onClick={() => moveStage(index, 1)}><ArrowDown /></Button>
@@ -214,10 +221,13 @@ export function FlowEditor({ spaces, initialId }: { spaces: Space[]; initialId?:
                 <label className="flex items-center gap-2"><Switch checked={stage.notify} onCheckedChange={(notify) => patchStage(index, { notify })} /> Avisar ao entrar</label>
                 {stage.type === "approval" ? (
                   <label className="flex items-center gap-2">Se recusar, volta para
-                    <select className={nativeSelectClass} value={stage.rejectTo ?? ""} onChange={(event) => patchStage(index, { rejectTo: event.target.value || null })}>
-                      <option value="">Etapa anterior</option>
-                      {draft.stages.slice(0, index).map((item) => <option key={item.key} value={item.key}>{item.name}</option>)}
-                    </select>
+                    <Select value={stage.rejectTo ?? "none"} onValueChange={(value) => patchStage(index, { rejectTo: value === "none" ? null : value })}>
+                      <SelectTrigger className="w-full min-w-40"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Etapa anterior</SelectItem>
+                        {draft.stages.slice(0, index).map((item) => <SelectItem key={item.key} value={item.key}>{item.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </label>
                 ) : null}
               </div>

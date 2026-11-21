@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { teamStatusIcon, teamStatusIconNames, type TeamStatus } from "@/lib/team-status-icons";
@@ -83,12 +83,12 @@ export function TeamStatusManager({ statuses }: { statuses: TeamStatus[] }) {
           );
         })}
       </div>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md py-8">
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar status" : "Novo status"}</DialogTitle>
-            <DialogDescription>Nome e ícone visíveis no perfil e na equipe.</DialogDescription>
-          </DialogHeader>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent size="panel">
+          <SheetHeader>
+            <SheetTitle>{editing ? "Editar status" : "Novo status"}</SheetTitle>
+            <SheetDescription>Nome e ícone visíveis no perfil e na equipe.</SheetDescription>
+          </SheetHeader>
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="status-name">Nome</Label>
@@ -123,8 +123,8 @@ export function TeamStatusManager({ statuses }: { statuses: TeamStatus[] }) {
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

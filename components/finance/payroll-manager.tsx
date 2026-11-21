@@ -8,7 +8,7 @@ import { DataTable, type FinanceColumn } from "@/components/finance/data-table";
 import { payrollTone } from "@/components/finance/tones";
 import { Field, StatusBadge } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDate, todayIso } from "@/lib/finance/dates";
@@ -117,12 +117,12 @@ export function PayrollManager({ month, run, items }: { month: string; run: Payr
         Bônus e descontos ajustados à mão são mantidos ao recalcular.
       </p>
       <DataTable data={items} columns={columns} empty="Folha ainda não gerada para este mês." initialSort={[{ id: "employeeName", desc: false }]} pageSize={50} />
-      <Dialog open={Boolean(editing)} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent className="py-8 sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Ajustar lançamento</DialogTitle>
-            <DialogDescription>{editing?.employeeName}</DialogDescription>
-          </DialogHeader>
+      <Sheet open={Boolean(editing)} onOpenChange={(open) => !open && setEditing(null)}>
+        <SheetContent size="panel">
+          <SheetHeader>
+            <SheetTitle>Ajustar lançamento</SheetTitle>
+            <SheetDescription>{editing?.employeeName}</SheetDescription>
+          </SheetHeader>
           {editing ? (
             <AdjustForm
               key={editing.id}
@@ -133,8 +133,8 @@ export function PayrollManager({ month, run, items }: { month: string; run: Payr
               }}
             />
           ) : null}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

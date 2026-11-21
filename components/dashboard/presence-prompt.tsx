@@ -5,7 +5,7 @@ import { CircleOff, Radio } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { clearPresencePrompt, shouldPromptPresence } from "@/lib/presence-session";
 import { cn } from "@/lib/utils";
 
@@ -37,17 +37,17 @@ export function PresencePrompt() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent
+    <Sheet open={open} onOpenChange={() => {}}>
+      <SheetContent
+        size="panel"
         showCloseButton={false}
         onPointerDownOutside={(event) => event.preventDefault()}
         onEscapeKeyDown={(event) => event.preventDefault()}
-        className="sm:max-w-md py-8"
       >
-        <DialogHeader>
-          <DialogTitle>Ficar online?</DialogTitle>
-          <DialogDescription>O time te vê como ausente até você confirmar.</DialogDescription>
-        </DialogHeader>
+        <SheetHeader>
+          <SheetTitle>Ficar online?</SheetTitle>
+          <SheetDescription>O time te vê como ausente até você confirmar.</SheetDescription>
+        </SheetHeader>
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
@@ -75,7 +75,7 @@ export function PresencePrompt() {
         <Button type="button" disabled={loading} onClick={confirm} className="w-full">
           Confirmar
         </Button>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

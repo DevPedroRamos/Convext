@@ -29,22 +29,15 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarGroup } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
+  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -126,15 +119,15 @@ function CreateRoomDialog() {
   const [privateRoom, setPrivateRoom] = useState(false);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         <Button size="lg"><Plus /> Criar sala</Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Criar uma sala</DialogTitle>
-          <DialogDescription>O protótipo demonstra o fluxo; nenhuma sala será salva.</DialogDescription>
-        </DialogHeader>
+      </SheetTrigger>
+      <SheetContent size="panel">
+        <SheetHeader>
+          <SheetTitle>Criar uma sala</SheetTitle>
+          <SheetDescription>O protótipo demonstra o fluxo; nenhuma sala será salva.</SheetDescription>
+        </SheetHeader>
         <div className="grid gap-5 py-2">
           <label className="grid gap-2 text-sm">
             <span className="font-medium">Nome</span>
@@ -170,12 +163,12 @@ function CreateRoomDialog() {
             </div>
           </div>
         </div>
-        <DialogFooter>
+        <SheetFooter className="mt-0 flex-row justify-end p-0">
           <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
           <Button onClick={() => { setOpen(false); toast.success("Sala simulada criada", { description: "Nenhum dado foi persistido neste protótipo." }); }}>Criar sala</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
 

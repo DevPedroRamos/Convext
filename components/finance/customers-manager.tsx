@@ -4,14 +4,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Pencil, Plus, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
 import { financeRequest } from "@/components/finance/api";
 import { DataTable, type FinanceColumn } from "@/components/finance/data-table";
-import { Field, nativeSelectClass } from "@/components/finance/ui";
+import { Field } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCents } from "@/lib/finance/money";
 import type { Customer, ProfileRef } from "@/lib/finance/types";
@@ -81,12 +82,12 @@ export function CustomersManager({ customers, people, clients, canDelete }: Prop
         initialSort={[{ id: "name", desc: false }]}
         toolbar={<Button className="ml-auto" onClick={() => edit(null)}><Plus /> Novo cliente</Button>}
       />
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto py-8 sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar cliente" : "Novo cliente financeiro"}</DialogTitle>
-            <DialogDescription>Dados de cobrança usados em contratos e parcelas.</DialogDescription>
-          </DialogHeader>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent size="panel">
+          <SheetHeader>
+            <SheetTitle>{editing ? "Editar cliente" : "Novo cliente financeiro"}</SheetTitle>
+            <SheetDescription>Dados de cobrança usados em contratos e parcelas.</SheetDescription>
+          </SheetHeader>
           <CustomerForm
             key={editing?.id ?? "new"}
             customer={editing}
@@ -98,8 +99,8 @@ export function CustomersManager({ customers, people, clients, canDelete }: Prop
               router.refresh();
             }}
           />
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
@@ -150,20 +151,38 @@ function CustomerForm({ customer, people, clients, onCancel, onSaved }: { custom
         <Input {...form.register("address")} />
       </Field>
       <Field label="Conta operacional" hint="Cliente atendido em Demandas." error={errors.clientId?.message}>
-        <select className={nativeSelectClass} {...form.register("clientId")}>
-          <option value="">Sem vínculo</option>
-          {clients.map((client) => (
-            <option key={client.id} value={client.id}>{client.name}</option>
-          ))}
-        </select>
+        <Controller
+          control={form.control}
+          name="clientId"
+          render={({ field }) => (
+            <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem vínculo</SelectItem>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </Field>
       <Field label="Responsável" error={errors.ownerId?.message}>
-        <select className={nativeSelectClass} {...form.register("ownerId")}>
-          <option value="">Sem responsável</option>
-          {people.map((person) => (
-            <option key={person.id} value={person.id}>{person.name}</option>
-          ))}
-        </select>
+        <Controller
+          control={form.control}
+          name="ownerId"
+          render={({ field }) => (
+            <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem responsável</SelectItem>
+                {people.map((person) => (
+                  <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </Field>
       <Field label="Observações" error={errors.notes?.message} className="sm:col-span-2">
         <Textarea rows={3} {...form.register("notes")} />

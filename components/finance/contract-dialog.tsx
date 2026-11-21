@@ -4,14 +4,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Pencil, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { type Control, type UseFormRegister, type UseFormSetValue, useForm } from "react-hook-form";
+import { Controller, type Control, type UseFormRegister, type UseFormSetValue, useForm } from "react-hook-form";
 import type { z } from "zod";
 import { financeRequest } from "@/components/finance/api";
 import { emptyItem, type LineItemInput, LineItemsEditor } from "@/components/finance/line-items-editor";
-import { Field, nativeSelectClass } from "@/components/finance/ui";
+import { Field } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { todayIso } from "@/lib/finance/dates";
 import { contractStatusLabels } from "@/lib/finance/labels";
@@ -37,12 +38,12 @@ export function ContractDialog({ contract, customers, products, people, defaultD
       ) : (
         <Button onClick={() => setOpen(true)}><Plus /> Novo contrato</Button>
       )}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[92vh] overflow-y-auto py-8 sm:max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>{contract ? "Editar contrato" : "Novo contrato"}</DialogTitle>
-            <DialogDescription>Alterações valem para as próximas parcelas; as já geradas não mudam.</DialogDescription>
-          </DialogHeader>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent size="panel">
+          <SheetHeader>
+            <SheetTitle>{contract ? "Editar contrato" : "Novo contrato"}</SheetTitle>
+            <SheetDescription>Alterações valem para as próximas parcelas; as já geradas não mudam.</SheetDescription>
+          </SheetHeader>
           <ContractForm
             key={contract?.id ?? "new"}
             contract={contract ?? null}
@@ -57,8 +58,8 @@ export function ContractDialog({ contract, customers, products, people, defaultD
               else router.push(`/app/financeiro/contratos/${id}`);
             }}
           />
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
@@ -105,20 +106,38 @@ function ContractForm({ contract, customers, products, people, defaultDueDay, on
         <Input {...form.register("title")} autoFocus />
       </Field>
       <Field label="Cliente" error={errors.customerId?.message}>
-        <select className={nativeSelectClass} {...form.register("customerId")}>
-          <option value="">Escolha o cliente</option>
-          {customers.map((customer) => (
-            <option key={customer.id} value={customer.id}>{customer.name}</option>
-          ))}
-        </select>
+        <Controller
+          control={form.control}
+          name="customerId"
+          render={({ field }) => (
+            <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Escolha o cliente" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Escolha o cliente</SelectItem>
+                {customers.map((customer) => (
+                  <SelectItem key={customer.id} value={customer.id}>{customer.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </Field>
       <Field label="Vendedor (comissão)" error={errors.sellerId?.message}>
-        <select className={nativeSelectClass} {...form.register("sellerId")}>
-          <option value="">Sem vendedor</option>
-          {people.map((person) => (
-            <option key={person.id} value={person.id}>{person.name}</option>
-          ))}
-        </select>
+        <Controller
+          control={form.control}
+          name="sellerId"
+          render={({ field }) => (
+            <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem vendedor</SelectItem>
+                {people.map((person) => (
+                  <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </Field>
       <Field label="Início" error={errors.startDate?.message}>
         <Input type="date" {...form.register("startDate")} />
@@ -130,11 +149,20 @@ function ContractForm({ contract, customers, products, people, defaultDueDay, on
         <Input type="number" min={1} max={31} {...form.register("dueDay")} />
       </Field>
       <Field label="Status" error={errors.status?.message}>
-        <select className={nativeSelectClass} {...form.register("status")}>
-          {CONTRACT_STATUSES.map((status) => (
-            <option key={status} value={status}>{contractStatusLabels[status]}</option>
-          ))}
-        </select>
+        <Controller
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {CONTRACT_STATUSES.map((status) => (
+                  <SelectItem key={status} value={status}>{contractStatusLabels[status]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </Field>
       <div className="grid gap-2 sm:col-span-2">
         <p className="text-sm font-medium">Itens</p>
