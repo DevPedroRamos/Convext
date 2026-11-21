@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { UserMenu } from "@/components/dashboard/user-menu";
-import { SidebarNav } from "@/components/dashboard/sidebar-nav";
+import { SidebarNav, type SidebarSpace } from "@/components/dashboard/sidebar-nav";
 import type { TeamStatus } from "@/lib/team-status-icons";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,7 @@ export type SidebarProps = {
   lastSeenAt?: string | null;
   statusId?: string | null;
   statuses?: TeamStatus[];
+  spaces?: SidebarSpace[];
   className?: string;
 };
 
@@ -26,6 +27,7 @@ export function AppSidebar({
   lastSeenAt,
   statusId,
   statuses,
+  spaces,
   className,
 }: SidebarProps) {
   return (
@@ -34,7 +36,7 @@ export function AppSidebar({
         <Image src="/brand/logo-lockup.png" alt="Convext" width={778} height={210} className="h-10 w-auto object-contain" />
       </Link>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <SidebarNav role={role} />
+        <SidebarNav role={role} spaces={spaces} />
       </div>
       <div className="mt-4 min-w-0 shrink-0 overflow-hidden">
         <UserMenu name={name} email={email} avatarUrl={avatarUrl} available={available} lastSeenAt={lastSeenAt} statusId={statusId} statuses={statuses} />

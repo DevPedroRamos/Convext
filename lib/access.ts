@@ -1,14 +1,14 @@
 export type AppRole = "admin" | "coordinator" | "traffic" | "creator" | "commercial";
-export type AppArea = "dashboard" | "demandas" | "clientes" | "feedback" | "cases" | "salas" | "perfil" | "equipe" | "gestao" | "financeiro_comercial" | "financeiro_admin";
+export type AppArea = "dashboard" | "espacos" | "clientes" | "cases" | "salas" | "perfil" | "equipe" | "gestao" | "financeiro_comercial" | "financeiro_admin";
 
 const operations: AppRole[] = ["admin", "coordinator"];
 
 const areasByRole: Record<AppRole, readonly AppArea[]> = {
-  admin: ["dashboard", "demandas", "clientes", "feedback", "cases", "salas", "perfil", "equipe", "gestao", "financeiro_comercial", "financeiro_admin"],
-  coordinator: ["dashboard", "demandas", "clientes", "feedback", "cases", "salas", "perfil"],
-  traffic: ["dashboard", "demandas", "salas", "perfil"],
-  creator: ["dashboard", "demandas", "salas", "perfil"],
-  commercial: ["dashboard", "salas", "perfil", "financeiro_comercial"],
+  admin: ["dashboard", "espacos", "clientes", "cases", "salas", "perfil", "equipe", "gestao", "financeiro_comercial", "financeiro_admin"],
+  coordinator: ["dashboard", "espacos", "clientes", "cases", "salas", "perfil"],
+  traffic: ["dashboard", "espacos", "salas", "perfil"],
+  creator: ["dashboard", "espacos", "salas", "perfil"],
+  commercial: ["dashboard", "espacos", "salas", "perfil", "financeiro_comercial"],
 };
 
 export function resolveAppRole(role?: string | null): AppRole {
@@ -22,9 +22,8 @@ export function canAccessArea(role: string | null | undefined, area: AppArea) {
 
 export function areaFromPath(pathname: string): AppArea | null {
   if (pathname === "/app" || pathname === "/app/") return "dashboard";
-  if (pathname.startsWith("/app/demandas")) return "demandas";
+  if (pathname.startsWith("/app/espacos") || pathname.startsWith("/app/tarefas")) return "espacos";
   if (pathname.startsWith("/app/clientes")) return "clientes";
-  if (pathname.startsWith("/app/feedback")) return "feedback";
   if (pathname.startsWith("/app/cases")) return "cases";
   if (pathname.startsWith("/app/salas") || pathname.startsWith("/app/chamadas")) return "salas";
   if (pathname.startsWith("/app/equipe")) return "equipe";

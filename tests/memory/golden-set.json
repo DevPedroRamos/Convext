@@ -1,16 +1,16 @@
 [
   {
-    "id": "visibilidade-demandas",
-    "query": "Quem pode ver e atualizar demandas? Traffic e creator enxergam todas?",
+    "id": "visibilidade-espacos",
+    "query": "Quem pode ver as tarefas de um espaço? Quem não é membro enxerga o quê?",
     "agent": "review",
-    "relevant": ["docs/adr/0002-visibilidade-demandas.md", "docs/specs/demandas.md"],
-    "mustInclude": ["responsible_id", "coordinator"]
+    "relevant": ["docs/specs/espacos.md"],
+    "mustInclude": ["membros"]
   },
   {
-    "id": "tabela-unica-demandas",
-    "query": "Por que as demandas usam uma tabela única com kind em vez de uma tabela feedbacks?",
+    "id": "espacos-substituem-demandas",
+    "query": "Por que Demandas e Feedback foram trocados por espaços configuráveis?",
     "agent": "spec",
-    "relevant": ["docs/adr/0001-demandas-por-tipo.md"],
+    "relevant": ["docs/adr/0004-espacos-configuraveis.md"],
     "mustInclude": ["kind"]
   },
   {
@@ -56,11 +56,11 @@
     "mustInclude": ["slug", "logo"]
   },
   {
-    "id": "tipos-feedback-criativo",
-    "query": "Quais tipos de feedback geram demanda de criativo para o designer?",
+    "id": "fluxo-campanha-nova",
+    "query": "Como funciona o fluxo de campanha nova entre creator, tráfego e aprovação do admin?",
     "agent": "spec",
-    "relevant": ["docs/specs/criativos.md"],
-    "mustInclude": ["spawns_creator"]
+    "relevant": ["docs/specs/espacos.md"],
+    "mustInclude": ["Aguardando aprovação"]
   },
   {
     "id": "cliente-whatsapp",
@@ -84,11 +84,11 @@
     "mustInclude": ["#F35703"]
   },
   {
-    "id": "prazo-prioridade",
-    "query": "Onde ficam prazo e prioridade das demandas e quais valores de prioridade existem?",
+    "id": "aprovacao-recusa",
+    "query": "O que acontece quando o admin recusa uma tarefa numa etapa de aprovação?",
     "agent": "code",
-    "relevant": ["docs/specs/demandas.md", "docs/specs/feedback.md"],
-    "mustInclude": ["due_on"]
+    "relevant": ["docs/specs/espacos.md"],
+    "mustInclude": ["motivo"]
   },
   {
     "id": "onboarding-papeis",

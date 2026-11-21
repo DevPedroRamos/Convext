@@ -3,7 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { listAllCases } from "@/lib/cases";
 import { listClients } from "@/lib/clients";
-import { listDemands } from "@/lib/demands";
+import { resolveAppRole } from "@/lib/access";
+import { countMyTurn, listSpaces } from "@/lib/spaces/data";
 import { getCurrentUserProfile, isAdmin, listTeamProfiles, profileName } from "@/lib/profile";
 
 function StatCard({
@@ -38,16 +39,12 @@ function StatCard({
 }
 
 export default async function AppHomePage() {
-  const [{ user, profile }, demands] = await Promise.all([
-    getCurrentUserProfile(),
-    listDemands(),
-  ]);
+  const [{ user, profile }, spaces] = await Promise.all([getCurrentUserProfile(), listSpaces()]);
+  const turn = user ? await countMyTurn({ id: user.id, role: resolveAppRole(profile?.role) }, spaces) : {};
+  const myTurn = Object.values(turn).reduce((sum, count) => sum + count, 0);
   const firstName = profile?.first_name || profileName(profile, user?.email).split(" ")[0];
   const cargo = profile?.cargo?.trim() || "Cargo não informado";
   const email = user?.email || "";
-  const openDemands = demands.filter(
-    (demand) => demand.responsibleId === user?.id && demand.status !== "completed"
-  ).length;
   const admin = isAdmin(profile);
   const [clients, cases, team] = admin
     ? await Promise.all([listClients(), listAllCases(), listTeamProfiles()])
@@ -64,12 +61,7 @@ export default async function AppHomePage() {
         </div>
       </section>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Demandas"
-          value={admin ? demands.length : openDemands}
-          hint={admin ? "total" : "em aberto"}
-          href="/app/demandas"
-        />
+        <StatCard title="Sua vez" value={myTurn} hint="tarefas esperando por você" href="/app/tarefas" />
         {admin ? (
           <>
             <StatCard title="Clientes" value={clients.length} hint="total" href="/app/clientes" />

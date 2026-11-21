@@ -21,11 +21,11 @@ const validEmployee = {
 };
 
 describe("gestão de funcionários", () => {
-  it("limita Comercial a Dashboard, Salas, Perfil e Financeiro comercial", () => {
+  it("limita Comercial a Dashboard, Espaços, Salas, Perfil e Financeiro comercial", () => {
     expect(canAccessArea("commercial", "dashboard")).toBe(true);
     expect(canAccessArea("commercial", "salas")).toBe(true);
     expect(canAccessArea("commercial", "perfil")).toBe(true);
-    expect(canAccessArea("commercial", "demandas")).toBe(false);
+    expect(canAccessArea("commercial", "espacos")).toBe(true);
     expect(canAccessArea("commercial", "clientes")).toBe(false);
     expect(canAccessArea("commercial", "equipe")).toBe(false);
     expect(canAccessArea("commercial", "gestao")).toBe(false);

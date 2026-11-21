@@ -1,121 +1,67 @@
 "use client";
 
-import { Briefcase, MessageSquare, Palette, UserPlus } from "lucide-react";
+import { Briefcase, FileText, Target, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { CreatorDemandForm } from "@/components/forms/creator-demand-form";
-import { FeedbackForm } from "@/components/forms/feedback-form";
 import { ClientForm } from "@/components/forms/client-form";
+import { type ClientOption, TaskFormDialog } from "@/components/spaces/task-form-dialog";
 import { CircularNavigation, type CircularNavItem } from "@/components/ui/circular-navigation-bar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PearlButton } from "@/components/ui/pearl-button";
-import type { ClientRecord } from "@/lib/clients";
-import type { FeedbackType } from "@/lib/feedback-types";
-import type { CreatorOption, TeamProfile } from "@/lib/profile";
+import type { TeamProfile } from "@/lib/profile";
+import type { QuickAction, Space, SpaceForm } from "@/lib/spaces/types";
 
-export function AppQuickActions({
-  clients,
-  team,
-  types,
-  creators,
-}: {
-  clients: ClientRecord[];
+type Props = {
+  /** Atalhos já filtrados para a role de quem está vendo. */
+  actions: QuickAction[];
+  forms: SpaceForm[];
+  spaces: Space[];
+  clients: ClientOption[];
   team: TeamProfile[];
-  types: FeedbackType[];
-  creators: CreatorOption[];
-}) {
+};
+
+const systemIcons = { case: Briefcase, client: UserPlus, lead: Target } as const;
+
+export function AppQuickActions({ actions, forms, spaces, clients, team }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [dialog, setDialog] = useState<"feedback" | "client" | "demand" | null>(null);
+  const [clientOpen, setClientOpen] = useState(false);
+  const [form, setForm] = useState<SpaceForm | null>(null);
 
-  const items: CircularNavItem[] = [
-    {
-      id: "feedback",
-      label: "Cadastrar Feedback",
-      icon: MessageSquare,
-      onSelect: () => setDialog("feedback"),
-    },
-    {
-      id: "demand",
-      label: "Cadastrar demanda",
-      icon: Palette,
-      onSelect: () => setDialog("demand"),
-    },
-    {
-      id: "client",
-      label: "Novo Cliente",
-      icon: UserPlus,
-      onSelect: () => setDialog("client"),
-    },
-    {
-      id: "case",
-      label: "Novo Case",
-      icon: Briefcase,
-      onSelect: () => router.push("/app/cases/novo"),
-    },
-    { id: "soon-a", label: "Mais funções em breve...", icon: Briefcase, locked: true },
-  ];
+  const items: CircularNavItem[] = actions.flatMap((action): CircularNavItem[] => {
+    if (action.kind === "form") {
+      const target = forms.find((item) => item.id === action.formId);
+      if (!target) return [];
+      return [{ id: action.id, label: action.label, icon: FileText, onSelect: () => setForm(target) }];
+    }
+    const icon = systemIcons[action.systemAction ?? "case"];
+    if (action.systemAction === "client") return [{ id: action.id, label: action.label, icon, onSelect: () => setClientOpen(true) }];
+    if (action.systemAction === "lead") return [{ id: action.id, label: action.label, icon, onSelect: () => router.push("/app/financeiro/leads") }];
+    return [{ id: action.id, label: action.label, icon, onSelect: () => router.push("/app/cases/novo") }];
+  });
+
+  if (!items.length) return null;
 
   return (
     <>
       <div className="fixed right-6 bottom-[calc(1.5rem+var(--call-dock-offset,0px))] z-40 size-[4.5rem] overflow-visible">
         <CircularNavigation items={items} isOpen={open} onClose={() => setOpen(false)} />
-        <PearlButton
-          open={open}
-          className="relative z-50"
-          aria-label={open ? "Fechar atalhos" : "Abrir atalhos"}
-          onClick={() => setOpen((current) => !current)}
-        />
+        <PearlButton open={open} className="relative z-50" aria-label={open ? "Fechar atalhos" : "Abrir atalhos"} onClick={() => setOpen((current) => !current)} />
       </div>
 
-      <Dialog open={dialog === "feedback"} onOpenChange={(next) => !next && setDialog(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl py-8">
-          <DialogHeader>
-            <DialogTitle>Cadastrar Feedback</DialogTitle>
-            <DialogDescription>A demanda fica ligada ao cliente e herda o responsável atual.</DialogDescription>
-          </DialogHeader>
-          <FeedbackForm
-            clients={clients}
-            types={types}
-            creators={creators}
-            onCancel={() => setDialog(null)}
-            onSuccess={() => {
-              setDialog(null);
-              router.refresh();
-            }}
-          />
-        </DialogContent>
-      </Dialog>
+      <TaskFormDialog form={form} space={form ? spaces.find((space) => space.id === form.spaceId) ?? null : null} clients={clients} onOpenChange={(next) => !next && setForm(null)} />
 
-      <Dialog open={dialog === "demand"} onOpenChange={(next) => !next && setDialog(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl py-8">
-          <DialogHeader>
-            <DialogTitle>Cadastrar demanda</DialogTitle>
-            <DialogDescription>Envia o briefing para o creator escolhido.</DialogDescription>
-          </DialogHeader>
-          <CreatorDemandForm
-            clients={clients}
-            creators={creators}
-            onCancel={() => setDialog(null)}
-            onSuccess={() => {
-              setDialog(null);
-              router.refresh();
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={dialog === "client"} onOpenChange={(next) => !next && setDialog(null)}>
-        <DialogContent className="sm:max-w-lg py-8">
+      <Dialog open={clientOpen} onOpenChange={setClientOpen}>
+        <DialogContent className="py-8 sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Novo cliente</DialogTitle>
             <DialogDescription>Cadastre o contato comercial sem sair da página.</DialogDescription>
           </DialogHeader>
           <ClientForm
             team={team}
-            onCancel={() => setDialog(null)}
+            onCancel={() => setClientOpen(false)}
             onSuccess={() => {
-              setDialog(null);
+              setClientOpen(false);
               router.refresh();
             }}
           />

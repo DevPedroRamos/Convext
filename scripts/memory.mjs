@@ -8,7 +8,7 @@
 //   npm run memory -- search "consulta" --k 5
 //   npm run memory -- ask "pergunta" --agent spec
 //   npm run memory -- remember "conteúdo" --title "Título" --type decision --tags a,b
-//   npm run memory -- graph doc:docs/specs/demandas.md --depth 1
+//   npm run memory -- graph doc:docs/specs/espacos.md --depth 1
 //   npm run memory -- graphify [graphify-out/graph.json]
 //   npm run memory -- eval [--answer]
 //   npm run memory -- metrics --days 7

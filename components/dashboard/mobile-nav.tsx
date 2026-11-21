@@ -2,6 +2,7 @@
 
 import { Menu } from "lucide-react";
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
+import type { SidebarSpace } from "@/components/dashboard/sidebar-nav";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import type { TeamStatus } from "@/lib/team-status-icons";
@@ -15,6 +16,7 @@ type MobileNavProps = {
   lastSeenAt?: string | null;
   statusId?: string | null;
   statuses?: TeamStatus[];
+  spaces?: SidebarSpace[];
 };
 
 export function MobileNav(props: MobileNavProps) {

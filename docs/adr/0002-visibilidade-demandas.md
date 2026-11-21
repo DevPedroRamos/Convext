@@ -1,7 +1,7 @@
 # Visibilidade de demandas por operação e responsável
 
 Data: 2026-10-29
-Status: accepted
+Status: superseded por [[0004-espacos-configuraveis]]
 
 ## Contexto
 

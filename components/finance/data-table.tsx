@@ -103,7 +103,7 @@ export function DataTable<T extends RowData>({ data, columns, searchText, search
           {toolbar}
         </div>
       ) : null}
-      <div className="surface overflow-x-auto">
+      <div className="surface relative overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((group) => (

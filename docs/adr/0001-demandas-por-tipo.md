@@ -1,7 +1,7 @@
 # Demandas por tipo, com responsável copiado no insert
 
 Data: 2026-10-29
-Status: accepted
+Status: superseded por [[0004-espacos-configuraveis]]
 
 ## Contexto
 

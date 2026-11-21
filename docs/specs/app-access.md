@@ -29,15 +29,14 @@ Cada role só alcança as áreas que lhe cabem. Admin tem tudo. Coordinator oper
 | Área | admin | coordinator | traffic | creator |
 |---|---|---|---|---|
 | Dashboard `/app` | sim | sim | sim | sim |
-| Demandas | sim (todas) | sim (todas) | sim (suas) | sim (suas) |
+| Espaços (`/app/tarefas`, `/app/espacos/*`) | sim | sim | sim | sim |
 | Clientes | sim | sim | não | não |
-| Feedback | sim | sim | não | não |
 | Cases | sim | sim | não | não |
 | Perfil | sim | sim | sim | sim |
 | Equipe | sim | não | não | não |
 | Gestão | sim | não | não | não |
 
-O workspace Financeiro e a role `commercial` estão em [[financeiro]].
+O workspace Financeiro e a role `commercial` estão em [[financeiro]]. A visibilidade dentro de cada espaço é configurada pelo admin: veja [[espacos]].
 
 - Perfil continua só no menu do usuário.
 - Delete de cliente e feedback continua só admin.

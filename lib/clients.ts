@@ -1,4 +1,3 @@
-import { clientHasDemands } from "@/lib/demands";
 import { createClient } from "@/lib/supabase/server";
 import type { ClientValues } from "@/lib/validations/client";
 import type { Database } from "@/types/database.types";
@@ -80,10 +79,9 @@ export async function updateClient(id: string, values: ClientValues) {
 }
 
 export async function deleteClient(id: string) {
-  if (await clientHasDemands(id)) return "Este cliente tem demandas e não pode ser excluído.";
   const supabase = await createClient();
   const { error } = await supabase.from("clients").delete().eq("id", id);
   if (!error) return null;
-  if (error.code === "23503") return "Este cliente tem demandas e não pode ser excluído.";
+  if (error.code === "23503") return "Este cliente está em uso e não pode ser excluído.";
   return error.message;
 }

@@ -12,9 +12,7 @@ produto em `PRODUCT.md` (raiz do repositório; ambos fixados no contexto dos age
 
 - [[app-access]] — acesso por role no `/app`
 - [[clients]] — clientes administrativos
-- [[feedback]] — cadastro de Feedback
-- [[demandas]] — quadro de demandas
-- [[criativos]] — criativos, tipos de feedback e Gestão
+- [[espacos]] — espaços, fluxos, formulários e atalho rápido (substitui Demandas e Feedback)
 - [[cases]] — cases dinâmicos
 - [[team-onboarding]] — equipe, papéis e onboarding
 - [[equipe]] — gestão de equipe, presença e status
@@ -24,8 +22,9 @@ produto em `PRODUCT.md` (raiz do repositório; ambos fixados no contexto dos age
 
 ## Decisões (ADR)
 
-- [[0001-demandas-por-tipo]]
-- [[0002-visibilidade-demandas]]
+- [[0001-demandas-por-tipo]] (substituído)
+- [[0002-visibilidade-demandas]] (substituído)
+- [[0004-espacos-configuraveis]]
 - [[0003-memoria-rag-hibrido]]
 
 ## Operação
