@@ -64,14 +64,7 @@ if (command === "login" || command === "logout") {
 }
 
 if (!informationalCommand) {
-  const requiresDatabasePassword =
-    command === "link" || command === "db" || (command === "migration" && !localMigrationCommand);
-  const requiredVariables = localMigrationCommand
-    ? []
-    : [
-        "SUPABASE_ACCESS_TOKEN",
-        ...(requiresDatabasePassword ? ["SUPABASE_DB_PASSWORD"] : []),
-      ];
+  const requiredVariables = localMigrationCommand ? [] : ["SUPABASE_ACCESS_TOKEN"];
   const missingVariables = requiredVariables.filter(
     (name) => !process.env[name]?.trim(),
   );
