@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const employeeRoles = ["coordinator", "traffic", "creator", "commercial"] as const;
+export const employeeRoles = ["admin", "coordinator", "traffic", "creator", "commercial"] as const;
 export const employmentStatuses = ["active", "inactive"] as const;
 export const contractTypes = ["clt", "pj", "freelancer", "partner_admin"] as const;
 export const paymentModels = ["fixed", "commission", "fixed_commission", "custom"] as const;
@@ -59,4 +59,8 @@ export type PaymentModel = (typeof paymentModels)[number];
 
 export function canManageEmployeeRole(role: string | null | undefined) {
   return role !== "admin";
+}
+
+export function inviteAccessRole(role: EmployeeRole, cargo: string): EmployeeRole {
+  return role === "admin" || cargo.trim().toLowerCase() === "admin" ? "admin" : role;
 }

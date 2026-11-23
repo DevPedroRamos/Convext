@@ -21,7 +21,8 @@ export function isOnboardingComplete(profile: { onboarding_completed?: boolean |
 }
 
 export function hasPasswordSet(user: { user_metadata?: Record<string, unknown> | null } | null) {
-  return Boolean(user?.user_metadata?.password_set);
+  const value = user?.user_metadata?.password_set;
+  return value === true || value === "true";
 }
 
 export function isAdmin(profile: { role?: string | null } | null) {

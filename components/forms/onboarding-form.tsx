@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/browser";
-import { onboardingSchema, type OnboardingValues } from "@/lib/validations/profile";
+import { onboardingSchema, passwordChangeSchema, type OnboardingValues } from "@/lib/validations/profile";
 
 type OnboardingFormProps = {
   userId: string;
@@ -19,16 +19,17 @@ type OnboardingFormProps = {
   firstName: string;
   lastName: string;
   cargo?: string | null;
+  requirePassword?: boolean;
   defaultValues: Pick<OnboardingValues, "phone" | "avatarUrl">;
 };
 
-export function OnboardingForm({ userId, email, firstName, lastName, cargo, defaultValues }: OnboardingFormProps) {
+export function OnboardingForm({ userId, email, firstName, lastName, cargo, requirePassword = false, defaultValues }: OnboardingFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const form = useForm<OnboardingValues>({
     resolver: zodResolver(onboardingSchema),
-    defaultValues: { firstName, lastName, ...defaultValues },
+    defaultValues: { firstName, lastName, password: "", confirmPassword: "", ...defaultValues },
   });
   const avatarUrl = useWatch({ control: form.control, name: "avatarUrl" });
   const name = [firstName, lastName].filter(Boolean).join(" ").trim() || firstName;
@@ -47,6 +48,19 @@ export function OnboardingForm({ userId, email, firstName, lastName, cargo, defa
   }
 
   async function onSubmit(values: OnboardingValues) {
+    if (requirePassword) {
+      const passwords = passwordChangeSchema.safeParse({
+        password: values.password ?? "",
+        confirmPassword: values.confirmPassword ?? "",
+      });
+      if (!passwords.success) {
+        for (const issue of passwords.error.issues) {
+          const field = String(issue.path[0]) as "password" | "confirmPassword";
+          form.setError(field, { message: issue.message });
+        }
+        return;
+      }
+    }
     setLoading(true);
     const response = await fetch("/api/onboarding", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(values) });
     const payload = await response.json();
@@ -61,8 +75,12 @@ export function OnboardingForm({ userId, email, firstName, lastName, cargo, defa
     <form onSubmit={form.handleSubmit(onSubmit)} className="surface grid gap-6 p-6 sm:p-8">
       <div>
         <p className="label text-primary">Primeiro acesso</p>
-        <h1 className="mt-3 font-display text-4xl tracking-[-.08em] sm:text-5xl">Complete seu perfil.</h1>
-        <p className="mt-3 text-sm text-muted-foreground">Envie sua foto e informe o telefone para entrar na área Convext.</p>
+        <h1 className="mt-3 font-display text-4xl tracking-[-.08em] sm:text-5xl">{requirePassword ? "Crie sua senha e complete o perfil." : "Complete seu perfil."}</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
+          {requirePassword
+            ? "Defina a senha de acesso, envie sua foto e informe o telefone para entrar na área Convext."
+            : "Envie sua foto e informe o telefone para entrar na área Convext."}
+        </p>
       </div>
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
         <Avatar className="size-20"><AvatarImage src={avatarUrl || undefined} /><AvatarFallback>{firstName?.slice(0, 2).toUpperCase() || "CV"}</AvatarFallback></Avatar>
@@ -81,6 +99,16 @@ export function OnboardingForm({ userId, email, firstName, lastName, cargo, defa
         <Field label="E-mail"><Input value={email} readOnly /></Field>
         <Field label="Cargo"><Input value={cargo || "—"} readOnly /></Field>
         <Field label="Telefone" error={form.formState.errors.phone?.message}><Input {...form.register("phone")} placeholder="(11) 99999-9999" /></Field>
+        {requirePassword ? (
+          <>
+            <Field label="Senha" error={form.formState.errors.password?.message}>
+              <Input type="password" autoComplete="new-password" {...form.register("password")} />
+            </Field>
+            <Field label="Confirmar senha" error={form.formState.errors.confirmPassword?.message}>
+              <Input type="password" autoComplete="new-password" {...form.register("confirmPassword")} />
+            </Field>
+          </>
+        ) : null}
       </div>
       <Button disabled={loading || avatarLoading} className="h-11 w-fit bg-primary text-primary-foreground hover:bg-primary/90">
         {loading ? <Loader2 className="animate-spin" /> : null} Entrar na Convext

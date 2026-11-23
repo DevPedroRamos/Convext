@@ -22,7 +22,7 @@ export default async function ClientsPage() {
       {clients.length === 0 ? (
         <div className="surface p-8 text-muted-foreground">Nenhum cliente cadastrado.</div>
       ) : (
-        <ClientsTable clients={clients} canDelete={isAdmin(profile)} />
+        <ClientsTable clients={clients} team={team} canDelete={isAdmin(profile)} />
       )}
     </div>
   );

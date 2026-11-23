@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
   canManageEmployeeRole,
+  inviteAccessRole,
   type ContractType,
   type EmployeeRole,
   type EmployeeValues,
@@ -147,8 +148,8 @@ export async function createEmployee(values: EmployeeValues, actorId: string) {
     type: "invite",
     email: values.email,
     options: {
-      redirectTo: `${redirectOrigin}/auth/callback?next=/app/confirmar`,
-      data: { first_name: values.firstName, last_name: values.lastName, password_set: false },
+      redirectTo: `${redirectOrigin}/auth/callback?next=${encodeURIComponent("/app/onboarding")}`,
+      data: { first_name: values.firstName, last_name: values.lastName },
     },
   });
   const inviteUrl = invited?.properties?.action_link;
@@ -157,6 +158,7 @@ export async function createEmployee(values: EmployeeValues, actorId: string) {
   }
 
   const userId = invited.user.id;
+  const accessRole = inviteAccessRole(values.role, values.cargo);
   const { error: profileError } = await admin
     .from("profiles")
     .update({
@@ -164,7 +166,7 @@ export async function createEmployee(values: EmployeeValues, actorId: string) {
       last_name: values.lastName || null,
       email: values.email,
       phone: values.phone || null,
-      role: values.role,
+      role: accessRole === "admin" ? "creator" : accessRole,
       cargo: values.cargo,
       available: false,
       onboarding_completed: false,
@@ -206,6 +208,14 @@ export async function createEmployee(values: EmployeeValues, actorId: string) {
     return { employee: null, error: employeeError.message || "Não foi possível concluir o cadastro." };
   }
 
+  if (accessRole === "admin") {
+    const { error: adminRoleError } = await admin.from("profiles").update({ role: "admin" }).eq("id", userId);
+    if (adminRoleError) {
+      await deleteCreatedUser(admin, userId);
+      return { employee: null, error: adminRoleError.message || "Não foi possível atribuir o acesso de admin." };
+    }
+  }
+
   const employee = await getManagedEmployee(userId);
   if (employee) return { employee, error: null };
   return {
@@ -215,7 +225,7 @@ export async function createEmployee(values: EmployeeValues, actorId: string) {
       last_name: values.lastName || null,
       email: values.email,
       phone: values.phone || null,
-      role: values.role,
+      role: accessRole,
       cargo: values.cargo,
       avatar_url: null,
       available: false,

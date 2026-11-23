@@ -6,7 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
-export function ClientDeleteButton({ id, name }: { id: string; name: string }) {
+export function ClientDeleteButton({ id, name, onDeleted }: { id: string; name: string; onDeleted?: () => void }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -21,6 +21,10 @@ export function ClientDeleteButton({ id, name }: { id: string; name: string }) {
       return;
     }
     toast.success("Cliente excluído.");
+    if (onDeleted) {
+      onDeleted();
+      return;
+    }
     router.push("/app/clientes");
     router.refresh();
   }

@@ -25,6 +25,18 @@ export function isPasswordSameAsEmail(password: string, email?: string | null) {
 export const onboardingSchema = profileSchema.extend({
   phone: z.string().min(8, "Informe seu telefone."),
   avatarUrl: z.string().url("Envie sua foto de perfil."),
+  password: z.string().optional(),
+  confirmPassword: z.string().optional(),
+}).superRefine((values, context) => {
+  if (!values.password && !values.confirmPassword) return;
+  const passwords = passwordChangeSchema.safeParse({
+    password: values.password ?? "",
+    confirmPassword: values.confirmPassword ?? "",
+  });
+  if (passwords.success) return;
+  for (const issue of passwords.error.issues) {
+    context.addIssue(issue);
+  }
 });
 
 export type ProfileValues = z.infer<typeof profileSchema>;

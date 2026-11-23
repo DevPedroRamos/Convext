@@ -56,11 +56,7 @@ export async function proxy(request: NextRequest) {
       response.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
       return redirectResponse;
     }
-    const passwordSet = Boolean(user.user_metadata?.password_set);
-    if (!onboarded && !passwordSet && pathname !== "/app/confirmar") {
-      return NextResponse.redirect(new URL("/app/confirmar", request.url));
-    }
-    if (!onboarded && passwordSet && pathname !== "/app/onboarding") {
+    if (!onboarded && pathname !== "/app/onboarding" && pathname !== "/app/confirmar") {
       return NextResponse.redirect(new URL("/app/onboarding", request.url));
     }
     if (onboarded && (pathname === "/app/onboarding" || pathname === "/app/confirmar")) {

@@ -13,6 +13,7 @@ type FieldsProps = {
 };
 
 const roleLabels = {
+  admin: "Admin",
   coordinator: "Coordenador",
   traffic: "Tráfego",
   creator: "Criativo",
@@ -33,6 +34,8 @@ const paymentLabels = {
   custom: "Personalizado",
 } as const;
 
+const cargoOptions = ["Admin", "Coordenador", "Gestor de tráfego", "Criativo", "Comercial"] as const;
+
 export function EmployeePersonalFields({ values, errors, setValue }: FieldsProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -49,7 +52,14 @@ export function EmployeePersonalFields({ values, errors, setValue }: FieldsProps
         <Input value={values.phone} onChange={(event) => setValue("phone", event.target.value)} placeholder="11 99999-9999" />
       </Field>
       <Field label="Perfil de acesso" error={errors?.role}>
-        <Select value={values.role} onValueChange={(value) => setValue("role", value as EmployeeValues["role"])}>
+        <Select
+          value={values.role}
+          onValueChange={(value) => {
+            const role = value as EmployeeValues["role"];
+            setValue("role", role);
+            if (role === "admin" && !values.cargo) setValue("cargo", "Admin");
+          }}
+        >
           <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
           <SelectContent>
             {Object.entries(roleLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
@@ -57,15 +67,20 @@ export function EmployeePersonalFields({ values, errors, setValue }: FieldsProps
         </Select>
       </Field>
       <Field label="Cargo" error={errors?.cargo}>
-        <>
-          <Input list="employee-cargo-options" value={values.cargo} onChange={(event) => setValue("cargo", event.target.value)} />
-          <datalist id="employee-cargo-options">
-            <option value="Comercial" />
-            <option value="Coordenador" />
-            <option value="Gestor de tráfego" />
-            <option value="Criativo" />
-          </datalist>
-        </>
+        <Select
+          value={values.cargo || "none"}
+          onValueChange={(value) => {
+            const cargo = value === "none" ? "" : value;
+            setValue("cargo", cargo);
+            if (cargo === "Admin") setValue("role", "admin");
+          }}
+        >
+          <SelectTrigger className="w-full"><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Não informado</SelectItem>
+            {cargoChoices(values.cargo).map((cargo) => <SelectItem key={cargo} value={cargo}>{cargo}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </Field>
     </div>
   );
@@ -129,6 +144,14 @@ export function employeeContractLabel(contract: string | null) {
 
 export function employeePaymentLabel(model: string | null) {
   return model ? paymentLabels[model as keyof typeof paymentLabels] || model : "Não informado";
+}
+
+function cargoChoices(current: string) {
+  const trimmed = current.trim();
+  if (trimmed && !(cargoOptions as readonly string[]).includes(trimmed)) {
+    return [trimmed, ...cargoOptions];
+  }
+  return [...cargoOptions];
 }
 
 function parseNumber(value: string) {

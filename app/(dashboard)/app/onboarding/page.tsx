@@ -6,7 +6,6 @@ export default async function OnboardingPage() {
   const { user, profile } = await getCurrentUserProfile();
   if (!user) redirect("/login");
   if (isOnboardingComplete(profile)) redirect("/app");
-  if (!hasPasswordSet(user)) redirect("/app/confirmar");
   return (
     <OnboardingForm
       userId={user.id}
@@ -14,6 +13,7 @@ export default async function OnboardingPage() {
       firstName={profile?.first_name || ""}
       lastName={profile?.last_name || ""}
       cargo={profile?.cargo}
+      requirePassword={!hasPasswordSet(user)}
       defaultValues={{
         phone: profile?.phone || "",
         avatarUrl: profile?.avatar_url || "",

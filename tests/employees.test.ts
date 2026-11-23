@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { canAccessArea } from "@/lib/access";
-import { canManageEmployeeRole, employeeSchema } from "@/lib/validations/employee";
+import { canManageEmployeeRole, employeeSchema, inviteAccessRole } from "@/lib/validations/employee";
 
 const validEmployee = {
   firstName: "Ana",
@@ -49,6 +49,13 @@ describe("gestão de funcionários", () => {
   it("impede operações administrativas sobre admins", () => {
     expect(canManageEmployeeRole("admin")).toBe(false);
     expect(canManageEmployeeRole("commercial")).toBe(true);
+  });
+
+  it("grava admin no convite pelo perfil ou pelo cargo", () => {
+    expect(inviteAccessRole("admin", "Head")).toBe("admin");
+    expect(inviteAccessRole("traffic", "Admin")).toBe("admin");
+    expect(inviteAccessRole("traffic", "Gestor de tráfego")).toBe("traffic");
+    expect(employeeSchema.safeParse({ ...validEmployee, role: "admin", cargo: "Admin" }).success).toBe(true);
   });
 
   it("grava last_seen_at para presença real", () => {

@@ -30,10 +30,10 @@ import {
   Pencil,
   Trash,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { ClientFormSheet } from "@/components/dashboard/client-form-sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -42,9 +42,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { ClientRecord } from "@/lib/clients";
+import type { TeamProfile } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
-type ClientsTableProps = { clients: ClientRecord[]; canDelete?: boolean };
+type ClientsTableProps = { clients: ClientRecord[]; team: TeamProfile[]; canDelete?: boolean };
 
 const features = tableFeatures({
   columnFilteringFeature,
@@ -71,9 +72,10 @@ export function isClientIncomplete(client: ClientRecord) {
   return !client.whatsapp?.trim() || !client.responsibleId;
 }
 
-export function ClientsTable({ clients, canDelete = false }: ClientsTableProps) {
+export function ClientsTable({ clients, team, canDelete = false }: ClientsTableProps) {
   const id = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [editing, setEditing] = useState<ClientRecord | null>(null);
   const [incompleteOnly, setIncompleteOnly] = useState(false);
   const [globalFilter, setGlobalFilter] = useState("");
   const [sorting, setSorting] = useState<SortingState>([{ id: "name", desc: false }]);
@@ -90,9 +92,9 @@ export function ClientsTable({ clients, canDelete = false }: ClientsTableProps) 
       header: "Cliente",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Link href={`/app/clientes/${row.original.id}`} className="font-medium hover:text-primary">
+          <button type="button" className="font-medium hover:text-primary" onClick={() => setEditing(row.original)}>
             {row.original.name}
-          </Link>
+          </button>
           {isClientIncomplete(row.original) ? <Badge variant="outline">Incompleto</Badge> : null}
         </div>
       ),
@@ -118,7 +120,7 @@ export function ClientsTable({ clients, canDelete = false }: ClientsTableProps) 
     {
       id: "actions",
       header: () => <span className="sr-only">Ações</span>,
-      cell: ({ row }) => <RowActions client={row.original} canDelete={canDelete} />,
+      cell: ({ row }) => <RowActions client={row.original} canDelete={canDelete} onEdit={setEditing} />,
       size: 64,
       enableSorting: false,
     },
@@ -141,6 +143,13 @@ export function ClientsTable({ clients, canDelete = false }: ClientsTableProps) 
 
   return (
     <div className="space-y-4">
+      <ClientFormSheet
+        team={team}
+        record={editing}
+        open={Boolean(editing)}
+        onOpenChange={(open) => !open && setEditing(null)}
+        canDelete={canDelete}
+      />
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative">
           <Input
@@ -276,7 +285,7 @@ export function ClientsTable({ clients, canDelete = false }: ClientsTableProps) 
   );
 }
 
-function RowActions({ client, canDelete }: { client: ClientRecord; canDelete: boolean }) {
+function RowActions({ client, canDelete, onEdit }: { client: ClientRecord; canDelete: boolean; onEdit: (client: ClientRecord) => void }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -302,8 +311,8 @@ function RowActions({ client, canDelete }: { client: ClientRecord; canDelete: bo
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-40">
-        <DropdownMenuItem asChild>
-          <Link href={`/app/clientes/${client.id}`}><Pencil /> Editar</Link>
+        <DropdownMenuItem onClick={() => onEdit(client)}>
+          <Pencil /> Editar
         </DropdownMenuItem>
         {canDelete ? (
           <DropdownMenuItem variant="destructive" disabled={loading} onClick={onDelete}>

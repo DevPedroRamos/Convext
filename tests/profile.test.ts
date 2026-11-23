@@ -20,7 +20,7 @@ describe("confirmação de convite", () => {
 });
 
 describe("onboarding", () => {
-  it("pede só telefone e foto, sem senha", () => {
+  it("aceita telefone e foto sem senha quando ela já foi definida", () => {
     const result = onboardingSchema.safeParse({
       firstName: "Ana",
       lastName: "Silva",
@@ -28,11 +28,13 @@ describe("onboarding", () => {
       avatarUrl: "https://example.com/ana.png",
     });
     expect(result.success).toBe(true);
-    expect("password" in (result.data || {})).toBe(false);
   });
 
-  it("marca senha definida só quando o metadata existe", () => {
+  it("marca senha definida só com true explícito", () => {
     expect(hasPasswordSet({ user_metadata: { password_set: true } })).toBe(true);
+    expect(hasPasswordSet({ user_metadata: { password_set: "true" } })).toBe(true);
+    expect(hasPasswordSet({ user_metadata: { password_set: false } })).toBe(false);
+    expect(hasPasswordSet({ user_metadata: { password_set: "false" } })).toBe(false);
     expect(hasPasswordSet({ user_metadata: {} })).toBe(false);
   });
 
