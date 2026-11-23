@@ -11,6 +11,7 @@ import { Container } from "@/components/layout/container";
 import { Section } from "@/components/layout/section";
 import { FadeUp } from "@/components/motion/fade-up";
 import { SplitLines } from "@/components/motion/split-lines";
+import { CaseRail } from "@/components/marketing/case-rail";
 import type { CaseRecord } from "@/lib/case-model";
 
 const diagnosis = [
@@ -58,37 +59,17 @@ export function Projects({ cases }: { cases: CaseRecord[] }) {
           </div>
           {cases.length === 0 ? (
             <p className="surface p-8 text-foreground/60">Novos cases entram aqui assim que forem publicados.</p>
+          ) : cases.length > 3 ? (
+            <CaseRail>
+              {cases.map((item) => (
+                <div key={item.id} className="w-[82vw] shrink-0 snap-start sm:w-[46vw] lg:w-[calc((100%-2.5rem)/3)]">
+                  <CaseCard item={item} />
+                </div>
+              ))}
+            </CaseRail>
           ) : (
             <div className="grid gap-5 lg:grid-cols-3">
-              {cases.map((item) => {
-                const inner = (
-                  <article>
-                    <div className="case-frame relative aspect-[4/5] overflow-hidden">
-                      <Image src={item.coverUrl || item.logoUrl} alt="" fill className="object-cover transition duration-700 group-hover:scale-105" sizes="(min-width: 1024px) 33vw, 100vw" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-black/0" />
-                      <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-4">
-                        <div className="min-w-0">
-                          {item.slug && item.logoUrl ? (
-                            <Image src={item.logoUrl} alt="" width={180} height={64} className="mb-3 h-10 w-auto max-w-[160px] object-contain" />
-                          ) : null}
-                          <p className="text-sm text-white/55">{item.segment}</p>
-                          <h3 className="mt-2 text-3xl tracking-[-.04em] text-white">{item.name}</h3>
-                          {item.summary ? <p className="mt-2 line-clamp-2 text-sm text-white/70">{item.summary}</p> : null}
-                        </div>
-                        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition group-hover:-translate-y-1 group-hover:translate-x-1"><ArrowUpRight /></span>
-                      </div>
-                    </div>
-                  </article>
-                );
-                if (!item.slug) {
-                  return <div key={item.id} className="group overflow-hidden rounded-3xl border border-border bg-card">{inner}</div>;
-                }
-                return (
-                  <Link key={item.id} href={`/cases/${item.slug}`} className="group overflow-hidden rounded-3xl border border-border bg-card">
-                    {inner}
-                  </Link>
-                );
-              })}
+              {cases.map((item) => <CaseCard key={item.id} item={item} />)}
             </div>
           )}
 
@@ -99,10 +80,12 @@ export function Projects({ cases }: { cases: CaseRecord[] }) {
             </SplitLines>
             <div className="mt-10 grid gap-4 lg:grid-cols-3">
               {diagnosis.map((item, index) => (
-                <FadeUp key={item.title} delay={index * 0.06} className="surface p-6 sm:p-8">
-                  <p className="font-mono text-sm text-primary">{String(index + 1).padStart(2, "0")}</p>
-                  <h4 className="mt-6 font-display text-3xl leading-none tracking-[-0.05em]">{item.title}</h4>
-                  <p className="mt-5 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">{item.body}</p>
+                <FadeUp key={item.title} delay={index * 0.06} className="h-full">
+                  <div data-spotlight className="surface surface-interactive h-full p-6 sm:p-8">
+                    <p className="font-mono text-sm text-primary">{String(index + 1).padStart(2, "0")}</p>
+                    <h4 className="mt-6 font-display text-3xl leading-none tracking-[-0.05em]">{item.title}</h4>
+                    <p className="mt-5 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">{item.body}</p>
+                  </div>
                 </FadeUp>
               ))}
             </div>
@@ -110,5 +93,54 @@ export function Projects({ cases }: { cases: CaseRecord[] }) {
         </Container>
       </div>
     </Section>
+  );
+}
+
+function CaseCard({ item }: { item: CaseRecord }) {
+  const inner = (
+    <article>
+      <div className="case-frame relative aspect-[4/5] overflow-hidden">
+        <Image
+          src={item.coverUrl || item.logoUrl}
+          alt=""
+          fill
+          className="object-cover transition-transform duration-[1.2s] ease-expo group-hover:scale-[1.06]"
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 46vw, 82vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/0 transition-colors duration-700 ease-expo group-hover:via-black/45" />
+        <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            {item.slug && item.logoUrl ? (
+              <Image src={item.logoUrl} alt="" width={180} height={64} className="mb-3 h-10 w-auto max-w-[160px] object-contain" />
+            ) : null}
+            <p className="text-sm text-white/55">{item.segment}</p>
+            <h3 className="mt-2 text-3xl tracking-[-.04em] text-white">{item.name}</h3>
+            {item.summary ? (
+              <div className="grid transition-[grid-template-rows,opacity] duration-700 ease-expo [@media(hover:hover)]:grid-rows-[0fr] [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:grid-rows-[1fr] [@media(hover:hover)]:group-hover:opacity-100">
+                <p className="overflow-hidden">
+                  <span className="mt-2 line-clamp-3 block text-sm text-white/75">{item.summary}</span>
+                </p>
+              </div>
+            ) : null}
+          </div>
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition-transform duration-500 ease-expo group-hover:rotate-45 group-hover:scale-110">
+            <ArrowUpRight />
+          </span>
+        </div>
+      </div>
+    </article>
+  );
+
+  if (!item.slug) {
+    return <div className="group overflow-hidden rounded-3xl border border-border bg-card">{inner}</div>;
+  }
+  return (
+    <Link
+      href={`/cases/${item.slug}`}
+      data-cursor="Ver case"
+      className="group block overflow-hidden rounded-3xl border border-border bg-card transition-[border-color] duration-500 hover:border-primary/50"
+    >
+      {inner}
+    </Link>
   );
 }

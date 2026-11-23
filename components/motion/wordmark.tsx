@@ -20,7 +20,7 @@ export function Wordmark({ text, className }: { text: string; className?: string
       aria: "auto",
       onSplit(self) {
         return gsap.from(self.chars, {
-          yPercent: 80,
+          yPercent: 100,
           stagger: 0.04,
           ease: "power3.out",
           scrollTrigger: { trigger: element, start: "top 92%", end: "top 55%", scrub: 0.6 },

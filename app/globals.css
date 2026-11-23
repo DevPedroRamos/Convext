@@ -40,6 +40,9 @@
   --radius-xl: 16px;
   --radius-2xl: 16px;
   --radius-3xl: 16px;
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-quint: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-quart: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 :root {
@@ -72,11 +75,18 @@
   --sidebar-accent-foreground: #fcfcfc;
   --sidebar-border: #292929;
   --sidebar-ring: #f35703;
+
+  /* Motion tokens — espelhados em lib/motion.ts para o GSAP */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 160ms;
+  --dur-base: 280ms;
+  --dur-slow: 600ms;
 }
 
 @layer base {
   * { @apply border-border outline-ring/40; }
-  html { scroll-behavior: smooth; }
   body {
     @apply min-h-screen bg-background text-foreground antialiased;
     font-family: var(--font-calibri), Calibri, Inter, Arial, sans-serif;
@@ -321,3 +331,174 @@
   }
 }
 
+
+/* ───────────────────────── Motion system ───────────────────────── */
+
+/* Lenis (scroll suave do site institucional) */
+html.lenis, html.lenis body { height: auto; }
+.lenis:not(.lenis-autoToggle).lenis-stopped { overflow: clip; }
+.lenis [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+
+/* Rótulo que rola no hover: <RollLabel> */
+.roll-label {
+  position: relative;
+  display: inline-flex;
+  overflow: hidden;
+  line-height: 1.2;
+}
+.roll-label > span {
+  display: block;
+  transition: transform var(--dur-slow) var(--ease-out-expo);
+}
+.roll-label > span::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 100%;
+}
+@media (hover: hover) {
+  :is(a, button):hover .roll-label > span { transform: translateY(-100%); }
+}
+:is(a, button):focus-visible .roll-label > span { transform: translateY(-100%); }
+
+/* Seta que "escapa" para o canto no hover */
+.arrow-nudge { transition: transform var(--dur-base) var(--ease-out-expo); }
+@media (hover: hover) {
+  :is(a, button):hover > .arrow-nudge,
+  :is(a, button):hover .arrow-nudge { transform: translate(2px, -2px); }
+}
+
+/* Sublinhado que cresce da esquerda e sai pela direita */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 100% 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  padding-bottom: 2px;
+  transition: background-size var(--dur-slow) var(--ease-out-expo), color var(--dur-base) var(--ease-out-expo);
+}
+@media (hover: hover) {
+  .link-underline:hover { background-position: 0% 100%; background-size: 100% 1px; }
+}
+.link-underline:focus-visible { background-position: 0% 100%; background-size: 100% 1px; }
+
+/* Card interativo com spotlight que segue o cursor (vars --mx/--my via <PointerSpotlight>) */
+.surface-interactive {
+  position: relative;
+  isolation: isolate;
+  transition:
+    transform var(--dur-slow) var(--ease-out-expo),
+    border-color var(--dur-base) var(--ease-out-expo),
+    box-shadow var(--dur-slow) var(--ease-out-expo);
+}
+.surface-interactive::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(243, 87, 3, 0.16), transparent 60%);
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out-expo);
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .surface-interactive:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+    box-shadow: 0 24px 60px -24px rgba(243, 87, 3, 0.35);
+  }
+  .surface-interactive:hover::before { opacity: 1; }
+}
+
+/* Cursor seguidor do site institucional */
+.convext-cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 95;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  opacity: 0;
+  transition:
+    width var(--dur-slow) var(--ease-out-expo),
+    height var(--dur-slow) var(--ease-out-expo),
+    margin var(--dur-slow) var(--ease-out-expo),
+    opacity var(--dur-base) var(--ease-out-expo),
+    background-color var(--dur-base) var(--ease-out-expo);
+}
+.convext-cursor[data-visible="true"] { opacity: 1; }
+.convext-cursor[data-state="link"] {
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  background: rgba(243, 87, 3, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(243, 87, 3, 0.6);
+}
+.convext-cursor[data-state="label"] {
+  width: 96px;
+  height: 96px;
+  margin: -48px 0 0 -48px;
+}
+.convext-cursor-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.1;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity var(--dur-base) var(--ease-out-expo), transform var(--dur-slow) var(--ease-out-expo);
+}
+.convext-cursor[data-state="label"] .convext-cursor-label { opacity: 1; transform: scale(1); }
+html[data-custom-cursor] [data-cursor] { cursor: none; }
+@media (hover: none), (pointer: coarse) {
+  .convext-cursor { display: none; }
+}
+
+/* Entrada do hero em CSS puro: roda no primeiro paint, sem flash antes da hidratação */
+@keyframes hero-line-in {
+  from { transform: translateY(110%); }
+  to { transform: translateY(0); }
+}
+@keyframes hero-fade-up {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes hero-form-in {
+  from { opacity: 0; transform: translateY(48px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes pulse-dot {
+  0% { box-shadow: 0 0 0 0 rgba(243, 87, 3, 0.6); }
+  70% { box-shadow: 0 0 0 10px rgba(243, 87, 3, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(243, 87, 3, 0); }
+}
+.hero-line { display: block; overflow: hidden; padding-bottom: 0.06em; margin-bottom: -0.06em; }
+.hero-line > span { display: block; animation: hero-line-in 1.1s var(--ease-out-expo) both; animation-delay: var(--d, 0ms); }
+.hero-fade { animation: hero-fade-up 1s var(--ease-out-expo) both; animation-delay: var(--d, 0ms); }
+.hero-form { animation: hero-form-in 1.2s var(--ease-out-expo) both; animation-delay: var(--d, 0ms); }
+.pulse-dot { animation: pulse-dot 2s var(--ease-out-quint) infinite; }
+
+/* Cortina de transição entre páginas do site */
+.route-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 96;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  transform: scaleY(0);
+  transform-origin: bottom;
+}

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { RollLabel } from "@/components/ui/roll-label";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { heroLeadSchema, type HeroLeadValues } from "@/lib/validations/hero-lead";
@@ -89,10 +90,10 @@ export function HeroLeadForm() {
       <Button
         type="submit"
         disabled={loading}
-        className="mt-6 h-12 w-full rounded-full bg-primary text-sm font-semibold uppercase tracking-[0.08em] text-primary-foreground hover:bg-primary/90"
+        className="mt-6 h-12 w-full rounded-full bg-primary text-sm font-semibold uppercase tracking-[0.08em] text-primary-foreground hover:shadow-[0_12px_36px_-12px_rgba(243,87,3,0.8)]"
       >
         {loading ? <Loader2 className="animate-spin" /> : null}
-        Quero gerar mais leads qualificados
+        <RollLabel>Quero gerar mais leads qualificados</RollLabel>
       </Button>
     </form>
   );

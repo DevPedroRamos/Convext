@@ -23,13 +23,21 @@ export function Metrics() {
       ease: "power3.out",
       scrollTrigger: { trigger: ref.current, start: "top 80%" },
     });
+    gsap.from(".metric-bar", {
+      scaleX: 0,
+      duration: 1.6,
+      stagger: 0.1,
+      ease: "expo.out",
+      scrollTrigger: { trigger: ref.current, start: "top 75%" },
+    });
     gsap.utils.toArray<HTMLElement>("[data-count]").forEach((node) => {
       const target = Number(node.dataset.count || 0);
       const counter = { value: 0 };
+      node.textContent = "0";
       gsap.to(counter, {
         value: target,
-        duration: 1.8,
-        ease: "power3.out",
+        duration: 2,
+        ease: "expo.out",
         scrollTrigger: { trigger: node, start: "top 85%" },
         onUpdate: () => { node.textContent = Math.round(counter.value).toString(); },
       });
@@ -52,11 +60,14 @@ export function Metrics() {
         </div>
         <div className="grid gap-4 md:grid-cols-4">
           {siteConfig.metrics.map((metric) => (
-            <div key={metric.label} className="metric-card surface min-h-48 p-6">
-              <div className="font-display text-6xl tracking-[-.07em]">
-                {metric.prefix}<span data-count={metric.value}>0</span>{metric.suffix}
+            <div key={metric.label} className="metric-card">
+              <div data-spotlight className="surface surface-interactive h-full min-h-48 overflow-hidden p-6">
+                <div className="font-display text-6xl tracking-[-.07em]">
+                  {metric.prefix}<span data-count={metric.value}>{metric.value}</span>{metric.suffix}
+                </div>
+                <p className="mt-10 text-sm text-muted-foreground">{metric.label}</p>
+                <span aria-hidden="true" className="metric-bar absolute inset-x-6 bottom-0 h-px origin-left bg-primary" />
               </div>
-              <p className="mt-10 text-sm text-muted-foreground">{metric.label}</p>
             </div>
           ))}
         </div>

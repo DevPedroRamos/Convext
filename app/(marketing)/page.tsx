@@ -1,6 +1,7 @@
 import { Hero } from "@/components/marketing/hero";
 import { Marquee } from "@/components/motion/marquee";
 import { MainCta } from "@/components/marketing/cta";
+import { FloatingCta } from "@/components/marketing/floating-cta";
 import { Manifesto } from "@/components/marketing/manifesto";
 import { Metrics } from "@/components/marketing/metrics";
 import { Projects } from "@/components/marketing/projects";
@@ -20,6 +21,7 @@ export default async function HomePage() {
       <Metrics />
       <Projects cases={cases} />
       <MainCta />
+      <FloatingCta />
     </>
   );
 }

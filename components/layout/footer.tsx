@@ -3,7 +3,9 @@ import { ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { SplitLines } from "@/components/motion/split-lines";
 import { Wordmark } from "@/components/motion/wordmark";
+import { Magnetic } from "@/components/motion/magnetic";
 import { Button } from "@/components/ui/button";
+import { RollLabel } from "@/components/ui/roll-label";
 import { siteConfig } from "@/lib/site";
 
 const columns = [
@@ -14,7 +16,7 @@ const columns = [
 
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden bg-primary text-primary-foreground">
+    <footer id="site-footer" className="relative overflow-hidden bg-primary text-primary-foreground">
       <Container className="py-10 sm:py-16">
         <div className="grid gap-10 border-b border-black/20 pb-12 lg:grid-cols-[1.2fr_.8fr]">
           <div>
@@ -29,8 +31,8 @@ export function Footer() {
                 <ul className="mt-5 space-y-3 text-sm">
                   {column.links.map((link) => (
                     <li key={link.label}>
-                      <Link href={link.href} className="inline-flex items-center gap-1 text-black/80 transition hover:text-black">
-                        {link.label} <ArrowUpRight className="size-3" />
+                      <Link href={link.href} className="group/link inline-flex items-center gap-1 text-black/80 transition-colors duration-300 hover:text-black">
+                        <span className="link-underline">{link.label}</span> <ArrowUpRight className="arrow-nudge size-3" />
                       </Link>
                     </li>
                   ))}
@@ -41,9 +43,11 @@ export function Footer() {
         </div>
         <div className="flex flex-col gap-6 py-8 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs uppercase tracking-[.16em] text-black/60">© 2026 Convext. Todos os direitos reservados.</p>
-          <Button asChild variant="secondary" className="w-fit bg-black text-white hover:bg-black/80">
-            <Link href="/contato">Quero falar com a Convext <ArrowUpRight /></Link>
-          </Button>
+          <Magnetic className="w-fit">
+            <Button asChild variant="secondary" size="lg" className="h-11 w-fit rounded-full bg-black px-5 text-white hover:bg-black">
+              <Link href="/contato"><RollLabel>Quero falar com a Convext</RollLabel> <ArrowUpRight className="arrow-nudge" /></Link>
+            </Button>
+          </Magnetic>
         </div>
         <Wordmark text="Convext" className="select-none overflow-hidden font-display text-[24vw] leading-[.72] tracking-[-.12em] text-black/90 sm:text-[20vw]" />
       </Container>

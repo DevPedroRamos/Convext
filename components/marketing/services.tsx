@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import { ScrambleTextPlugin } from "gsap/ScrambleTextPlugin";
 import { useGSAP } from "@gsap/react";
+import { ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { siteConfig } from "@/lib/site";
 
@@ -120,12 +121,21 @@ export function Services() {
 
         <div className="divide-y divide-border border-y border-border">
           {siteConfig.services.map((service) => (
-            <article key={service.number} className="service-step grid gap-4 py-7 md:grid-cols-[0.18fr_0.82fr_1.2fr] md:items-start md:gap-8">
-              <span className="font-mono text-sm text-primary">{service.number}</span>
-              <h3 data-title={service.title} className="service-step-title font-display text-3xl leading-none tracking-[-0.05em] text-foreground sm:text-4xl">
-                {service.title}
-              </h3>
-              <p className="text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">{service.description}</p>
+            <article key={service.number} className="service-step group relative overflow-hidden hover:opacity-100!">
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 origin-left scale-x-0 bg-primary transition-transform duration-700 ease-expo group-hover:scale-x-100"
+              />
+              <div className="relative grid gap-4 py-7 transition-[padding] duration-700 ease-expo md:grid-cols-[0.18fr_0.82fr_1.2fr] md:items-start md:gap-8 md:group-hover:px-6">
+                <span className="relative block h-5 overflow-hidden font-mono text-sm text-primary transition-colors duration-300 group-hover:text-black">
+                  <span className="block transition-transform duration-500 ease-expo group-hover:-translate-y-full">{service.number}</span>
+                  <ArrowUpRight aria-hidden="true" className="absolute left-0 top-full size-5 transition-transform duration-500 ease-expo group-hover:-translate-y-full" />
+                </span>
+                <h3 data-title={service.title} className="service-step-title font-display text-3xl leading-none tracking-[-0.05em] text-foreground transition-colors duration-300 group-hover:text-black sm:text-4xl">
+                  {service.title}
+                </h3>
+                <p className="text-sm leading-6 text-muted-foreground transition-colors duration-300 group-hover:text-black/75 sm:text-base sm:leading-7">{service.description}</p>
+              </div>
             </article>
           ))}
         </div>

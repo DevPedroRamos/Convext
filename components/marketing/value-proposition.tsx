@@ -1,5 +1,6 @@
 import { Container } from "@/components/layout/container";
 import { Section } from "@/components/layout/section";
+import { EquationReveal } from "@/components/marketing/equation-reveal";
 import { FadeUp } from "@/components/motion/fade-up";
 import { SplitLines } from "@/components/motion/split-lines";
 
@@ -30,9 +31,7 @@ export function ValueProposition() {
 
         <FadeUp delay={0.1} className="mt-14 overflow-hidden rounded-3xl border border-primary/30 bg-primary p-8 text-black sm:p-12 lg:p-16">
           <p className="label">O equilíbrio ideal</p>
-          <p className="mt-6 font-display text-[clamp(2.75rem,8vw,8rem)] leading-[0.82] tracking-[-0.08em]">
-            Volume + custo + qualidade
-          </p>
+          <EquationReveal />
         </FadeUp>
       </Container>
     </Section>
