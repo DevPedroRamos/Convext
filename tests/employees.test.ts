@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { canAccessArea } from "@/lib/access";
-import { canManageEmployeeRole, employeeSchema, inviteAccessRole } from "@/lib/validations/employee";
+import { canManageEmployeeRole, employeeSchema, inviteAccessRole, lastAdminBlocked } from "@/lib/validations/employee";
 
 const validEmployee = {
   firstName: "Ana",
@@ -46,9 +46,15 @@ describe("gestão de funcionários", () => {
     }
   });
 
-  it("impede operações administrativas sobre admins", () => {
-    expect(canManageEmployeeRole("admin")).toBe(false);
+  it("permite editar qualquer role, inclusive admin", () => {
+    expect(canManageEmployeeRole("admin")).toBe(true);
     expect(canManageEmployeeRole("commercial")).toBe(true);
+  });
+
+  it("bloqueia desativar a si mesmo ou o último admin", () => {
+    expect(lastAdminBlocked({ actorId: "a", targetId: "a", currentRole: "admin", currentActive: true, nextRole: "admin", nextActive: false, activeAdminCount: 3 })).toBe("Você não pode desativar o próprio acesso.");
+    expect(lastAdminBlocked({ actorId: "a", targetId: "b", currentRole: "admin", currentActive: true, nextRole: "creator", nextActive: true, activeAdminCount: 1 })).toBe("Não é possível remover o último administrador.");
+    expect(lastAdminBlocked({ actorId: "a", targetId: "b", currentRole: "admin", currentActive: true, nextRole: "admin", nextActive: true, activeAdminCount: 1 })).toBeNull();
   });
 
   it("grava admin no convite pelo perfil ou pelo cargo", () => {
@@ -68,6 +74,9 @@ describe("gestão de funcionários", () => {
     const sql = readFileSync("supabase/migrations/20261118222248_employee_management.sql", "utf8");
     expect(sql).toContain("create table public.employee_records");
     expect(sql).toContain("protect_admin_employee_record");
+    const logs = readFileSync("supabase/migrations/20261123233355_admin_logs.sql", "utf8");
+    expect(logs).toContain("service_role");
+    expect(logs).toContain("platform_events");
     expect(sql).toContain("employee_access_is_active");
     expect(sql).toContain("'commercial'");
     expect(sql).toContain("enable row level security");

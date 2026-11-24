@@ -11,6 +11,7 @@ import { emptyItem, type LineItemInput, LineItemsEditor } from "@/components/fin
 import { Field } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
@@ -110,15 +111,13 @@ function ContractForm({ contract, customers, products, people, defaultDueDay, on
           control={form.control}
           name="customerId"
           render={({ field }) => (
-            <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
-              <SelectTrigger className="w-full"><SelectValue placeholder="Escolha o cliente" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Escolha o cliente</SelectItem>
-                {customers.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>{customer.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={field.value || ""}
+              onValueChange={field.onChange}
+              emptyLabel="Escolha o cliente"
+              placeholder="Escolha o cliente"
+              options={customers.map((customer) => ({ value: customer.id, label: customer.name }))}
+            />
           )}
         />
       </Field>
@@ -127,15 +126,13 @@ function ContractForm({ contract, customers, products, people, defaultDueDay, on
           control={form.control}
           name="sellerId"
           render={({ field }) => (
-            <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
-              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sem vendedor</SelectItem>
-                {people.map((person) => (
-                  <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={field.value || ""}
+              onValueChange={field.onChange}
+              emptyLabel="Sem vendedor"
+              placeholder="Sem vendedor"
+              options={people.map((person) => ({ value: person.id, label: person.name }))}
+            />
           )}
         />
       </Field>

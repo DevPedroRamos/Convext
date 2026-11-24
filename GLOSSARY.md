@@ -69,3 +69,21 @@ _Avoid_: Case, gravação
 **Disponibilidade**:
 Indicação manual de disponível ou ausente escolhida pelo membro da equipe; independente de estar conectado ou em chamada.
 _Avoid_: Online, Em chamada como equivalentes
+
+## Agenda
+
+**Compromisso**:
+Hora marcada ligada a uma tarefa de Espaço, com data, início, duração (padrão 1h), local e participantes. Nasce do campo "Compromisso" do formulário; não existe sem tarefa.
+_Avoid_: Evento, reunião (como nome da entidade)
+
+**Participante do compromisso**:
+Pessoa da equipe escolhida no formulário que deve comparecer ao Compromisso. É o dono do Compromisso na agenda dela.
+_Avoid_: Responsável da tarefa (assignee), que muda a cada etapa
+
+**Local**:
+Endereço ou nome do lugar do Compromisso, em texto livre (ex.: "Econ Parque do Carmo").
+_Avoid_: Sala (que é da Comunicação)
+
+**Agenda**:
+Página `/app/agenda`. O creator vê os próprios Compromissos; coordenador e admin veem os da equipe. Só coordenador e admin remarcam.
+_Avoid_: Calendário como nome da área

@@ -5,8 +5,8 @@ import type { AppRole } from "@/lib/access";
 import { createClient } from "@/lib/supabase/server";
 import { isMyTurn } from "@/lib/spaces/rules";
 import type { StageOwner } from "@/lib/spaces/roles";
-import type { AppNotification, FormField, QuickAction, Space, SpaceForm, SpaceStage, SpaceTask, TaskEvent } from "@/lib/spaces/types";
-import type { SpaceFormValues, SpaceValues } from "@/lib/validations/spaces";
+import type { AppNotification, FormField, QuickAction, Space, SpaceForm, SpaceStage, SpaceTask, TaskAppointment, TaskEvent } from "@/lib/spaces/types";
+import type { AppointmentInput, SpaceFormValues, SpaceValues } from "@/lib/validations/spaces";
 
 type Row = Record<string, unknown>;
 type ProfileJoin = { id: string; first_name: string | null; last_name: string | null; email?: string | null } | null;
@@ -101,7 +101,29 @@ export async function listQuickActions(): Promise<QuickAction[]> {
   }));
 }
 
-const taskSelect = `*, client:clients(id, name), assignee:profiles!space_tasks_assignee_id_fkey(${profileCols}), creator:profiles!space_tasks_created_by_fkey(${profileCols})`;
+const taskSelect = `*, client:clients(id, name), assignee:profiles!space_tasks_assignee_id_fkey(${profileCols}), creator:profiles!space_tasks_created_by_fkey(${profileCols}), appointment:task_appointments(id, task_id, starts_at, ends_at, location, attendees:task_appointment_attendees(user_id, profile:profiles(${profileCols})))`;
+
+export function mapAppointment(row: Row | null | undefined): TaskAppointment | null {
+  if (!row) return null;
+  const attendees = ((row.attendees as Row[]) ?? []).map((item) => ({
+    id: (item.user_id as string) ?? "",
+    name: personName(one<ProfileJoin>(item.profile)) ?? "—",
+  })).filter((item) => item.id);
+  const task = one<Row>(row.task);
+  const space = one<Row>(task?.space);
+  return {
+    id: row.id as string,
+    taskId: (row.task_id as string) ?? (task?.id as string) ?? "",
+    startsAt: row.starts_at as string,
+    endsAt: row.ends_at as string,
+    location: (row.location as string) ?? "",
+    attendees,
+    spaceId: (space?.id as string | undefined) ?? (task?.space_id as string | undefined),
+    spaceName: space?.name as string | undefined,
+    spaceColor: space?.color as string | undefined,
+    title: task?.title as string | undefined,
+  };
+}
 
 function mapTask(row: Row): SpaceTask {
   return {
@@ -120,7 +142,15 @@ function mapTask(row: Row): SpaceTask {
     completedAt: (row.completed_at as string | null) ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
+    appointment: mapAppointment(one<Row>(row.appointment)),
   };
+}
+
+export async function listTasksByIds(ids: string[]): Promise<SpaceTask[]> {
+  if (!ids.length) return [];
+  const client = await db();
+  const { data } = await client.from("space_tasks").select(taskSelect).in("id", ids);
+  return (data ?? []).map(mapTask);
 }
 
 /** Tarefas visíveis ao usuário (a RLS filtra). Concluídas só dos últimos 30 dias. */
@@ -161,15 +191,29 @@ export async function countMyTurn(viewer: { id: string; role: AppRole }, spaces:
 // Ações de tarefa (regras no banco)
 // ---------------------------------------------------------------------------
 
-export async function createTask(values: { formId: string; title: string; clientId?: string | null; values: Record<string, string> }): Promise<Result<string>> {
+export async function createTask(values: { formId: string; title: string; clientId?: string | null; values: Record<string, string>; appointment?: AppointmentInput | null }): Promise<Result<string>> {
   const client = await db();
-  const { data, error } = await client.rpc("space_create_task", { p_form_id: values.formId, p_title: values.title, p_client_id: values.clientId ?? null, p_values: values.values });
+  const { data, error } = await client.rpc("space_create_task", {
+    p_form_id: values.formId,
+    p_title: values.title,
+    p_client_id: values.clientId ?? null,
+    p_values: values.values,
+    p_appointment: values.appointment ?? null,
+  });
   return error || !data ? fail(error, "Não foi possível enviar.") : ok(data as string);
 }
 
 export async function runTaskAction(
   taskId: string,
-  action: { action: "advance"; value?: string } | { action: "approve" } | { action: "reject"; reason: string } | { action: "claim" } | { action: "move"; stageId: string } | { action: "comment"; message: string },
+  action:
+    | { action: "advance"; value?: string }
+    | { action: "approve" }
+    | { action: "reject"; reason: string }
+    | { action: "claim" }
+    | { action: "move"; stageId: string }
+    | { action: "comment"; message: string }
+    | { action: "reschedule"; appointment: AppointmentInput }
+    | { action: "unschedule" },
 ): Promise<Result<true>> {
   const client = await db();
   const call = {
@@ -179,6 +223,8 @@ export async function runTaskAction(
     claim: () => client.rpc("space_task_claim", { p_task_id: taskId }),
     move: () => client.rpc("space_task_move", { p_task_id: taskId, p_stage_id: "stageId" in action ? action.stageId : null }),
     comment: () => client.rpc("space_task_comment", { p_task_id: taskId, p_message: "message" in action ? action.message : "" }),
+    reschedule: () => client.rpc("task_appointment_update", { p_task_id: taskId, p_appointment: "appointment" in action ? action.appointment : null }),
+    unschedule: () => client.rpc("task_appointment_delete", { p_task_id: taskId }),
   }[action.action];
   const { error } = await call();
   return error ? fail(error, "Não foi possível concluir a ação.") : ok(true);

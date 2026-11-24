@@ -5,11 +5,20 @@ const role = z.enum(["admin", "coordinator", "traffic", "creator", "commercial"]
 const roles = z.array(role).min(1, "Escolha ao menos uma role.");
 const uuid = z.string().uuid();
 
+export const appointmentInputSchema = z.object({
+  startsAt: z.string().datetime({ offset: true, message: "Informe a data e a hora de início." }),
+  durationMinutes: z.number().int().min(15).max(720).default(60),
+  location: z.string().trim().max(200).default(""),
+  attendeeIds: z.array(uuid).min(1, "Escolha ao menos um participante."),
+});
+export type AppointmentInput = z.infer<typeof appointmentInputSchema>;
+
 export const createTaskSchema = z.object({
   formId: uuid,
   title: z.string().trim().min(2, "Informe o título."),
   clientId: uuid.nullable().optional(),
-  values: z.record(z.string(), z.string().max(5000)).default({}),
+  values: z.record(z.string(), z.string().max(20000)).default({}),
+  appointment: appointmentInputSchema.optional().nullable(),
 });
 
 export const taskActionSchema = z.discriminatedUnion("action", [
@@ -19,6 +28,8 @@ export const taskActionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("claim") }),
   z.object({ action: z.literal("move"), stageId: uuid }),
   z.object({ action: z.literal("comment"), message: z.string().trim().min(1, "Escreva o comentário.").max(4000) }),
+  z.object({ action: z.literal("reschedule"), appointment: appointmentInputSchema }),
+  z.object({ action: z.literal("unschedule") }),
 ]);
 
 export const stageSchema = z.object({
@@ -59,7 +70,9 @@ export const spaceFormSchema = z
   })
   .refine((form) => form.fields.some((field) => field.key === "titulo"), { path: ["fields"], message: "O formulário precisa do campo de título." })
   .refine((form) => new Set(form.fields.map((field) => field.key)).size === form.fields.length, { path: ["fields"], message: "Campos repetidos." })
-  .refine((form) => form.fields.filter((field) => field.type === "client").length <= 1, { path: ["fields"], message: "Use no máximo um campo de cliente." });
+  .refine((form) => form.fields.filter((field) => field.type === "client").length <= 1, { path: ["fields"], message: "Use no máximo um campo de cliente." })
+  .refine((form) => form.fields.filter((field) => field.type === "feedback").length <= 1, { path: ["fields"], message: "Use no máximo um campo de tipo de feedback." })
+  .refine((form) => form.fields.filter((field) => field.type === "appointment").length <= 1, { path: ["fields"], message: "Use no máximo um campo de compromisso." });
 export type SpaceFormValues = z.infer<typeof spaceFormSchema>;
 
 export const quickActionsSchema = z.object({

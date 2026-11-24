@@ -18,7 +18,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
   const result = await updateEmployee(id, parsed.data, user.id);
   if (result.error || !result.employee) {
-    const status = result.error?.includes("Administradores") ? 403 : 500;
+    const status = /último administrador|próprio acesso|Administradores/.test(result.error ?? "") ? 403 : 500;
     return NextResponse.json({ error: result.error || "Não foi possível salvar o funcionário." }, { status });
   }
   revalidatePath("/app", "layout");
@@ -33,7 +33,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
   const { id } = await context.params;
   const error = await deactivateEmployee(id, user.id);
   if (error) {
-    const status = error.includes("Administradores") ? 403 : 500;
+    const status = /último administrador|próprio acesso|Administradores/.test(error) ? 403 : 500;
     return NextResponse.json({ error }, { status });
   }
   revalidatePath("/app", "layout");

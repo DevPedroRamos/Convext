@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   canManageEmployeeRole,
   inviteAccessRole,
+  lastAdminBlocked,
   type ContractType,
   type EmployeeRole,
   type EmployeeValues,
@@ -116,6 +117,32 @@ async function deleteCreatedUser(admin: ReturnType<typeof createAdminClient>, us
   return error?.message ?? null;
 }
 
+async function countActiveAdmins() {
+  const admin = createAdminClient();
+  const { data } = await admin.from("profiles").select("id, role, employee:employee_records(employment_status)").eq("role", "admin");
+  return (data ?? []).filter((row) => {
+    const record = Array.isArray(row.employee) ? row.employee[0] : row.employee;
+    const status = (record as { employment_status?: string } | null)?.employment_status;
+    return status !== "inactive";
+  }).length;
+}
+
+async function recordEmployeeEvent(area: "equipe", kind: "created" | "updated" | "deleted", message: string, entityId: string, actorId: string) {
+  const admin = createAdminClient();
+  await admin.rpc("log_platform_event", {
+    p_area: area,
+    p_kind: kind,
+    p_entity: "employee",
+    p_entity_id: entityId,
+    p_message: message,
+    p_actor_id: actorId,
+  });
+}
+
+function employeeName(values: { firstName: string; lastName: string; email: string }) {
+  return [values.firstName, values.lastName].filter(Boolean).join(" ").trim() || values.email;
+}
+
 function employeeRecord(values: EmployeeValues, actorId: string) {
   return {
     hired_on: values.hiredOn,
@@ -216,6 +243,8 @@ export async function createEmployee(values: EmployeeValues, actorId: string) {
     }
   }
 
+  await recordEmployeeEvent("equipe", "created", `Cadastrou ${employeeName(values)} na equipe.`, userId, actorId);
+
   const employee = await getManagedEmployee(userId);
   if (employee) return { employee, error: null };
   return {
@@ -259,7 +288,16 @@ export async function updateEmployee(id: string, values: EmployeeValues, actorId
   const admin = createAdminClient();
   const current = await getManagedEmployee(id);
   if (!current) return { employee: null, error: "Funcionário não encontrado." };
-  if (!current.manageable) return { employee: null, error: "Administradores não podem ser alterados." };
+  const blocked = lastAdminBlocked({
+    actorId,
+    targetId: id,
+    currentRole: current.role,
+    currentActive: current.employmentStatus !== "inactive",
+    nextRole: values.role,
+    nextActive: values.employmentStatus !== "inactive",
+    activeAdminCount: await countActiveAdmins(),
+  });
+  if (blocked) return { employee: null, error: blocked };
 
   const oldEmail = current.email;
   const { error: authError } = await admin.auth.admin.updateUserById(id, {
@@ -325,13 +363,14 @@ export async function updateEmployee(id: string, values: EmployeeValues, actorId
     return { employee: null, error: profileError?.message || employeeError?.message || "Não foi possível salvar o funcionário." };
   }
 
+  const kind = values.employmentStatus === "inactive" && current.employmentStatus !== "inactive" ? "deleted" : "updated";
+  await recordEmployeeEvent("equipe", kind, `${kind === "deleted" ? "Desativou" : "Atualizou a ficha de"} ${employeeName(values)}.`, id, actorId);
   return { employee: await getManagedEmployee(id), error: null };
 }
 
 export async function deactivateEmployee(id: string, actorId: string) {
   const current = await getManagedEmployee(id);
   if (!current) return "Funcionário não encontrado.";
-  if (!current.manageable) return "Administradores não podem ser desativados.";
   const result = await updateEmployee(id, {
     firstName: current.firstName,
     lastName: current.lastName,

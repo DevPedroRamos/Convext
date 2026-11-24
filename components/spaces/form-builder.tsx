@@ -12,10 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import type { AppRole } from "@/lib/access";
 import { roleLabels, SPACE_ROLES } from "@/lib/spaces/roles";
+import type { FeedbackType } from "@/lib/feedback-types";
 import type { FieldType, FormField, QuickAction, Space, SpaceForm } from "@/lib/spaces/types";
 import { cn } from "@/lib/utils";
 
-const FIELD_LABELS: Record<FieldType, string> = { text: "Texto", longtext: "Texto longo", number: "Número", date: "Data", select: "Seleção", client: "Cliente", link: "Link" };
+const FIELD_LABELS: Record<FieldType, string> = { text: "Texto", longtext: "Texto longo", number: "Número", date: "Data", select: "Seleção", client: "Cliente", link: "Link", feedback: "Tipo de feedback", gallery: "Galeria", appointment: "Compromisso" };
 
 type Draft = { id: string | null; spaceId: string; name: string; description: string; audienceRoles: AppRole[]; active: boolean; fields: FormField[] };
 
@@ -27,7 +28,7 @@ function blank(spaceId: string): Draft {
 }
 const fieldKey = () => `campo_${Math.random().toString(36).slice(2, 8)}`;
 
-export function FormBuilder({ forms, spaces, quickActions }: { forms: SpaceForm[]; spaces: Space[]; quickActions: QuickAction[] }) {
+export function FormBuilder({ forms, spaces, quickActions, feedbackTypes }: { forms: SpaceForm[]; spaces: Space[]; quickActions: QuickAction[]; feedbackTypes: FeedbackType[] }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(forms[0] ? toDraft(forms[0]) : spaces[0] ? blank(spaces[0].id) : null);
   const [saving, setSaving] = useState(false);
@@ -131,6 +132,9 @@ export function FormBuilder({ forms, spaces, quickActions }: { forms: SpaceForm[
                     </div>
                   </div>
                   {field.type === "select" ? <Input value={field.options ?? ""} onChange={(event) => patchField(index, { options: event.target.value })} placeholder="Opções separadas por vírgula" aria-label="Opções" /> : null}
+                  {field.type === "feedback" ? <p className="text-xs text-muted-foreground">Opções vêm do catálogo em Gestão → Tipos de feedback.</p> : null}
+                  {field.type === "gallery" ? <p className="text-xs text-muted-foreground">Permite selecionar várias imagens (até 8).</p> : null}
+                  {field.type === "appointment" ? <p className="text-xs text-muted-foreground">No máximo um por formulário. Data, duração, local e participantes.</p> : null}
                   {fixed ? <p className="text-xs text-muted-foreground">Vira o título da tarefa.</p> : null}
                 </div>
               );
@@ -151,7 +155,7 @@ export function FormBuilder({ forms, spaces, quickActions }: { forms: SpaceForm[
             {draft.description ? <p className="mt-1 text-sm text-muted-foreground">{draft.description}</p> : null}
           </div>
           <div className="pointer-events-none grid gap-4 opacity-90">
-            {draft.fields.map((field) => <FieldInput key={field.key} field={field} value="" clients={[{ id: "x", name: "Cliente de exemplo" }]} onChange={() => {}} disabled />)}
+            {draft.fields.map((field) => <FieldInput key={field.key} field={field} value="" clients={[{ id: "x", name: "Cliente de exemplo" }]} feedbackTypes={feedbackTypes} onChange={() => {}} disabled />)}
           </div>
         </section>
       </div>

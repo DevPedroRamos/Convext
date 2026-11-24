@@ -7,6 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { spacesRequest } from "@/components/spaces/api";
 import { TaskCard } from "@/components/spaces/task-card";
+import { type AttendeeOption } from "@/components/spaces/appointment-field";
 import { type ClientOption, TaskFormDialog } from "@/components/spaces/task-form-dialog";
 import { TaskSheet } from "@/components/spaces/task-sheet";
 import { StatusBadge } from "@/components/finance/ui";
@@ -16,11 +17,12 @@ import { Input } from "@/components/ui/input";
 import { Kanban, KanbanBoard, KanbanColumn, KanbanColumnContent, KanbanItem, KanbanItemHandle, KanbanOverlay } from "@/components/ui/kanban";
 import { ownerLabel, roleLabels } from "@/lib/spaces/roles";
 import { canAct, canSeeSpace, canSubmitForm, isMyTurn, missingRequirement, nextStage, orderedStages, type Viewer } from "@/lib/spaces/rules";
+import type { FeedbackType } from "@/lib/feedback-types";
 import type { Space, SpaceForm, SpaceTask } from "@/lib/spaces/types";
 
-type Props = { space: Space; tasks: SpaceTask[]; forms: SpaceForm[]; clients: ClientOption[]; viewer: Viewer };
+type Props = { space: Space; tasks: SpaceTask[]; forms: SpaceForm[]; clients: ClientOption[]; attendees?: AttendeeOption[]; viewer: Viewer; feedbackTypes: FeedbackType[] };
 
-export function SpaceBoard({ space, tasks, forms, clients, viewer }: Props) {
+export function SpaceBoard({ space, tasks, forms, clients, attendees = [], viewer, feedbackTypes }: Props) {
   const router = useRouter();
   const stages = orderedStages(space);
   const [query, setQuery] = useState("");
@@ -128,8 +130,8 @@ export function SpaceBoard({ space, tasks, forms, clients, viewer }: Props) {
       </div>
       <p className="text-xs text-muted-foreground">Arraste para a próxima coluna ou abra a tarefa. Só o dono da etapa avança; o admin move para qualquer coluna.</p>
 
-      <TaskSheet task={selected} space={space} form={selected ? forms.find((form) => form.id === selected.formId) ?? null : null} viewer={viewer} onClose={() => setSelectedId(null)} />
-      <TaskFormDialog form={openForm} space={space} clients={clients} onOpenChange={(open) => !open && setOpenForm(null)} />
+      <TaskSheet task={selected} space={space} form={selected ? forms.find((form) => form.id === selected.formId) ?? null : null} viewer={viewer} attendees={attendees} onClose={() => setSelectedId(null)} />
+      <TaskFormDialog form={openForm} space={space} clients={clients} attendees={attendees} feedbackTypes={feedbackTypes} onOpenChange={(open) => !open && setOpenForm(null)} />
     </div>
   );
 }

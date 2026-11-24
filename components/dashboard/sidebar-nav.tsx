@@ -9,6 +9,7 @@ import {
   FileSignature,
   FileText,
   Headphones,
+  CalendarDays,
   LayoutDashboard,
   ListTodo,
   type LucideIcon,
@@ -16,7 +17,9 @@ import {
   PieChart,
   Receipt,
   Scale,
+  ScrollText,
   Settings2,
+  Shield,
   SlidersHorizontal,
   Target,
   Users,
@@ -33,11 +36,10 @@ type NavSection = { label: string; items: NavItem[] };
 const items: NavItem[] = [
   { href: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/app/tarefas", label: "Minhas tarefas", icon: ListTodo },
+  { href: "/app/agenda", label: "Agenda", icon: CalendarDays },
   { href: "/app/clientes", label: "Clientes", icon: Users },
   { href: "/app/salas", label: "Salas", icon: Headphones },
   { href: "/app/cases", label: "Cases", icon: Briefcase },
-  { href: "/app/equipe", label: "Equipe", icon: UsersRound },
-  { href: "/app/gestao", label: "Gestão da plataforma", icon: Settings2 },
 ];
 
 const financeSections: NavSection[] = [
@@ -52,8 +54,19 @@ const financeSections: NavSection[] = [
       { href: "/app/financeiro/produtos", label: "Produtos", icon: Package },
     ],
   },
+];
+
+const adminSections: NavSection[] = [
   {
-    label: "Administrativo",
+    label: "Plataforma",
+    items: [
+      { href: "/app/equipe", label: "Equipe", icon: UsersRound },
+      { href: "/app/gestao", label: "Gestão da plataforma", icon: Settings2 },
+      { href: "/app/gestao/logs", label: "Logs", icon: ScrollText },
+    ],
+  },
+  {
+    label: "Financeiro",
     items: [
       { href: "/app/financeiro/admin", label: "Gerencial", icon: LayoutDashboard, exact: true },
       { href: "/app/financeiro/admin/folha", label: "Folha", icon: Receipt },
@@ -64,21 +77,38 @@ const financeSections: NavSection[] = [
 ];
 
 const FINANCE_OPEN_KEY = "convext:sidebar:financeiro";
+const ADMIN_OPEN_KEY = "convext:sidebar:admin";
 
 function subscribeStorage(onChange: () => void) {
   window.addEventListener("storage", onChange);
   return () => window.removeEventListener("storage", onChange);
 }
 
-function readStoredOpen() {
+function readStoredOpen(key: string) {
   try {
-    return window.localStorage.getItem(FINANCE_OPEN_KEY) === "1";
+    return window.localStorage.getItem(key) === "1";
   } catch {
     return false;
   }
 }
 
+function useNavOpen(key: string, inSection: boolean, pathname: string) {
+  const storedOpen = useSyncExternalStore(subscribeStorage, () => readStoredOpen(key), () => false);
+  const [manual, setManual] = useState<{ open: boolean; path: string } | null>(null);
+  const open = manual && manual.path === pathname ? manual.open : inSection || storedOpen;
+  function toggle(next: boolean) {
+    setManual({ open: next, path: pathname });
+    try {
+      window.localStorage.setItem(key, next ? "1" : "0");
+    } catch {
+      // Armazenamento indisponível: o estado vale só nesta página.
+    }
+  }
+  return { open, toggle };
+}
+
 function isActive(pathname: string, item: NavItem) {
+  if (item.href === "/app/gestao" && pathname.startsWith("/app/gestao/logs")) return false;
   return item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
@@ -108,20 +138,13 @@ export function SidebarNav({ role, spaces = [] }: { role?: string | null; spaces
   const sections = financeSections
     .map((section) => ({ ...section, items: section.items.filter((item) => canAccessPath(role, item.href)) }))
     .filter((section) => section.items.length > 0);
-  const inFinance = pathname === "/app/financeiro" || pathname.startsWith("/app/financeiro/");
-  const storedOpen = useSyncExternalStore(subscribeStorage, readStoredOpen, () => false);
-  // null = segue o padrão (aberto dentro do financeiro ou pela preferência salva).
-  const [manual, setManual] = useState<{ open: boolean; path: string } | null>(null);
-  const open = manual && manual.path === pathname ? manual.open : inFinance || storedOpen;
-
-  function toggle(next: boolean) {
-    setManual({ open: next, path: pathname });
-    try {
-      window.localStorage.setItem(FINANCE_OPEN_KEY, next ? "1" : "0");
-    } catch {
-      // Armazenamento indisponível: o estado vale só nesta página.
-    }
-  }
+  const adminNav = adminSections
+    .map((section) => ({ ...section, items: section.items.filter((item) => canAccessPath(role, item.href)) }))
+    .filter((section) => section.items.length > 0);
+  const inFinance = pathname === "/app/financeiro" || (pathname.startsWith("/app/financeiro/") && !pathname.startsWith("/app/financeiro/admin"));
+  const inAdmin = pathname.startsWith("/app/equipe") || pathname.startsWith("/app/gestao") || pathname.startsWith("/app/financeiro/admin");
+  const finance = useNavOpen(FINANCE_OPEN_KEY, inFinance, pathname);
+  const admin = useNavOpen(ADMIN_OPEN_KEY, inAdmin, pathname);
 
   return (
     <nav className="grid gap-1">
@@ -145,7 +168,7 @@ export function SidebarNav({ role, spaces = [] }: { role?: string | null; spaces
         </div>
       ) : null}
       {sections.length > 0 ? (
-        <Collapsible open={open} onOpenChange={toggle}>
+        <Collapsible open={finance.open} onOpenChange={finance.toggle}>
           <CollapsibleTrigger
             className={cn(
               "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground",
@@ -153,10 +176,33 @@ export function SidebarNav({ role, spaces = [] }: { role?: string | null; spaces
             )}
           >
             <Wallet className="size-4" /> Financeiro
-            <ChevronDown className={cn("ml-auto size-4 transition-transform", open && "rotate-180")} />
+            <ChevronDown className={cn("ml-auto size-4 transition-transform", finance.open && "rotate-180")} />
           </CollapsibleTrigger>
           <CollapsibleContent className="grid gap-3 overflow-hidden pt-1 pl-4">
             {sections.map((section) => (
+              <div key={section.label} className="grid gap-0.5 border-l border-border pl-2">
+                <p className="px-3 pt-1 pb-1 text-[11px] font-medium tracking-wide text-muted-foreground/70 uppercase">{section.label}</p>
+                {section.items.map((item) => (
+                  <NavLink key={item.href} item={item} pathname={pathname} nested />
+                ))}
+              </div>
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
+      ) : null}
+      {adminNav.length > 0 ? (
+        <Collapsible open={admin.open} onOpenChange={admin.toggle}>
+          <CollapsibleTrigger
+            className={cn(
+              "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground",
+              inAdmin && "text-foreground",
+            )}
+          >
+            <Shield className="size-4" /> Área administrativa
+            <ChevronDown className={cn("ml-auto size-4 transition-transform", admin.open && "rotate-180")} />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="grid gap-3 overflow-hidden pt-1 pl-4">
+            {adminNav.map((section) => (
               <div key={section.label} className="grid gap-0.5 border-l border-border pl-2">
                 <p className="px-3 pt-1 pb-1 text-[11px] font-medium tracking-wide text-muted-foreground/70 uppercase">{section.label}</p>
                 {section.items.map((item) => (

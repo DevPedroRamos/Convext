@@ -4,10 +4,12 @@ import { Briefcase, FileText, Target, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ClientForm } from "@/components/forms/client-form";
+import { type AttendeeOption } from "@/components/spaces/appointment-field";
 import { type ClientOption, TaskFormDialog } from "@/components/spaces/task-form-dialog";
 import { CircularNavigation, type CircularNavItem } from "@/components/ui/circular-navigation-bar";
 import { PearlButton } from "@/components/ui/pearl-button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import type { FeedbackType } from "@/lib/feedback-types";
 import type { TeamProfile } from "@/lib/profile";
 import type { QuickAction, Space, SpaceForm } from "@/lib/spaces/types";
 
@@ -17,12 +19,14 @@ type Props = {
   forms: SpaceForm[];
   spaces: Space[];
   clients: ClientOption[];
+  attendees?: AttendeeOption[];
   team: TeamProfile[];
+  feedbackTypes: FeedbackType[];
 };
 
 const systemIcons = { case: Briefcase, client: UserPlus, lead: Target } as const;
 
-export function AppQuickActions({ actions, forms, spaces, clients, team }: Props) {
+export function AppQuickActions({ actions, forms, spaces, clients, attendees = [], team, feedbackTypes }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [clientOpen, setClientOpen] = useState(false);
@@ -49,7 +53,7 @@ export function AppQuickActions({ actions, forms, spaces, clients, team }: Props
         <PearlButton open={open} className="relative z-50" aria-label={open ? "Fechar atalhos" : "Abrir atalhos"} onClick={() => setOpen((current) => !current)} />
       </div>
 
-      <TaskFormDialog form={form} space={form ? spaces.find((space) => space.id === form.spaceId) ?? null : null} clients={clients} onOpenChange={(next) => !next && setForm(null)} />
+      <TaskFormDialog form={form} space={form ? spaces.find((space) => space.id === form.spaceId) ?? null : null} clients={clients} attendees={attendees} feedbackTypes={feedbackTypes} onOpenChange={(next) => !next && setForm(null)} />
 
       <Sheet open={clientOpen} onOpenChange={setClientOpen}>
         <SheetContent size="panel">

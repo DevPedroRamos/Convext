@@ -1,7 +1,9 @@
 // Espelho das regras do banco (supabase/migrations/*_spaces.sql) para a interface decidir
 // o que mostrar. Quem decide de fato são as funções space_* no banco.
 import type { AppRole } from "@/lib/access";
+import { parseGallery } from "@/lib/spaces/gallery";
 import type { FormField, Space, SpaceStage, SpaceTask } from "@/lib/spaces/types";
+import type { AppointmentInput } from "@/lib/validations/spaces";
 
 export type Viewer = { id: string; role: AppRole };
 
@@ -64,16 +66,24 @@ export function selectOptions(field: Pick<FormField, "options">) {
 }
 
 /** Valida os valores de um envio: devolve o primeiro rótulo obrigatório vazio. */
-export function firstMissingField(fields: FormField[], values: Record<string, string>, clientId: string | null) {
+export function firstMissingField(fields: FormField[], values: Record<string, string>, clientId: string | null, appointment?: AppointmentInput | null) {
   for (const field of fields) {
     if (!field.required) continue;
     if (field.type === "client") {
       if (!clientId) return field.label;
+    } else if (field.type === "gallery") {
+      if (!parseGallery(values[field.key]).length) return field.label;
+    } else if (field.type === "appointment") {
+      if (!appointment?.startsAt || !appointment.attendeeIds.length) return field.label;
     } else if (!values[field.key]?.trim()) {
       return field.label;
     }
   }
   return null;
+}
+
+export function canReschedule(role: AppRole) {
+  return role === "admin" || role === "coordinator";
 }
 
 /** Problemas na configuração de um fluxo antes de salvar. */

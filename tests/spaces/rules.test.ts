@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { canAccessPath } from "@/lib/access";
-import { canAct, canClaim, canSeeSpace, canSubmitForm, firstMissingField, flowProblems, isMyTurn, missingRequirement, nextStage, rejectTarget } from "@/lib/spaces/rules";
+import { parseGallery } from "@/lib/spaces/gallery";
+import { canAct, canClaim, canReschedule, canSeeSpace, canSubmitForm, firstMissingField, flowProblems, isMyTurn, missingRequirement, nextStage, rejectTarget } from "@/lib/spaces/rules";
 import type { Space, SpaceStage } from "@/lib/spaces/types";
 import { spaceFormSchema, taskActionSchema } from "@/lib/validations/spaces";
 
@@ -112,11 +113,71 @@ describe("formulários", () => {
     expect(spaceFormSchema.safeParse({ ...base, fields: fields.slice(1) }).success).toBe(false);
     expect(spaceFormSchema.safeParse({ ...base, fields: [...fields, { ...fields[1], key: "cliente2" }] }).success).toBe(false);
     expect(spaceFormSchema.safeParse({ ...base, audienceRoles: [], fields }).success).toBe(false);
+    expect(spaceFormSchema.safeParse({ ...base, fields: [...fields, { key: "tipo", label: "Tipo", type: "feedback", required: true }] }).success).toBe(true);
+    expect(
+      spaceFormSchema.safeParse({
+        ...base,
+        fields: [
+          ...fields,
+          { key: "tipo", label: "Tipo", type: "feedback", required: true },
+          { key: "tipo2", label: "Tipo 2", type: "feedback", required: false },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("exige o tipo de feedback obrigatório", () => {
+    const feedbackFields = [
+      { key: "titulo", label: "Nome", type: "text" as const, required: true },
+      { key: "tipo", label: "Tipo de feedback", type: "feedback" as const, required: true },
+    ];
+    expect(firstMissingField(feedbackFields, { titulo: "Lead ruim" }, null)).toBe("Tipo de feedback");
+    expect(firstMissingField(feedbackFields, { titulo: "Lead ruim", tipo: "renda baixa" }, null)).toBeNull();
+  });
+
+  it("aceita galeria e exige imagens quando obrigatória", () => {
+    const galleryFields = [
+      { key: "titulo", label: "Nome", type: "text" as const, required: true },
+      { key: "imagens", label: "Imagens", type: "gallery" as const, required: true },
+    ];
+    const base = { spaceId: "8b0c6a4e-8a5f-4a43-9a3f-6f1c1f5f0a11", name: "Pedido", description: "", audienceRoles: ["admin"], active: true };
+    expect(spaceFormSchema.safeParse({ ...base, fields: galleryFields }).success).toBe(true);
+    expect(firstMissingField(galleryFields, { titulo: "Print", imagens: "[]" }, null)).toBe("Imagens");
+    expect(firstMissingField(galleryFields, { titulo: "Print", imagens: JSON.stringify(["https://cdn.example/a.jpg"]) }, null)).toBeNull();
+  });
+
+  it("lê URLs da galeria e ignora lista vazia", () => {
+    expect(parseGallery("")).toEqual([]);
+    expect(parseGallery("[]")).toEqual([]);
+    expect(parseGallery(JSON.stringify(["https://cdn.example/a.jpg", "ftp://x"]))).toEqual(["https://cdn.example/a.jpg"]);
   });
 
   it("exige motivo ao recusar", () => {
     expect(taskActionSchema.safeParse({ action: "reject", reason: "" }).success).toBe(false);
     expect(taskActionSchema.safeParse({ action: "reject", reason: "Trocar foto" }).success).toBe(true);
+  });
+
+  it("aceita no máximo um campo de compromisso e cobra o agendamento obrigatório", () => {
+    const appointmentFields = [
+      { key: "titulo", label: "Nome", type: "text" as const, required: true },
+      { key: "quando", label: "Compromisso", type: "appointment" as const, required: true },
+    ];
+    const base = { spaceId: "8b0c6a4e-8a5f-4a43-9a3f-6f1c1f5f0a11", name: "Pedido", description: "", audienceRoles: ["admin"], active: true };
+    expect(spaceFormSchema.safeParse({ ...base, fields: appointmentFields }).success).toBe(true);
+    expect(
+      spaceFormSchema.safeParse({
+        ...base,
+        fields: [...appointmentFields, { key: "quando2", label: "Outro", type: "appointment", required: false }],
+      }).success,
+    ).toBe(false);
+    expect(firstMissingField(appointmentFields, { titulo: "Visita" }, null)).toBe("Compromisso");
+    expect(firstMissingField(appointmentFields, { titulo: "Visita" }, null, { startsAt: "2026-11-24T13:00:00.000Z", durationMinutes: 60, location: "", attendeeIds: ["8b0c6a4e-8a5f-4a43-9a3f-6f1c1f5f0a11"] })).toBeNull();
+  });
+
+  it("só coordenador e admin remarcam", () => {
+    expect(canReschedule("admin")).toBe(true);
+    expect(canReschedule("coordinator")).toBe(true);
+    expect(canReschedule("creator")).toBe(false);
   });
 });
 

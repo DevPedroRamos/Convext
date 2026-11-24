@@ -28,7 +28,7 @@ Cada pessoa marca Disponível/Ausente e escolhe um status atual. A bolinha verde
 - Auto-ausente por inatividade com a aba ainda aberta (timer em background continua Online).
 - Exclusão física de contas ou do histórico relacionado.
 - Coordinator na página Equipe.
-- Editar ou desativar usuários com role `admin`.
+- Desativar a si mesmo ou o último administrador ativo.
 
 ## Comportamento
 

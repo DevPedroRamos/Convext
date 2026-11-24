@@ -9,6 +9,7 @@ import { financeRequest } from "@/components/finance/api";
 import { Field } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
@@ -126,15 +127,13 @@ function LeadForm({ lead, people, onCancel, onSaved }: { lead?: Lead | null; peo
           control={form.control}
           name="assigneeId"
           render={({ field }) => (
-            <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
-              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sem responsável</SelectItem>
-                {people.map((person) => (
-                  <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={field.value || ""}
+              onValueChange={field.onChange}
+              emptyLabel="Sem responsável"
+              placeholder="Sem responsável"
+              options={people.map((person) => ({ value: person.id, label: person.name }))}
+            />
           )}
         />
       </Field>
@@ -206,15 +205,13 @@ export function ConvertLeadDialog({ lead, clients, onOpenChange, onConverted }: 
             <Input value={document} onChange={(event) => setDocument(event.target.value)} />
           </Field>
           <Field label="Conta operacional (opcional)" hint="Vincula ao cliente atendido em Demandas.">
-            <Select value={clientId || "none"} onValueChange={(value) => setClientId(value === "none" ? "" : value)}>
-              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sem vínculo</SelectItem>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={clientId}
+              onValueChange={setClientId}
+              emptyLabel="Sem vínculo"
+              placeholder="Sem vínculo"
+              options={clients.map((client) => ({ value: client.id, label: client.name }))}
+            />
           </Field>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>

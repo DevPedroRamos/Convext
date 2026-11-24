@@ -57,8 +57,28 @@ export type EmploymentStatus = (typeof employmentStatuses)[number];
 export type ContractType = (typeof contractTypes)[number];
 export type PaymentModel = (typeof paymentModels)[number];
 
-export function canManageEmployeeRole(role: string | null | undefined) {
-  return role !== "admin";
+export function canManageEmployeeRole(role?: string | null) {
+  return typeof role === "string" || role == null;
+}
+
+export function lastAdminBlocked(input: {
+  actorId: string;
+  targetId: string;
+  currentRole: string;
+  currentActive: boolean;
+  nextRole: string;
+  nextActive: boolean;
+  activeAdminCount: number;
+}) {
+  const wasAdmin = input.currentRole === "admin" && input.currentActive;
+  const staysAdmin = input.nextRole === "admin" && input.nextActive;
+  if (input.actorId === input.targetId && !input.nextActive) {
+    return "Você não pode desativar o próprio acesso.";
+  }
+  if (wasAdmin && !staysAdmin && input.activeAdminCount <= 1) {
+    return "Não é possível remover o último administrador.";
+  }
+  return null;
 }
 
 export function inviteAccessRole(role: EmployeeRole, cargo: string): EmployeeRole {

@@ -14,7 +14,8 @@ import { Field, StatusBadge } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDate, todayIso } from "@/lib/finance/dates";
@@ -226,39 +227,29 @@ function ProposalForm({ proposal, prefillLead, customers, leads, products, peopl
         <Input {...form.register("title")} autoFocus />
       </Field>
       <Field label="Para" error={errors.customerId?.message}>
-        <Select value={target || "none"} onValueChange={(value) => chooseTarget(value === "none" ? "" : value)}>
-          <SelectTrigger className="w-full"><SelectValue placeholder="Escolha cliente ou lead" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">Escolha cliente ou lead</SelectItem>
-            <SelectGroup>
-              <SelectLabel>Clientes</SelectLabel>
-              {customers.map((customer) => (
-                <SelectItem key={customer.id} value={`c:${customer.id}`}>{customer.name}</SelectItem>
-              ))}
-            </SelectGroup>
-            <SelectGroup>
-              <SelectLabel>Leads</SelectLabel>
-              {openLeads.map((lead) => (
-                <SelectItem key={lead.id} value={`l:${lead.id}`}>{lead.company ? `${lead.company} (${lead.name})` : lead.name}</SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          value={target}
+          onValueChange={chooseTarget}
+          emptyLabel="Escolha cliente ou lead"
+          placeholder="Escolha cliente ou lead"
+          options={[
+            ...customers.map((customer) => ({ value: `c:${customer.id}`, label: `Cliente · ${customer.name}` })),
+            ...openLeads.map((lead) => ({ value: `l:${lead.id}`, label: `Lead · ${lead.company ? `${lead.company} (${lead.name})` : lead.name}` })),
+          ]}
+        />
       </Field>
       <Field label="Responsável" error={errors.ownerId?.message}>
         <Controller
           control={form.control}
           name="ownerId"
           render={({ field }) => (
-            <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
-              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sem responsável</SelectItem>
-                {people.map((person) => (
-                  <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={field.value || ""}
+              onValueChange={field.onChange}
+              emptyLabel="Sem responsável"
+              placeholder="Sem responsável"
+              options={people.map((person) => ({ value: person.id, label: person.name }))}
+            />
           )}
         />
       </Field>
@@ -345,15 +336,13 @@ function AcceptForm({ proposal, people, defaultDueDay, onCancel, onAccepted }: {
         <Input type="number" min={1} max={31} value={dueDay} onChange={(event) => setDueDay(Number(event.target.value))} required />
       </Field>
       <Field label="Vendedor (comissão)">
-        <Select value={sellerId || "none"} onValueChange={(value) => setSellerId(value === "none" ? "" : value)}>
-          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">Sem vendedor</SelectItem>
-            {people.map((person) => (
-              <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          value={sellerId}
+          onValueChange={setSellerId}
+          emptyLabel="Sem vendedor"
+          placeholder="Sem vendedor"
+          options={people.map((person) => ({ value: person.id, label: person.name }))}
+        />
       </Field>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>

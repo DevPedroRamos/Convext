@@ -11,7 +11,7 @@ import { DataTable, type FinanceColumn } from "@/components/finance/data-table";
 import { Field } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCents } from "@/lib/finance/money";
@@ -155,15 +155,13 @@ function CustomerForm({ customer, people, clients, onCancel, onSaved }: { custom
           control={form.control}
           name="clientId"
           render={({ field }) => (
-            <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
-              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sem vínculo</SelectItem>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={field.value || ""}
+              onValueChange={field.onChange}
+              emptyLabel="Sem vínculo"
+              placeholder="Sem vínculo"
+              options={clients.map((client) => ({ value: client.id, label: client.name }))}
+            />
           )}
         />
       </Field>
@@ -172,15 +170,13 @@ function CustomerForm({ customer, people, clients, onCancel, onSaved }: { custom
           control={form.control}
           name="ownerId"
           render={({ field }) => (
-            <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
-              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sem responsável</SelectItem>
-                {people.map((person) => (
-                  <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={field.value || ""}
+              onValueChange={field.onChange}
+              emptyLabel="Sem responsável"
+              placeholder="Sem responsável"
+              options={people.map((person) => ({ value: person.id, label: person.name }))}
+            />
           )}
         />
       </Field>

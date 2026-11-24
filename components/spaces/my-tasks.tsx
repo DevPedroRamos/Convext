@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { TaskCard } from "@/components/spaces/task-card";
+import { type AttendeeOption } from "@/components/spaces/appointment-field";
 import { TaskSheet } from "@/components/spaces/task-sheet";
 import { isMyTurn, type Viewer } from "@/lib/spaces/rules";
 import type { Space, SpaceForm, SpaceTask } from "@/lib/spaces/types";
 
-export function MyTasks({ tasks, spaces, forms, viewer }: { tasks: SpaceTask[]; spaces: Space[]; forms: SpaceForm[]; viewer: Viewer }) {
+export function MyTasks({ tasks, spaces, forms, viewer, attendees = [] }: { tasks: SpaceTask[]; spaces: Space[]; forms: SpaceForm[]; viewer: Viewer; attendees?: AttendeeOption[] }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const spaceById = new Map(spaces.map((space) => [space.id, space]));
   const stageById = new Map(spaces.flatMap((space) => space.stages.map((stage) => [stage.id, stage] as const)));
@@ -37,6 +38,7 @@ export function MyTasks({ tasks, spaces, forms, viewer }: { tasks: SpaceTask[]; 
         space={selected ? spaceById.get(selected.spaceId) ?? null : null}
         form={selected ? forms.find((form) => form.id === selected.formId) ?? null : null}
         viewer={viewer}
+        attendees={attendees}
         onClose={() => setSelectedId(null)}
       />
     </>

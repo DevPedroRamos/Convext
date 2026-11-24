@@ -24,7 +24,7 @@ export type Space = {
   stages: SpaceStage[];
 };
 
-export const FIELD_TYPES = ["text", "longtext", "number", "date", "select", "client", "link"] as const;
+export const FIELD_TYPES = ["text", "longtext", "number", "date", "select", "client", "link", "feedback", "gallery", "appointment"] as const;
 export type FieldType = (typeof FIELD_TYPES)[number];
 
 export type FormField = {
@@ -56,10 +56,23 @@ export type QuickAction = {
   position: number;
 };
 
+export type TaskAppointment = {
+  id: string;
+  taskId: string;
+  startsAt: string;
+  endsAt: string;
+  location: string;
+  attendees: { id: string; name: string }[];
+  spaceId?: string;
+  spaceName?: string;
+  spaceColor?: string;
+  title?: string;
+};
+
 export type TaskEvent = {
   id: string;
   actorName: string | null;
-  kind: "created" | "advanced" | "approved" | "rejected" | "claimed" | "moved" | "comment";
+  kind: "created" | "advanced" | "approved" | "rejected" | "claimed" | "moved" | "comment" | "scheduled" | "rescheduled" | "unscheduled";
   message: string;
   createdAt: string;
 };
@@ -80,6 +93,7 @@ export type SpaceTask = {
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  appointment: TaskAppointment | null;
 };
 
 export type AppNotification = {

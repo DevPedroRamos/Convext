@@ -2,9 +2,12 @@
 
 import { Check, Hand, Loader2, Send, Trash, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { spacesRequest } from "@/components/spaces/api";
+import { AppointmentField, type AttendeeOption } from "@/components/spaces/appointment-field";
+import { GalleryThumbs } from "@/components/spaces/gallery-field";
 import { timeAgo } from "@/components/spaces/task-card";
+import { TaskHistory } from "@/components/spaces/task-history";
 import { Field } from "@/components/finance/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,23 +15,36 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { ownerLabel } from "@/lib/spaces/roles";
-import { canAct, canClaim, missingRequirement, nextStage, orderedStages, rejectTarget, type Viewer } from "@/lib/spaces/rules";
+import { parseGallery } from "@/lib/spaces/gallery";
+import { canAct, canClaim, canReschedule, missingRequirement, nextStage, orderedStages, rejectTarget, type Viewer } from "@/lib/spaces/rules";
 import type { Space, SpaceForm, SpaceTask, TaskEvent } from "@/lib/spaces/types";
+import type { AppointmentInput } from "@/lib/validations/spaces";
 import { cn } from "@/lib/utils";
 
-type Props = { task: SpaceTask | null; space: Space | null; form: SpaceForm | null; viewer: Viewer; onClose: () => void };
+type Props = { task: SpaceTask | null; space: Space | null; form: SpaceForm | null; viewer: Viewer; attendees?: AttendeeOption[]; onClose: () => void };
 
-export function TaskSheet({ task, space, form, viewer, onClose }: Props) {
+export function TaskSheet({ task, space, form, viewer, attendees = [], onClose }: Props) {
   return (
     <Sheet open={Boolean(task)} onOpenChange={(open) => !open && onClose()}>
       <SheetContent size="panel">
-        {task && space ? <TaskDetail key={`${task.id}:${task.stageId}:${task.updatedAt}`} task={task} space={space} form={form} viewer={viewer} onClose={onClose} /> : null}
+        {task && space ? <TaskDetail key={`${task.id}:${task.stageId}:${task.updatedAt}`} task={task} space={space} form={form} viewer={viewer} attendees={attendees} onClose={onClose} /> : null}
       </SheetContent>
     </Sheet>
   );
 }
 
-function TaskDetail({ task, space, form, viewer, onClose }: { task: SpaceTask; space: Space; form: SpaceForm | null; viewer: Viewer; onClose: () => void }) {
+function toInput(task: SpaceTask): AppointmentInput | null {
+  const item = task.appointment;
+  if (!item) return null;
+  return {
+    startsAt: item.startsAt,
+    durationMinutes: Math.max(15, Math.round((new Date(item.endsAt).getTime() - new Date(item.startsAt).getTime()) / 60000)),
+    location: item.location,
+    attendeeIds: item.attendees.map((attendee) => attendee.id),
+  };
+}
+
+function TaskDetail({ task, space, form, viewer, attendees, onClose }: { task: SpaceTask; space: Space; form: SpaceForm | null; viewer: Viewer; attendees: AttendeeOption[]; onClose: () => void }) {
   const router = useRouter();
   const stages = orderedStages(space);
   const stage = stages.find((item) => item.id === task.stageId) ?? stages[0];
@@ -43,6 +59,13 @@ function TaskDetail({ task, space, form, viewer, onClose }: { task: SpaceTask; s
   const [comment, setComment] = useState("");
   const [events, setEvents] = useState<TaskEvent[] | null>(null);
   const [moveTo, setMoveTo] = useState(stage.id);
+  const [editingAppointment, setEditingAppointment] = useState(false);
+  const [appointmentDraft, setAppointmentDraft] = useState<AppointmentInput | null>(() => toInput(task));
+
+  async function loadEvents() {
+    const payload = await fetch(`/api/spaces/tasks/${task.id}`).then((response) => response.json()).catch(() => ({}));
+    setEvents(payload.data ?? []);
+  }
 
   useEffect(() => {
     let alive = true;
@@ -54,7 +77,10 @@ function TaskDetail({ task, space, form, viewer, onClose }: { task: SpaceTask; s
     setBusy(key);
     const done = await spacesRequest(`/api/spaces/tasks/${task.id}`, "POST", body, success);
     setBusy(null);
-    if (done) router.refresh();
+    if (done) {
+      router.refresh();
+      await loadEvents();
+    }
     return done;
   }
 
@@ -66,7 +92,8 @@ function TaskDetail({ task, space, form, viewer, onClose }: { task: SpaceTask; s
     }
   }
 
-  const fields = (form?.fields ?? []).filter((field) => field.key !== "titulo" && field.type !== "client");
+  const fields = (form?.fields ?? []).filter((field) => field.key !== "titulo" && field.type !== "client" && field.type !== "appointment");
+  const schedule = canReschedule(viewer.role);
   const required = stages.filter((item) => item.requiresLabel && task.values[item.requiresLabel]);
 
   return (
@@ -136,13 +163,63 @@ function TaskDetail({ task, space, form, viewer, onClose }: { task: SpaceTask; s
         <Button variant="outline" className="w-fit" disabled={busy === "claim"} onClick={() => run("claim", { action: "claim" }, "A tarefa é sua.")}><Hand /> Pegar para mim</Button>
       ) : null}
 
+      {task.appointment || editingAppointment ? (
+        <div className="grid gap-3 rounded-lg border border-border p-4">
+          <p className="font-medium">Compromisso</p>
+          {editingAppointment ? (
+            <>
+              <AppointmentField required value={appointmentDraft} attendees={attendees} onChange={setAppointmentDraft} />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  disabled={busy === "reschedule" || !appointmentDraft?.startsAt || !appointmentDraft.attendeeIds.length}
+                  onClick={async () => {
+                    if (!appointmentDraft) return;
+                    if (await run("reschedule", { action: "reschedule", appointment: appointmentDraft }, "Compromisso remarcado.")) setEditingAppointment(false);
+                  }}
+                >
+                  {busy === "reschedule" ? <Loader2 className="animate-spin" /> : null}Salvar
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => { setEditingAppointment(false); setAppointmentDraft(toInput(task)); }}>Cancelar</Button>
+              </div>
+            </>
+          ) : task.appointment ? (
+            <>
+              <p className="text-sm">
+                {new Date(task.appointment.startsAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+                {" · "}
+                {Math.round((new Date(task.appointment.endsAt).getTime() - new Date(task.appointment.startsAt).getTime()) / 60000)} min
+              </p>
+              {task.appointment.location ? <p className="text-sm text-muted-foreground">{task.appointment.location}</p> : null}
+              <p className="text-sm text-muted-foreground">{task.appointment.attendees.map((item) => item.name).join(", ") || "—"}</p>
+              {schedule ? (
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" onClick={() => { setAppointmentDraft(toInput(task)); setEditingAppointment(true); }}>Remarcar</Button>
+                  <Button size="sm" variant="ghost" className="text-destructive" disabled={busy === "unschedule"} onClick={() => run("unschedule", { action: "unschedule" }, "Compromisso removido.")}>Remover</Button>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      ) : null}
+
       <dl className="grid grid-cols-[minmax(0,140px)_minmax(0,1fr)] gap-x-4 gap-y-2 text-sm">
         <dt className="text-muted-foreground">Cliente</dt>
         <dd>{task.clientName ?? <span className="text-muted-foreground">Sem cliente</span>}</dd>
         <dt className="text-muted-foreground">Responsável</dt>
         <dd>{task.assigneeName ?? <span className="text-muted-foreground">{stage.type === "done" ? "—" : `Fila de ${ownerLabel(stage.ownerRole)}`}</span>}</dd>
         {fields.map((field) => (
-          <FieldRow key={field.key} label={field.label} value={task.values[field.key]} />
+          <Fragment key={field.key}>
+            {field.type === "gallery" ? (
+              <>
+                <dt className="text-muted-foreground">{field.label}</dt>
+                <dd><GalleryThumbs urls={parseGallery(task.values[field.key])} /></dd>
+              </>
+            ) : (
+              <FieldRow label={field.label} value={task.values[field.key]} />
+            )}
+            {field.type === "feedback" ? <FieldRow label="Solução" value={task.values.solucao} /> : null}
+          </Fragment>
         ))}
         {required.map((item) => (
           <FieldRow key={item.id} label={item.requiresLabel!} value={task.values[item.requiresLabel!]} />
@@ -167,19 +244,7 @@ function TaskDetail({ task, space, form, viewer, onClose }: { task: SpaceTask; s
 
       <div className="grid gap-3">
         <p className="label">Histórico</p>
-        {events === null ? (
-          <p className="text-sm text-muted-foreground">Carregando…</p>
-        ) : (
-          <ol className="grid gap-2 border-l border-border pl-4 text-sm">
-            {[...events].reverse().map((event) => (
-              <li key={event.id} className={cn(event.kind === "comment" && "rounded-md bg-muted/40 px-2 py-1")}>
-                <span className="font-medium">{event.actorName?.split(" ")[0] ?? "Sistema"}</span>{" "}
-                <span className={event.kind === "rejected" ? "text-destructive" : undefined}>{event.message}</span>{" "}
-                <span className="text-xs text-muted-foreground">· {timeAgo(event.createdAt)}</span>
-              </li>
-            ))}
-          </ol>
-        )}
+        {events === null ? <p className="text-sm text-muted-foreground">Carregando…</p> : <TaskHistory events={events} />}
         <form
           className="flex gap-2"
           onSubmit={async (event) => {

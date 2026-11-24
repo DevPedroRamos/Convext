@@ -1,4 +1,4 @@
-import { Kanban, ListChecks, Zap } from "lucide-react";
+import { Kanban, ListChecks, MessageSquareWarning, ScrollText, Zap } from "lucide-react";
 import Link from "next/link";
 import { TeamStatusManager } from "@/components/dashboard/team-status-form";
 import { listTeamStatuses } from "@/lib/team-status";
@@ -7,6 +7,8 @@ const links = [
   { href: "/app/gestao/espacos", label: "Espaços e fluxos", description: "Times, membros e as etapas de cada quadro.", icon: Kanban },
   { href: "/app/gestao/formularios", label: "Formulários", description: "O que cada pessoa preenche para abrir uma tarefa.", icon: ListChecks },
   { href: "/app/gestao/atalhos", label: "Atalho rápido", description: "Quais atalhos cada role vê no botão laranja.", icon: Zap },
+  { href: "/app/gestao/feedbacks", label: "Tipos de feedback", description: "Catálogo global de nomes e soluções para o cadastro de feedback.", icon: MessageSquareWarning },
+  { href: "/app/gestao/logs", label: "Logs", description: "Registro das alterações administrativas.", icon: ScrollText },
 ];
 
 export default async function GestaoPage() {
@@ -19,7 +21,7 @@ export default async function GestaoPage() {
         <h2 className="mt-2 font-display text-h2">Configuração do admin.</h2>
       </div>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {links.map((item) => (
           <Link key={item.href} href={item.href} className="surface grid gap-2 p-5 transition hover:border-primary/50">
             <item.icon className="size-5 text-primary" />

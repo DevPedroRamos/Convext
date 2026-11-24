@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import type { ClientRecord } from "@/lib/clients";
 import type { TeamProfile } from "@/lib/profile";
 import { clientSchema, type ClientValues } from "@/lib/validations/client";
@@ -82,18 +82,16 @@ export function ClientForm({ team, record, onSuccess, onCancel }: ClientFormProp
           control={form.control}
           name="responsibleId"
           render={({ field }) => (
-            <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? "" : value)}>
-              <SelectTrigger className="w-full"><SelectValue placeholder="Sem responsável" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sem responsável</SelectItem>
-                {team.map((member) => (
-                  <SelectItem key={member.id} value={member.id}>
-                    {teamMemberName(member)}
-                    {member.cargo ? ` · ${member.cargo}` : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={field.value || ""}
+              onValueChange={field.onChange}
+              emptyLabel="Sem responsável"
+              placeholder="Sem responsável"
+              options={team.map((member) => ({
+                value: member.id,
+                label: `${teamMemberName(member)}${member.cargo ? ` · ${member.cargo}` : ""}`,
+              }))}
+            />
           )}
         />
       </Field>
