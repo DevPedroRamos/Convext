@@ -25,7 +25,7 @@ export function rejectTarget(space: Pick<Space, "stages">, stage: SpaceStage): S
   return index > 0 ? stages[index - 1] : null;
 }
 
-/** Destino do reajuste admin: recusa da última aprovação, ou a etapa antes de Concluída. */
+/** Destino do reajuste: recusa da última aprovação, ou a etapa antes de Concluída. */
 export function reworkTarget(space: Pick<Space, "stages">): SpaceStage | null {
   const stages = orderedStages(space);
   const approval = [...stages].reverse().find((item) => item.type === "approval");
@@ -37,6 +37,16 @@ export function reworkTarget(space: Pick<Space, "stages">): SpaceStage | null {
 
 export function canSeeSpace(space: Pick<Space, "memberRoles">, viewer: Viewer) {
   return viewer.role === "admin" || space.memberRoles.includes(viewer.role);
+}
+
+/** Quem vê a demanda pode editar a ficha (título, campos, cliente, responsável). */
+export function canEditTask(_viewer: Viewer) {
+  return true;
+}
+
+/** Mover livremente, reajuste e exclusão. */
+export function canManageTask(viewer: Viewer) {
+  return viewer.role === "admin";
 }
 
 export function canAct(task: Pick<SpaceTask, "createdBy" | "assigneeId">, stage: SpaceStage, viewer: Viewer) {
@@ -76,11 +86,13 @@ export function selectOptions(field: Pick<FormField, "options">) {
 }
 
 /** Valida os valores de um envio: devolve o primeiro rótulo obrigatório vazio. */
-export function firstMissingField(fields: FormField[], values: Record<string, string>, clientId: string | null, appointment?: AppointmentInput | null) {
+export function firstMissingField(fields: FormField[], values: Record<string, string>, clientId: string | null, appointment?: AppointmentInput | null, assigneeId?: string | null) {
   for (const field of fields) {
     if (!field.required) continue;
     if (field.type === "client") {
       if (!clientId) return field.label;
+    } else if (field.type === "assignee") {
+      if (!assigneeId) return field.label;
     } else if (field.type === "gallery") {
       if (!parseGallery(values[field.key]).length) return field.label;
     } else if (field.type === "appointment") {

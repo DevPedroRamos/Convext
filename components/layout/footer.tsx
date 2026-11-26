@@ -1,56 +1,53 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { Container } from "@/components/layout/container";
-import { SplitLines } from "@/components/motion/split-lines";
-import { Wordmark } from "@/components/motion/wordmark";
 import { Magnetic } from "@/components/motion/magnetic";
-import { Button } from "@/components/ui/button";
-import { RollLabel } from "@/components/ui/roll-label";
-import { siteConfig } from "@/lib/site";
+import { footer, pieces, sagaNav } from "@/lib/saga-content";
 
 const columns = [
-  { title: "Convext", links: [{ label: "Sobre", href: "/#sobre" }, { label: "Cases", href: "/#cases" }, { label: "Contato", href: "/contato" }] },
-  { title: "Serviços", links: siteConfig.services.slice(0, 4).map((service) => ({ label: service.title, href: "/#servicos" })) },
-  { title: "Social", links: [{ label: "Instagram", href: siteConfig.contact.instagram }, { label: "LinkedIn", href: siteConfig.contact.linkedin }, { label: "Behance", href: siteConfig.contact.behance }] },
+  { title: "Explorar", links: sagaNav.filter((item) => item.href.startsWith("/#")) },
+  { title: "Soluções", links: pieces.items.map((item) => ({ label: item.name, href: "/#solucoes" })) },
 ];
 
 export function Footer() {
   return (
-    <footer id="site-footer" className="relative overflow-hidden bg-primary text-primary-foreground">
-      <Container className="py-10 sm:py-16">
-        <div className="grid gap-10 border-b border-black/20 pb-12 lg:grid-cols-[1.2fr_.8fr]">
+    <footer id="site-footer" className="relative overflow-hidden bg-primary text-ink">
+      <div className="container-convext pt-20 sm:pt-24">
+        <div className="grid gap-12 border-b border-ink/20 pb-14 lg:grid-cols-[1.3fr_0.6fr_0.6fr]">
           <div>
-            <p className="label">Contato</p>
-            <SplitLines as="h2" className="mt-5 max-w-2xl text-h2 font-display">Convext Mídias. Performance para o mercado imobiliário.</SplitLines>
-            <p className="mt-6 max-w-md text-sm text-black/70">Vamos construir uma estratégia para gerar mais oportunidades para o seu time de vendas.</p>
+            <p className="saga-eyebrow text-ink/60 [&::before]:bg-ink">Próximo movimento</p>
+            <h2 className="saga-title mt-6 max-w-[14ch] text-[clamp(2.5rem,5vw,4.75rem)]">Sua próxima jogada começa aqui.</h2>
+            <p className="mt-6 max-w-[40ch] text-sm leading-6 text-ink/70">{footer.next}</p>
+            <Magnetic className="mt-8">
+              <Link
+                href="/#diagnostico"
+                className="saga-press inline-flex h-12 items-center gap-2 rounded-full bg-ink pl-6 pr-5 text-sm text-foreground hover:bg-black"
+              >
+                Agendar diagnóstico <ArrowUpRight className="arrow-nudge size-4" />
+              </Link>
+            </Magnetic>
           </div>
-          <div className="grid gap-8 sm:grid-cols-3">
-            {columns.map((column) => (
-              <div key={column.title}>
-                <p className="label">{column.title}</p>
-                <ul className="mt-5 space-y-3 text-sm">
-                  {column.links.map((link) => (
-                    <li key={link.label}>
-                      <Link href={link.href} className="group/link inline-flex items-center gap-1 text-black/80 transition-colors duration-300 hover:text-black">
-                        <span className="link-underline">{link.label}</span> <ArrowUpRight className="arrow-nudge size-3" />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          {columns.map((column) => (
+            <div key={column.title}>
+              <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink/55">{column.title}</p>
+              <ul className="mt-5 space-y-3 text-sm">
+                {column.links.map((link) => (
+                  <li key={link.label}>
+                    <Link href={link.href} className="link-underline text-ink/80 hover:text-ink">{link.label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
-        <div className="flex flex-col gap-6 py-8 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs uppercase tracking-[.16em] text-black/60">© 2026 Convext. Todos os direitos reservados.</p>
-          <Magnetic className="w-fit">
-            <Button asChild variant="secondary" size="lg" className="h-11 w-fit rounded-full bg-black px-5 text-white hover:bg-black">
-              <Link href="/contato"><RollLabel>Quero falar com a Convext</RollLabel> <ArrowUpRight className="arrow-nudge" /></Link>
-            </Button>
-          </Magnetic>
+
+        <div className="flex flex-col gap-3 py-6 text-xs text-ink/60 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} Convext. Todos os direitos reservados.</p>
+          <p className="max-w-[48ch] sm:text-right">{footer.about}</p>
         </div>
-        <Wordmark text="Convext" className="select-none overflow-hidden font-display text-[24vw] leading-[.72] tracking-[-.12em] text-black/90 sm:text-[20vw]" />
-      </Container>
+      </div>
+      <p aria-hidden="true" className="pointer-events-none -mb-[0.14em] select-none overflow-hidden whitespace-nowrap text-center font-display text-[24vw] leading-[.8] tracking-[-.1em] text-ink">
+        Convext
+      </p>
     </footer>
   );
 }

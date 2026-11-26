@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { canAccessPath } from "@/lib/access";
 import { parseGallery } from "@/lib/spaces/gallery";
-import { canAct, canClaim, canReschedule, canSeeSpace, canSubmitForm, firstMissingField, flowProblems, isMyTurn, missingRequirement, nextStage, rejectTarget, reworkTarget } from "@/lib/spaces/rules";
+import { canAct, canClaim, canEditTask, canManageTask, canReschedule, canSeeSpace, canSubmitForm, firstMissingField, flowProblems, isMyTurn, missingRequirement, nextStage, rejectTarget, reworkTarget } from "@/lib/spaces/rules";
 import type { Space, SpaceStage } from "@/lib/spaces/types";
 import { spaceFormSchema, taskActionSchema } from "@/lib/validations/spaces";
 
@@ -82,6 +82,16 @@ describe("fluxo", () => {
     expect(canSeeSpace(space, carla)).toBe(true);
     expect(canSeeSpace(space, lara)).toBe(false);
     expect(canSeeSpace(space, pedro)).toBe(true);
+  });
+
+  it("qualquer role edita a ficha; mover, reajuste e excluir continuam do admin", () => {
+    for (const person of [pedro, carla, davi, lara]) {
+      expect(canEditTask(person)).toBe(true);
+    }
+    expect(canManageTask(pedro)).toBe(true);
+    expect(canManageTask(carla)).toBe(false);
+    expect(canManageTask(davi)).toBe(false);
+    expect(canManageTask(lara)).toBe(false);
   });
 
   it("aponta problemas na configuração do fluxo", () => {
@@ -185,6 +195,25 @@ describe("formulários", () => {
     ).toBe(false);
     expect(firstMissingField(appointmentFields, { titulo: "Visita" }, null)).toBe("Compromisso");
     expect(firstMissingField(appointmentFields, { titulo: "Visita" }, null, { startsAt: "2026-11-24T13:00:00.000Z", durationMinutes: 60, location: "", attendeeIds: ["8b0c6a4e-8a5f-4a43-9a3f-6f1c1f5f0a11"] })).toBeNull();
+  });
+
+  it("aceita no máximo um responsável, exige a role nas opções e cobra o campo na abertura", () => {
+    const assigneeFields = [
+      { key: "titulo", label: "Nome", type: "text" as const, required: true },
+      { key: "dono", label: "Responsável", type: "assignee" as const, required: true, options: "creator" },
+    ];
+    const base = { spaceId: "8b0c6a4e-8a5f-4a43-9a3f-6f1c1f5f0a11", name: "Pedido", description: "", audienceRoles: ["admin"], active: true };
+    expect(spaceFormSchema.safeParse({ ...base, fields: assigneeFields }).success).toBe(true);
+    expect(
+      spaceFormSchema.safeParse({
+        ...base,
+        fields: [...assigneeFields, { key: "dono2", label: "Outro", type: "assignee", required: false, options: "traffic" }],
+      }).success,
+    ).toBe(false);
+    expect(spaceFormSchema.safeParse({ ...base, fields: [{ key: "titulo", label: "Nome", type: "text", required: true }, { key: "dono", label: "Responsável", type: "assignee", required: true }] }).success).toBe(false);
+    expect(spaceFormSchema.safeParse({ ...base, fields: [{ key: "titulo", label: "Nome", type: "text", required: true }, { key: "dono", label: "Responsável", type: "assignee", required: true, options: "xyz" }] }).success).toBe(false);
+    expect(firstMissingField(assigneeFields, { titulo: "Peça" }, null, null, null)).toBe("Responsável");
+    expect(firstMissingField(assigneeFields, { titulo: "Peça" }, null, null, "8b0c6a4e-8a5f-4a43-9a3f-6f1c1f5f0a11")).toBeNull();
   });
 
   it("só coordenador e admin remarcam", () => {

@@ -24,7 +24,7 @@ export type Space = {
   stages: SpaceStage[];
 };
 
-export const FIELD_TYPES = ["text", "longtext", "number", "date", "select", "client", "link", "feedback", "gallery", "appointment"] as const;
+export const FIELD_TYPES = ["text", "longtext", "number", "date", "select", "client", "link", "feedback", "gallery", "appointment", "assignee"] as const;
 export type FieldType = (typeof FIELD_TYPES)[number];
 
 export type FormField = {

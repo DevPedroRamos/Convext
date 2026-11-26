@@ -10,6 +10,8 @@
   --font-sans: var(--font-calibri);
   --font-display: var(--font-archivo);
   --font-mono: var(--font-geist-mono);
+  --color-bone: var(--bone);
+  --color-ink: var(--ink);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -49,6 +51,8 @@
   --convext-orange: #f35703;
   --convext-black: #0f0f0f;
   --convext-white: #fcfcfc;
+  --bone: #efece6;
+  --ink: #0b0b0b;
   --background: #0f0f0f;
   --foreground: #fcfcfc;
   --card: #151515;
@@ -80,6 +84,8 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  /* Movimento na tela (peças, trocas) — ease-in-out forte */
+  --ease-move: cubic-bezier(0.77, 0, 0.175, 1);
   --dur-fast: 160ms;
   --dur-base: 280ms;
   --dur-slow: 600ms;
@@ -191,8 +197,10 @@
   pointer-events: none;
 }
 
+/* O site institucional ([data-motion-site]) mostra o movimento completo por decisão
+   de produto (ver SITE_RESPECTS_REDUCED_MOTION em lib/motion.ts). O app segue a regra geral. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *:not([data-motion-site] *), *:not([data-motion-site] *)::before, *:not([data-motion-site] *)::after {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
@@ -502,3 +510,133 @@ html[data-custom-cursor] [data-cursor] { cursor: none; }
   transform: scaleY(0);
   transform-origin: bottom;
 }
+
+
+/* ───────────────────────── Saga — site institucional ───────────────────────── */
+
+/* Títulos: Archivo regular apertada, como na home anterior; destaque só em laranja */
+.saga-title {
+  font-family: var(--font-archivo), Arial, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 0.94;
+}
+.saga-title em { font-style: normal; color: var(--primary); }
+.saga-h2 { font-size: clamp(2.5rem, 5.4vw, 5.25rem); }
+
+/* Rótulo de seção: número + traço + texto, em mono */
+.saga-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.saga-eyebrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  background: var(--primary);
+}
+
+/* Seções claras (bone): invertem a tinta */
+.saga-light { background: var(--bone); color: var(--ink); }
+.saga-light ::selection { background: var(--ink); color: var(--bone); }
+
+/* Grade sutil de casas do tabuleiro usada como textura de fundo */
+.saga-grid {
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,.045) 1px, transparent 1px);
+  background-size: calc(100% / 8) calc(100% / 8);
+}
+
+/* Faixa de competências em CSS puro (sem JS) */
+@keyframes saga-ticker { to { transform: translateX(-50%); } }
+.saga-ticker-track { animation: saga-ticker 48s linear infinite; }
+@media (hover: hover) { .saga-ticker:hover .saga-ticker-track { animation-play-state: paused; } }
+
+/* Abertura do hero em CSS: roda no primeiro paint */
+@keyframes saga-rise { from { transform: translateY(105%); } to { transform: translateY(0); } }
+@keyframes saga-fade { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.saga-rise { display: block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+.saga-rise > span { display: block; animation: saga-rise 1s var(--ease-out-quint) both; animation-delay: var(--d, 0ms); }
+.saga-fade { animation: saga-fade 0.9s var(--ease-out-quint) both; animation-delay: var(--d, 0ms); }
+.saga-fade-only { animation: saga-opacity 0.8s ease both; animation-delay: var(--d, 0ms); }
+/* A cena 3D é decoração: entra só com opacidade, depois do título */
+.saga-scene { animation: saga-opacity 1.6s ease 0.2s both; }
+
+/* Pressionáveis: resposta imediata ao toque */
+.saga-press { transition: transform var(--dur-fast) var(--ease-out-quint), background-color var(--dur-base) ease, color var(--dur-base) ease, border-color var(--dur-base) ease; }
+.saga-press:active { transform: scale(0.97); }
+
+@keyframes saga-opacity { from { opacity: 0; } }
+
+/* Tabuleiro do método */
+.board-piece { will-change: transform; }
+.board-piece[data-side="w"] { color: var(--bone); }
+.board-piece[data-side="b"] { color: #5d5751; }
+.board-piece > svg { transition: color 300ms ease; }
+.board-piece[data-moved][data-side="w"] > svg { color: var(--primary); }
+.board-piece[data-moved][data-side="b"] > svg { color: #8f877f; }
+.board-square::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(243, 87, 3, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(243, 87, 3, 0.45);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.board-square[data-hot]::after { opacity: 1; }
+
+/* Etapas do método: a ativa em primeiro plano, as outras recuam */
+.method-step { opacity: 0.32; transition: opacity 400ms ease; }
+.method-step[data-active] { opacity: 1; }
+.method-step[data-active] .method-notation { color: var(--primary); }
+
+/* Índice das cinco peças */
+.piece-panel { grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 360ms var(--ease-move), opacity 240ms ease; }
+.piece-panel[data-open] { grid-template-rows: 1fr; opacity: 1; transition: grid-template-rows 360ms var(--ease-move), opacity 300ms ease 80ms; }
+.piece-panel:not([data-open]) { visibility: hidden; transition: grid-template-rows 360ms var(--ease-move), opacity 200ms ease, visibility 0s 360ms; }
+.piece-plus { transition: transform 300ms var(--ease-move); }
+
+/* Linha de case: a tinta sobe por clip-path no hover (só mouse) */
+.case-fill { clip-path: inset(100% 0 0 0); transition: clip-path 420ms var(--ease-move); }
+.case-row { transition: color 300ms ease; }
+@media (hover: hover) and (pointer: fine) {
+  .case-row:hover { color: var(--bone); }
+  .case-row:hover .case-fill { clip-path: inset(0 0 0 0); }
+  .case-row:hover .case-muted { color: color-mix(in oklab, var(--bone) 55%, transparent); }
+}
+.case-row:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+
+/* CTA flutuante: entra e sai pelo mesmo caminho, saída mais curta */
+.floating-cta { transition: opacity 300ms ease, transform 300ms var(--ease-out-quint); }
+.floating-cta.pointer-events-none { transition-duration: 200ms; }
+
+/* Casas dos pilares: acendem quando a linha chega */
+.pillar-node { transition: background-color 250ms ease, transform 250ms var(--ease-out-quint); }
+.pillar-node[data-lit] { background: var(--primary); transform: scale(1.35); }
+
+/* Prévia de capa dos cases: troca por crossfade dentro do cartão */
+.cp-image { opacity: 0; transition: opacity 250ms ease; }
+.cp-image[data-shown] { opacity: 1; }
+
+/* Menu: marcador da seção atual (casa laranja sob o link) */
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  background: var(--primary);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 200ms ease, transform 250ms var(--ease-out-quint);
+}
+.nav-link[aria-current]::after { opacity: 1; transform: none; }

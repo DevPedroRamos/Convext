@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ownerLabel } from "@/lib/spaces/roles";
 import { parseGallery } from "@/lib/spaces/gallery";
 import type { FeedbackType } from "@/lib/feedback-types";
-import { canAct, canClaim, canReschedule, firstMissingField, missingRequirement, nextStage, orderedStages, rejectTarget, reworkTarget, type Viewer } from "@/lib/spaces/rules";
+import { canAct, canClaim, canEditTask, canManageTask, canReschedule, firstMissingField, missingRequirement, nextStage, orderedStages, rejectTarget, reworkTarget, type Viewer } from "@/lib/spaces/rules";
 import type { Space, SpaceForm, SpaceTask, TaskEvent } from "@/lib/spaces/types";
 import type { AppointmentInput } from "@/lib/validations/spaces";
 import { cn } from "@/lib/utils";
@@ -294,7 +294,7 @@ function TaskDetail({
         <dd>{task.clientName ?? <span className="text-muted-foreground">Sem cliente</span>}</dd>
         <dt className="text-muted-foreground">Responsável</dt>
         <dd>{task.assigneeName ?? <span className="text-muted-foreground">{stage.type === "done" ? "—" : `Fila de ${ownerLabel(stage.ownerRole)}`}</span>}</dd>
-        {fields.map((field) => (
+        {fields.map((field) => field.type === "assignee" ? null : (
           <Fragment key={field.key}>
             {field.type === "gallery" ? (
               <>
@@ -312,12 +312,12 @@ function TaskDetail({
         ))}
       </dl>
 
-      {viewer.role === "admin" ? (
+      {canEditTask(viewer) || canManageTask(viewer) ? (
         <div className="grid gap-2 rounded-lg border border-border p-3">
-          <p className="text-xs text-muted-foreground">Admin</p>
+          {canManageTask(viewer) && !editing && !reworking ? <p className="text-xs text-muted-foreground">Admin</p> : null}
           {editing ? (
             <div className="grid gap-3">
-              {(form?.fields ?? [{ key: "titulo", label: "Título", type: "text" as const, required: true }]).map((field) => (
+              {(form?.fields ?? [{ key: "titulo", label: "Título", type: "text" as const, required: true }]).filter((field) => field.type !== "assignee").map((field) => (
                 <FieldInput
                   key={field.key}
                   field={field}
@@ -380,23 +380,29 @@ function TaskDetail({
           ) : (
             <>
               <div className="flex flex-wrap items-center gap-2">
-                <Button size="sm" variant="outline" onClick={() => { setEditing(true); setReworking(false); setEditValues(formValues(task, form)); setEditAssignee(task.assigneeId ?? "none"); setEditClient(task.clientId ?? "none"); setEditAppointment(toInput(task)); setEditError(null); }}>
-                  <Pencil /> Editar demanda
-                </Button>
-                <Button size="sm" variant="outline" disabled={!backTo} onClick={() => { setReworking(true); setEditing(false); }}>
-                  <RotateCcw /> Solicitar reajuste
-                </Button>
+                {canEditTask(viewer) ? (
+                  <Button size="sm" variant="outline" onClick={() => { setEditing(true); setReworking(false); setEditValues(formValues(task, form)); setEditAssignee(task.assigneeId ?? "none"); setEditClient(task.clientId ?? "none"); setEditAppointment(toInput(task)); setEditError(null); }}>
+                    <Pencil /> Editar demanda
+                  </Button>
+                ) : null}
+                {canManageTask(viewer) ? (
+                  <Button size="sm" variant="outline" disabled={!backTo} onClick={() => { setReworking(true); setEditing(false); }}>
+                    <RotateCcw /> Solicitar reajuste
+                  </Button>
+                ) : null}
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Select value={moveTo} onValueChange={setMoveTo}>
-                  <SelectTrigger className="w-full sm:w-52" aria-label="Mover para a etapa"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {stages.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Button size="sm" variant="outline" disabled={moveTo === stage.id || busy === "move"} onClick={() => run("move", { action: "move", stageId: moveTo }, "Tarefa movida.")}>Mover</Button>
-                <Button size="sm" variant="ghost" className="ml-auto text-destructive" onClick={remove}><Trash /> Excluir</Button>
-              </div>
+              {canManageTask(viewer) ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Select value={moveTo} onValueChange={setMoveTo}>
+                    <SelectTrigger className="w-full sm:w-52" aria-label="Mover para a etapa"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {stages.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" variant="outline" disabled={moveTo === stage.id || busy === "move"} onClick={() => run("move", { action: "move", stageId: moveTo }, "Tarefa movida.")}>Mover</Button>
+                  <Button size="sm" variant="ghost" className="ml-auto text-destructive" onClick={remove}><Trash /> Excluir</Button>
+                </div>
+              ) : null}
             </>
           )}
         </div>

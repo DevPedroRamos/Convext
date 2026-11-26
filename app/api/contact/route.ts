@@ -5,6 +5,7 @@ import { ContactNotificationEmail } from "@/emails/contact-notification";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hasResendEnv, hasServerSupabaseEnv } from "@/lib/env";
 import { contactSchema, type ContactFormValues } from "@/lib/validations/contact";
+import { diagnosticSchema, type DiagnosticValues } from "@/lib/validations/diagnostic";
 import { heroLeadSchema, type HeroLeadValues } from "@/lib/validations/hero-lead";
 
 function mapHeroLead(values: HeroLeadValues): ContactFormValues {
@@ -20,10 +21,33 @@ function mapHeroLead(values: HeroLeadValues): ContactFormValues {
   };
 }
 
+function mapDiagnostic(values: DiagnosticValues): ContactFormValues {
+  const [firstName, ...rest] = values.name.split(/\s+/);
+  return {
+    inquiryType: "Novo projeto",
+    firstName,
+    lastName: rest.join(" "),
+    email: values.email,
+    phone: values.whatsapp,
+    company: values.company,
+    website: "",
+    message: [
+      "Solicitação de diagnóstico estratégico (home).",
+      `Desafio prioritário: ${values.challenge}`,
+      `Investimento mensal pretendido: ${values.budget || "não informado"}`,
+    ].join("\n"),
+  };
+}
+
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
+  const diagnosticParsed = diagnosticSchema.safeParse(body);
   const heroParsed = heroLeadSchema.safeParse(body);
-  const parsed = heroParsed.success ? { success: true as const, data: mapHeroLead(heroParsed.data) } : contactSchema.safeParse(body);
+  const parsed = diagnosticParsed.success
+    ? { success: true as const, data: mapDiagnostic(diagnosticParsed.data) }
+    : heroParsed.success
+      ? { success: true as const, data: mapHeroLead(heroParsed.data) }
+      : contactSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Dados inválidos.", issues: parsed.error.flatten() }, { status: 400 });
   if (!hasServerSupabaseEnv()) return NextResponse.json({ error: "Supabase server env vars não configuradas." }, { status: 503 });
 

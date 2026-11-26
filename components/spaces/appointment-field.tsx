@@ -11,9 +11,10 @@ import { Input } from "@/components/ui/input";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import type { AppRole } from "@/lib/access";
 import type { AppointmentInput } from "@/lib/validations/spaces";
 
-export type AttendeeOption = { id: string; name: string };
+export type AttendeeOption = { id: string; name: string; role?: AppRole };
 
 const PRESETS = [30, 60, 90, 120];
 

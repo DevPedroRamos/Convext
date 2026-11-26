@@ -16,7 +16,7 @@ import type { FeedbackType } from "@/lib/feedback-types";
 import type { FieldType, FormField, QuickAction, Space, SpaceForm } from "@/lib/spaces/types";
 import { cn } from "@/lib/utils";
 
-const FIELD_LABELS: Record<FieldType, string> = { text: "Texto", longtext: "Texto longo", number: "Número", date: "Data", select: "Seleção", client: "Cliente", link: "Link", feedback: "Tipo de feedback", gallery: "Galeria", appointment: "Compromisso" };
+const FIELD_LABELS: Record<FieldType, string> = { text: "Texto", longtext: "Texto longo", number: "Número", date: "Data", select: "Seleção", client: "Cliente", link: "Link", feedback: "Tipo de feedback", gallery: "Galeria", appointment: "Compromisso", assignee: "Responsável" };
 
 type Draft = { id: string | null; spaceId: string; name: string; description: string; audienceRoles: AppRole[]; active: boolean; fields: FormField[] };
 
@@ -119,7 +119,17 @@ export function FormBuilder({ forms, spaces, quickActions, feedbackTypes }: { fo
                 <div key={field.key} className="grid gap-2 rounded-lg border border-border bg-background/40 p-3">
                   <div className="grid gap-2 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_auto_auto] sm:items-center">
                     <Input value={field.label} onChange={(event) => patchField(index, { label: event.target.value })} aria-label="Rótulo do campo" />
-                    <Select value={field.type} disabled={fixed} onValueChange={(value) => patchField(index, { type: value as FieldType })}>
+                    <Select
+                      value={field.type}
+                      disabled={fixed}
+                      onValueChange={(value) => {
+                        const type = value as FieldType;
+                        patchField(index, {
+                          type,
+                          options: type === "assignee" ? (SPACE_ROLES.includes(field.options as AppRole) ? field.options : "creator") : type === "select" ? field.options : undefined,
+                        });
+                      }}
+                    >
                       <SelectTrigger className="w-full" aria-label="Tipo do campo"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {(Object.keys(FIELD_LABELS) as FieldType[]).map((type) => <SelectItem key={type} value={type}>{FIELD_LABELS[type]}</SelectItem>)}
@@ -135,6 +145,17 @@ export function FormBuilder({ forms, spaces, quickActions, feedbackTypes }: { fo
                   {field.type === "feedback" ? <p className="text-xs text-muted-foreground">Opções vêm do catálogo em Gestão → Tipos de feedback.</p> : null}
                   {field.type === "gallery" ? <p className="text-xs text-muted-foreground">Permite selecionar várias imagens (até 8).</p> : null}
                   {field.type === "appointment" ? <p className="text-xs text-muted-foreground">No máximo um por formulário. Data, duração, local e participantes.</p> : null}
+                  {field.type === "assignee" ? (
+                    <div className="grid gap-1">
+                      <Select value={field.options && SPACE_ROLES.includes(field.options as AppRole) ? field.options : "creator"} onValueChange={(value) => patchField(index, { options: value })}>
+                        <SelectTrigger className="w-full" aria-label="Role do responsável"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {SPACE_ROLES.map((role) => <SelectItem key={role} value={role}>{roleLabels[role]}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">No máximo um por formulário. Na abertura, lista só pessoas desta role.</p>
+                    </div>
+                  ) : null}
                   {fixed ? <p className="text-xs text-muted-foreground">Vira o título da tarefa.</p> : null}
                 </div>
               );
@@ -155,7 +176,7 @@ export function FormBuilder({ forms, spaces, quickActions, feedbackTypes }: { fo
             {draft.description ? <p className="mt-1 text-sm text-muted-foreground">{draft.description}</p> : null}
           </div>
           <div className="pointer-events-none grid gap-4 opacity-90">
-            {draft.fields.map((field) => <FieldInput key={field.key} field={field} value="" clients={[{ id: "x", name: "Cliente de exemplo" }]} feedbackTypes={feedbackTypes} onChange={() => {}} disabled />)}
+            {draft.fields.map((field) => <FieldInput key={field.key} field={field} value="" clients={[{ id: "x", name: "Cliente de exemplo" }]} attendees={[{ id: "x", name: "Pessoa da role", role: (field.options as AppRole) ?? "creator" }]} feedbackTypes={feedbackTypes} onChange={() => {}} disabled />)}
           </div>
         </section>
       </div>

@@ -191,7 +191,7 @@ export async function countMyTurn(viewer: { id: string; role: AppRole }, spaces:
 // Ações de tarefa (regras no banco)
 // ---------------------------------------------------------------------------
 
-export async function createTask(values: { formId: string; title: string; clientId?: string | null; values: Record<string, string>; appointment?: AppointmentInput | null }): Promise<Result<string>> {
+export async function createTask(values: { formId: string; title: string; clientId?: string | null; assigneeId?: string | null; values: Record<string, string>; appointment?: AppointmentInput | null }): Promise<Result<string>> {
   const client = await db();
   const { data, error } = await client.rpc("space_create_task", {
     p_form_id: values.formId,
@@ -199,6 +199,7 @@ export async function createTask(values: { formId: string; title: string; client
     p_client_id: values.clientId ?? null,
     p_values: values.values,
     p_appointment: values.appointment ?? null,
+    p_assignee_id: values.assigneeId ?? null,
   });
   return error || !data ? fail(error, "Não foi possível enviar.") : ok(data as string);
 }

@@ -4,7 +4,7 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { cn } from "@/lib/utils";
-import { hasFinePointer, prefersReducedMotion } from "@/lib/motion";
+import { hasFinePointer, siteReducedMotion } from "@/lib/motion";
 
 gsap.registerPlugin(useGSAP);
 
@@ -18,7 +18,7 @@ export function Magnetic({ children, strength = 0.35, className }: { children: R
 
   useGSAP(() => {
     const element = ref.current;
-    if (!element || !hasFinePointer() || prefersReducedMotion()) return;
+    if (!element || !hasFinePointer() || siteReducedMotion()) return;
 
     const xTo = gsap.quickTo(element, "x", { duration: 0.6, ease: "expo.out" });
     const yTo = gsap.quickTo(element, "y", { duration: 0.6, ease: "expo.out" });

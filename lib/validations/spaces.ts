@@ -17,6 +17,7 @@ export const createTaskSchema = z.object({
   formId: uuid,
   title: z.string().trim().min(2, "Informe o título."),
   clientId: uuid.nullable().optional(),
+  assigneeId: uuid.nullable().optional(),
   values: z.record(z.string(), z.string().max(20000)).default({}),
   appointment: appointmentInputSchema.optional().nullable(),
 });
@@ -81,7 +82,12 @@ export const spaceFormSchema = z
   .refine((form) => new Set(form.fields.map((field) => field.key)).size === form.fields.length, { path: ["fields"], message: "Campos repetidos." })
   .refine((form) => form.fields.filter((field) => field.type === "client").length <= 1, { path: ["fields"], message: "Use no máximo um campo de cliente." })
   .refine((form) => form.fields.filter((field) => field.type === "feedback").length <= 1, { path: ["fields"], message: "Use no máximo um campo de tipo de feedback." })
-  .refine((form) => form.fields.filter((field) => field.type === "appointment").length <= 1, { path: ["fields"], message: "Use no máximo um campo de compromisso." });
+  .refine((form) => form.fields.filter((field) => field.type === "appointment").length <= 1, { path: ["fields"], message: "Use no máximo um campo de compromisso." })
+  .refine((form) => form.fields.filter((field) => field.type === "assignee").length <= 1, { path: ["fields"], message: "Use no máximo um campo de responsável." })
+  .refine(
+    (form) => form.fields.filter((field) => field.type === "assignee").every((field) => role.safeParse(field.options).success),
+    { path: ["fields"], message: "O campo de responsável precisa de uma role." },
+  );
 export type SpaceFormValues = z.infer<typeof spaceFormSchema>;
 
 export const quickActionsSchema = z.object({

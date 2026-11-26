@@ -380,14 +380,20 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
   }, [pathname, state]);
 
   const respondIncoming = useCallback(async (action: "accept" | "decline") => {
-    if (!incoming?.referenceId) return;
+    if (!incoming) return;
     const inviteId = String(incoming.payload.inviteId || incoming.id);
-    await communicationApi.respondCall(inviteId, action);
+    let accepted = false;
+    try {
+      await communicationApi.respondCall(inviteId, action);
+      accepted = action === "accept";
+    } catch {
+      // Convite expirado ou recusado depois do toque: o overlay ainda precisa fechar.
+    }
     await communicationApi.readNotification(incoming.id).catch(() => undefined);
-    if (action === "accept") {
+    setIncoming(null);
+    if (accepted && incoming.referenceId) {
       await connect({ sessionId: incoming.referenceId, title: "Chamada" });
     }
-    setIncoming(null);
   }, [connect, incoming]);
 
   const value = useMemo<CommunicationValue>(() => ({

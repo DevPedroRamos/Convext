@@ -68,7 +68,10 @@ function TaskForm({ form, space, clients, attendees, feedbackTypes, onCancel, on
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     const clientId = clientField ? values[clientField.key] || null : null;
-    const missing = firstMissingField(form.fields, values, clientId, appointment);
+    const assigneeField = form.fields.find((field) => field.type === "assignee");
+    const assigneeRaw = assigneeField ? values[assigneeField.key] : "";
+    const assigneeId = assigneeRaw && assigneeRaw !== "none" ? assigneeRaw : null;
+    const missing = firstMissingField(form.fields, values, clientId, appointment, assigneeId);
     if (missing) {
       setError(`Preencha: ${missing}.`);
       return;
@@ -79,9 +82,9 @@ function TaskForm({ form, space, clients, attendees, feedbackTypes, onCancel, on
     }
     setError(null);
     setLoading(true);
-    const extra = Object.fromEntries(Object.entries(values).filter(([key]) => key !== "titulo" && key !== clientField?.key));
+    const extra = Object.fromEntries(Object.entries(values).filter(([key]) => key !== "titulo" && key !== clientField?.key && key !== assigneeField?.key));
     const payload = appointment && appointment.startsAt && appointment.attendeeIds.length ? appointment : undefined;
-    const id = await spacesRequest<string>("/api/spaces/tasks", "POST", { formId: form.id, title: values.titulo ?? "", clientId, values: extra, appointment: payload }, `Enviado para ${space.name}.`);
+    const id = await spacesRequest<string>("/api/spaces/tasks", "POST", { formId: form.id, title: values.titulo ?? "", clientId, assigneeId, values: extra, appointment: payload }, `Enviado para ${space.name}.`);
     setLoading(false);
     if (!id) return;
     onSent();
@@ -148,6 +151,20 @@ export function FieldInput({ field, value, clients, attendees = [], appointment 
   }
   if (field.type === "appointment") {
     return <AppointmentField required={field.required} value={appointment} attendees={attendees} onChange={(next) => onAppointmentChange?.(next)} disabled={disabled} />;
+  }
+  if (field.type === "assignee") {
+    const people = attendees.filter((item) => !field.options || item.role === field.options);
+    return (
+      <Field label={label}>
+        <SearchableSelect
+          value={value || "none"}
+          onValueChange={(next) => onChange(next === "none" ? "" : next)}
+          options={[{ value: "none", label: "Fila da etapa" }, ...people.map((item) => ({ value: item.id, label: item.name }))]}
+          placeholder="Escolha"
+          disabled={disabled}
+        />
+      </Field>
+    );
   }
   if (field.type === "select") {
     const options = selectOptions(field).map((option) => ({ value: option, label: option }));

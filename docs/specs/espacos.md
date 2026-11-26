@@ -21,9 +21,11 @@ O admin configura, sem código:
 - **Aprovação**: etapa do tipo aprovação mostra Aprovar e Recusar só para o dono. Recusar exige motivo e devolve para a etapa configurada (ou a anterior).
 - **Concluída**: a última etapa é sempre do tipo Concluída. Quem abriu a tarefa é avisado.
 - **Visibilidade**: admin vê tudo; membros veem as tarefas do espaço; os demais veem só o que abriram ou o que pegaram.
-- **Admin** move a tarefa para qualquer etapa, edita a ficha (formulário, cliente, responsável), solicita reajuste (devolve à etapa de recusa com motivo, inclusive em concluídas), exclui tarefas e configura tudo em `/app/gestao/*`.
+- **Edição da ficha**: qualquer pessoa que vê a tarefa edita título, campos, cliente e responsável.
+- **Admin** move a tarefa para qualquer etapa, solicita reajuste (devolve à etapa de recusa com motivo, inclusive em concluídas), exclui tarefas e configura tudo em `/app/gestao/*`.
 - **Avisos** no app (sino no cabeçalho). E-mail fica para depois.
 - **Cliente** é um tipo de campo de formulário; cada formulário decide se pede e se é obrigatório.
+- **Responsável** é um tipo de campo (no máximo um por formulário). O admin escolhe uma role; na abertura a lista mostra só pessoas dessa role. O valor vai para `space_tasks.assignee_id` (não para o JSON `values`). Com responsável preenchido, a etapa inicial sai da fila da role dona e passa a essa pessoa (admin continua podendo agir).
 - **Minhas tarefas** (`/app/tarefas`): "Sua vez" (o que espera por você) e "Minhas solicitações".
 - O quadro mostra as concluídas dos últimos 30 dias.
 

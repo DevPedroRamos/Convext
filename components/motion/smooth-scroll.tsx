@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { prefersReducedMotion } from "@/lib/motion";
+import { siteReducedMotion } from "@/lib/motion";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -38,7 +38,7 @@ export function scrollToTarget(target: string | HTMLElement | number, options: {
  */
 export function SmoothScroll() {
   useEffect(() => {
-    if (prefersReducedMotion()) return;
+    if (siteReducedMotion()) return;
 
     const lenis = new Lenis({ lerp: 0.1, wheelMultiplier: 1, autoRaf: false });
     instance = lenis;

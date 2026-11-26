@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { AppRole } from "@/lib/access";
 import { profileName } from "@/lib/profile";
 import { mapAppointment } from "@/lib/spaces/data";
 import type { TaskAppointment } from "@/lib/spaces/types";
@@ -11,7 +12,7 @@ async function db(): Promise<SupabaseClient> {
   return (await createClient()) as unknown as SupabaseClient;
 }
 
-export type AttendeeOption = { id: string; name: string };
+export type AttendeeOption = { id: string; name: string; role?: AppRole };
 
 export async function listAppointments({ from, to, userId }: { from: string; to: string; userId?: string }): Promise<TaskAppointment[]> {
   const client = await db();
@@ -37,5 +38,6 @@ export async function listAttendeeOptions(): Promise<AttendeeOption[]> {
   return ((data ?? []) as Row[]).map((row) => ({
     id: row.id as string,
     name: profileName({ first_name: row.first_name as string | null, last_name: row.last_name as string | null }, row.email as string | null),
+    role: row.role as AppRole,
   }));
 }
