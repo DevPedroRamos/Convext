@@ -30,6 +30,15 @@ export const taskActionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("comment"), message: z.string().trim().min(1, "Escreva o comentário.").max(4000) }),
   z.object({ action: z.literal("reschedule"), appointment: appointmentInputSchema }),
   z.object({ action: z.literal("unschedule") }),
+  z.object({
+    action: z.literal("update"),
+    title: z.string().trim().min(2, "Informe o título."),
+    clientId: uuid.nullable().optional(),
+    values: z.record(z.string(), z.string().max(20000)).default({}),
+    assigneeId: uuid.nullable().optional(),
+    appointment: appointmentInputSchema.nullable().optional(),
+  }),
+  z.object({ action: z.literal("rework"), reason: z.string().trim().min(3, "Escreva o motivo do reajuste.") }),
 ]);
 
 export const stageSchema = z.object({

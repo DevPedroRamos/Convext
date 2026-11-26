@@ -1,8 +1,10 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Field } from "@/components/finance/ui";
+import { DatePartsField } from "@/components/forms/date-parts-field";
+import { TimePartsField } from "@/components/forms/time-parts-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,10 +29,17 @@ export function toAppointmentParts(iso: string) {
   };
 }
 
-function toIso(date: string, time: string) {
+export function toAppointmentIso(date: string, time: string) {
   if (!date || !time) return "";
   const parsed = new Date(`${date}T${time}`);
   return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString();
+}
+
+function partsFromValue(value: AppointmentInput | null) {
+  if (!value?.startsAt || Number.isNaN(new Date(value.startsAt).getTime())) {
+    return { date: "", time: "" };
+  }
+  return toAppointmentParts(value.startsAt);
 }
 
 export function AppointmentField({
@@ -47,21 +56,30 @@ export function AppointmentField({
   disabled?: boolean;
 }) {
   const enabled = required || Boolean(value);
-  const parts = value?.startsAt && !Number.isNaN(new Date(value.startsAt).getTime()) ? toAppointmentParts(value.startsAt) : { date: "", time: "" };
+  const [draft, setDraft] = useState(() => partsFromValue(value));
   const duration = value?.durationMinutes ?? 60;
   const preset = PRESETS.includes(duration) ? String(duration) : "other";
   const names = useMemo(() => Object.fromEntries(attendees.map((item) => [item.id, item.name])), [attendees]);
   const remaining = attendees.filter((item) => !(value?.attendeeIds ?? []).includes(item.id));
 
+  useEffect(() => {
+    if (!value?.startsAt || Number.isNaN(new Date(value.startsAt).getTime())) return;
+    setDraft(toAppointmentParts(value.startsAt));
+  }, [value?.startsAt]);
+
   function patch(next: Partial<AppointmentInput> & { date?: string; time?: string; enabled?: boolean }) {
     if (next.enabled === false) {
+      setDraft({ date: "", time: "" });
       onChange(null);
       return;
     }
-    const date = next.date ?? parts.date;
-    const time = next.time ?? parts.time;
+    const date = next.date ?? draft.date;
+    const time = next.time ?? draft.time;
+    if (next.date !== undefined || next.time !== undefined) {
+      setDraft({ date, time });
+    }
     onChange({
-      startsAt: toIso(date, time) || (next.date !== undefined || next.time !== undefined ? "" : value?.startsAt ?? ""),
+      startsAt: toAppointmentIso(date, time),
       durationMinutes: next.durationMinutes ?? duration,
       location: next.location ?? value?.location ?? "",
       attendeeIds: next.attendeeIds ?? value?.attendeeIds ?? [],
@@ -78,10 +96,10 @@ export function AppointmentField({
         <div className="grid gap-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Data *">
-              <Input type="date" value={parts.date} disabled={disabled} onChange={(event) => patch({ date: event.target.value })} />
+              <DatePartsField value={draft.date} disabled={disabled} onChange={(date) => patch({ date })} />
             </Field>
             <Field label="Hora de início *">
-              <Input type="time" value={parts.time} disabled={disabled} onChange={(event) => patch({ time: event.target.value })} />
+              <TimePartsField value={draft.time} disabled={disabled} onChange={(time) => patch({ time })} />
             </Field>
           </div>
           <Field label="Duração">

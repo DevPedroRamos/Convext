@@ -25,6 +25,16 @@ export function rejectTarget(space: Pick<Space, "stages">, stage: SpaceStage): S
   return index > 0 ? stages[index - 1] : null;
 }
 
+/** Destino do reajuste admin: recusa da última aprovação, ou a etapa antes de Concluída. */
+export function reworkTarget(space: Pick<Space, "stages">): SpaceStage | null {
+  const stages = orderedStages(space);
+  const approval = [...stages].reverse().find((item) => item.type === "approval");
+  if (approval) return rejectTarget(space, approval);
+  const done = stages.findIndex((item) => item.type === "done");
+  if (done > 0) return stages[done - 1];
+  return null;
+}
+
 export function canSeeSpace(space: Pick<Space, "memberRoles">, viewer: Viewer) {
   return viewer.role === "admin" || space.memberRoles.includes(viewer.role);
 }

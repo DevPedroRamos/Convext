@@ -14,11 +14,11 @@
     "binding": "ASSETS"
   },
   "routes": [
-    { "pattern": "convextmidias.com.br/*", "zone_name": "convextmidias.com.br" },
-    { "pattern": "www.convextmidias.com.br/*", "zone_name": "convextmidias.com.br" }
+    { "pattern": "sagacompanybr.com.br", "custom_domain": true },
+    { "pattern": "www.sagacompanybr.com.br", "custom_domain": true }
   ],
   "vars": {
-    "NEXT_PUBLIC_APP_URL": "https://convextmidias.com.br",
+    "NEXT_PUBLIC_APP_URL": "https://sagacompanybr.com.br",
     "NEXT_PUBLIC_SUPABASE_URL": "https://kfhxiljdzgwylruinrve.supabase.co"
   }
 }

@@ -130,7 +130,7 @@ export function SpaceBoard({ space, tasks, forms, clients, attendees = [], viewe
       </div>
       <p className="text-xs text-muted-foreground">Arraste para a próxima coluna ou abra a tarefa. Só o dono da etapa avança; o admin move para qualquer coluna.</p>
 
-      <TaskSheet task={selected} space={space} form={selected ? forms.find((form) => form.id === selected.formId) ?? null : null} viewer={viewer} attendees={attendees} onClose={() => setSelectedId(null)} />
+      <TaskSheet task={selected} space={space} form={selected ? forms.find((form) => form.id === selected.formId) ?? null : null} viewer={viewer} attendees={attendees} clients={clients} feedbackTypes={feedbackTypes} onClose={() => setSelectedId(null)} />
       <TaskFormDialog form={openForm} space={space} clients={clients} attendees={attendees} feedbackTypes={feedbackTypes} onOpenChange={(open) => !open && setOpenForm(null)} />
     </div>
   );

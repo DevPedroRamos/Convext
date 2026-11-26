@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { canAccessPath } from "@/lib/access";
 import { parseGallery } from "@/lib/spaces/gallery";
-import { canAct, canClaim, canReschedule, canSeeSpace, canSubmitForm, firstMissingField, flowProblems, isMyTurn, missingRequirement, nextStage, rejectTarget } from "@/lib/spaces/rules";
+import { canAct, canClaim, canReschedule, canSeeSpace, canSubmitForm, firstMissingField, flowProblems, isMyTurn, missingRequirement, nextStage, rejectTarget, reworkTarget } from "@/lib/spaces/rules";
 import type { Space, SpaceStage } from "@/lib/spaces/types";
 import { spaceFormSchema, taskActionSchema } from "@/lib/validations/spaces";
 
@@ -37,6 +37,12 @@ describe("fluxo", () => {
   it("recusa volta para a etapa configurada ou para a anterior", () => {
     expect(rejectTarget(space, byId("aprovacao"))?.id).toBe("arte");
     expect(rejectTarget(space, { ...byId("aprovacao"), rejectTo: null })?.id).toBe("campanha");
+  });
+
+  it("reajuste admin usa o destino da última aprovação", () => {
+    expect(reworkTarget(space)?.id).toBe("arte");
+    const semAprovacao: Space = { ...space, stages: space.stages.filter((item) => item.type !== "approval") };
+    expect(reworkTarget(semAprovacao)?.id).toBe("campanha");
   });
 
   it("só o dono da etapa age; o admin age em tudo", () => {
@@ -155,6 +161,13 @@ describe("formulários", () => {
   it("exige motivo ao recusar", () => {
     expect(taskActionSchema.safeParse({ action: "reject", reason: "" }).success).toBe(false);
     expect(taskActionSchema.safeParse({ action: "reject", reason: "Trocar foto" }).success).toBe(true);
+  });
+
+  it("aceita edição e reajuste do admin", () => {
+    expect(taskActionSchema.safeParse({ action: "update", title: "Nova arte", values: { briefing: "x" }, assigneeId: null, clientId: null }).success).toBe(true);
+    expect(taskActionSchema.safeParse({ action: "update", title: "A" }).success).toBe(false);
+    expect(taskActionSchema.safeParse({ action: "rework", reason: "ok" }).success).toBe(false);
+    expect(taskActionSchema.safeParse({ action: "rework", reason: "Ajustar o corte" }).success).toBe(true);
   });
 
   it("aceita no máximo um campo de compromisso e cobra o agendamento obrigatório", () => {

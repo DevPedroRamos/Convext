@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -32,21 +32,30 @@ function daysInMonth(year: string, month: string) {
   return new Date(Number(year), Number(month), 0).getDate();
 }
 
-function yearOptions() {
+function yearOptions(selected?: string) {
   const current = new Date().getFullYear();
-  return Array.from({ length: 8 }, (_, index) => String(current - 1 + index));
+  const years = new Set(Array.from({ length: 8 }, (_, index) => String(current - 1 + index)));
+  if (selected && /^\d{4}$/.test(selected)) years.add(selected);
+  return [...years].sort();
 }
 
 export function DatePartsField({
   value,
   onChange,
+  disabled,
 }: {
   value?: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }) {
   const id = useId();
   const [parts, setParts] = useState(() => splitDate(value));
   const maxDay = daysInMonth(parts.year, parts.month);
+
+  useEffect(() => {
+    if (!value) return;
+    setParts(splitDate(value));
+  }, [value]);
 
   function emit(next: { year: string; month: string; day: string }) {
     const last = daysInMonth(next.year, next.month);
@@ -66,6 +75,7 @@ export function DatePartsField({
         <Label htmlFor={`${id}-day`} className="text-xs text-muted-foreground">Dia</Label>
         <Select
           value={parts.day || undefined}
+          disabled={disabled}
           onValueChange={(day) => emit({ ...parts, day: day === EMPTY ? "" : day })}
         >
           <SelectTrigger id={`${id}-day`} className="w-full"><SelectValue placeholder="Dia" /></SelectTrigger>
@@ -82,6 +92,7 @@ export function DatePartsField({
         <Label htmlFor={`${id}-month`} className="text-xs text-muted-foreground">Mês</Label>
         <Select
           value={parts.month || undefined}
+          disabled={disabled}
           onValueChange={(month) => emit({ ...parts, month: month === EMPTY ? "" : month })}
         >
           <SelectTrigger id={`${id}-month`} className="w-full"><SelectValue placeholder="Mês" /></SelectTrigger>
@@ -97,12 +108,13 @@ export function DatePartsField({
         <Label htmlFor={`${id}-year`} className="text-xs text-muted-foreground">Ano</Label>
         <Select
           value={parts.year || undefined}
+          disabled={disabled}
           onValueChange={(year) => emit({ ...parts, year: year === EMPTY ? "" : year })}
         >
           <SelectTrigger id={`${id}-year`} className="w-full"><SelectValue placeholder="Ano" /></SelectTrigger>
           <SelectContent>
             <SelectItem value={EMPTY}>Limpar</SelectItem>
-            {yearOptions().map((year) => (
+            {yearOptions(parts.year).map((year) => (
               <SelectItem key={year} value={year}>{year}</SelectItem>
             ))}
           </SelectContent>

@@ -6,7 +6,7 @@ A área precisa reunir o diretório do time, presença e a gestão administrativ
 
 ## Objetivo
 
-Cada pessoa marca Disponível/Ausente e escolhe um status atual. A bolinha verde só aparece se a pessoa está Disponível e com a área aberta. Admin vê a equipe, convida, edita e desativa funcionários não-admin, além de administrar os status.
+Cada pessoa marca Disponível/Ausente e escolhe um status atual. A bolinha verde só aparece se a pessoa está Disponível e com a área aberta. Admin vê a equipe, convida, edita e desativa funcionários (inclusive outros admins), além de administrar os status.
 
 ## Escopo
 
@@ -14,7 +14,7 @@ Cada pessoa marca Disponível/Ausente e escolhe um status atual. A bolinha verde
 - Status atual (`status_id`) escolhido pelo próprio usuário na lista criada pelo admin. Aparece no trigger do perfil. Pode ficar vazio.
 - Catálogo `team_statuses` com seed: Modo foco, Em reunião, Poucas demandas.
 - `/app/equipe` só admin: cards (avatar, nome, cargo, e-mail, presença, status). O CRUD do catálogo de status fica em `/app/gestao` (spec Criativos).
-- Cada card não-admin tem ações com ícone para editar e excluir. Editar abre um `Sheet` à direita; excluir desativa o acesso e preserva o histórico.
+- Cada card tem ações com ícone para editar e excluir. Editar abre um `Sheet` à direita; excluir desativa o acesso e preserva o histórico.
 - “Adicionar funcionário” abre um modal em três etapas, envia convite por e-mail e não navega para outra página.
 - Dados do funcionário: nome, sobrenome, e-mail, telefone, role, cargo, data de entrada, status Ativo/Inativo, tipo de contrato e financeiro.
 - Tipos de contrato: CLT, PJ, Freelancer e Sócio (adm).
@@ -47,7 +47,7 @@ Cada pessoa marca Disponível/Ausente e escolhe um status atual. A bolinha verde
 - Edição de funcionário acontece no painel lateral e sincroniza o e-mail entre Auth e `profiles`.
 - Excluir é uma desativação lógica: status Inativo, presença Ausente e bloqueio no Auth. Reativar remove o bloqueio.
 - A aplicação e as APIs recusam funcionários inativos mesmo enquanto um token antigo ainda estiver válido.
-- Admins continuam visíveis, mas nunca recebem ações de editar ou excluir.
+- Admins continuam visíveis e editáveis. A API recusa desativar a si mesmo ou o último administrador ativo.
 
 ## Arquitetura
 
@@ -77,7 +77,7 @@ components/dashboard/presence-runtime
 
 `employee_records`: vínculo 1:1 com `profiles`, data de entrada, status funcional, tipo de contrato, modelo de pagamento, valores em centavos, comissão percentual, dia de pagamento e timestamps.
 
-RLS: dados funcionais/financeiros somente para admin. Uma função restrita retorna apenas se o usuário atual está ativo. Trigger e validação de servidor impedem mutações de admins.
+RLS: dados funcionais/financeiros somente para admin. Uma função restrita retorna apenas se o usuário atual está ativo. Trigger impede mutação de ficha de admin por quem não é admin nem `service_role`. Validação de servidor impede remover o último admin ou desativar a si mesmo.
 
 ## Critérios de aceite
 
@@ -87,8 +87,8 @@ RLS: dados funcionais/financeiros somente para admin. Uma função restrita reto
 - Menu mostra bolinha, status atual, switch e lista de status.
 - Traffic não abre `/app/equipe`. Continua alterando presença e status.
 - Admin cadastra em modal com etapas e o convite é enviado pelo Resend.
-- Admin edita funcionário não-admin no painel lateral.
-- Admin não vê ações em cards de outros admins e a API também recusa essas operações.
+- Admin edita qualquer funcionário, inclusive admin, no painel lateral.
+- A API recusa desativar a si mesmo ou o último administrador ativo.
 - Excluir torna o funcionário Inativo e bloqueia o acesso sem apagar histórico.
 - Comercial entra somente em Dashboard, Salas e Perfil.
 - Valores financeiros não ficam disponíveis na leitura geral de `profiles`.

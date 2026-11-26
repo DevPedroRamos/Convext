@@ -213,9 +213,29 @@ export async function runTaskAction(
     | { action: "move"; stageId: string }
     | { action: "comment"; message: string }
     | { action: "reschedule"; appointment: AppointmentInput }
-    | { action: "unschedule" },
+    | { action: "unschedule" }
+    | { action: "update"; title: string; clientId?: string | null; values: Record<string, string>; assigneeId?: string | null; appointment?: AppointmentInput | null }
+    | { action: "rework"; reason: string },
 ): Promise<Result<true>> {
   const client = await db();
+  if (action.action === "update") {
+    const { error } = await client.rpc("space_task_update", {
+      p_task_id: taskId,
+      p_title: action.title,
+      p_client_id: action.clientId ?? null,
+      p_values: action.values,
+      p_assignee_id: action.assigneeId ?? null,
+    });
+    if (error) return fail(error, "Não foi possível concluir a ação.");
+    if (action.appointment) {
+      const booked = await client.rpc("task_appointment_update", { p_task_id: taskId, p_appointment: action.appointment });
+      if (booked.error) return fail(booked.error, "Não foi possível atualizar o compromisso.");
+    } else if (action.appointment === null) {
+      const removed = await client.rpc("task_appointment_delete", { p_task_id: taskId });
+      if (removed.error && removed.error.code !== "P0002") return fail(removed.error, "Não foi possível atualizar o compromisso.");
+    }
+    return ok(true);
+  }
   const call = {
     advance: () => client.rpc("space_task_advance", { p_task_id: taskId, p_required_value: "value" in action ? action.value || null : null }),
     approve: () => client.rpc("space_task_approve", { p_task_id: taskId }),
@@ -225,6 +245,7 @@ export async function runTaskAction(
     comment: () => client.rpc("space_task_comment", { p_task_id: taskId, p_message: "message" in action ? action.message : "" }),
     reschedule: () => client.rpc("task_appointment_update", { p_task_id: taskId, p_appointment: "appointment" in action ? action.appointment : null }),
     unschedule: () => client.rpc("task_appointment_delete", { p_task_id: taskId }),
+    rework: () => client.rpc("space_task_rework", { p_task_id: taskId, p_reason: "reason" in action ? action.reason : "" }),
   }[action.action];
   const { error } = await call();
   return error ? fail(error, "Não foi possível concluir a ação.") : ok(true);

@@ -7,6 +7,7 @@ import { type ClientOption, TaskFormDialog } from "@/components/spaces/task-form
 import { TaskSheet } from "@/components/spaces/task-sheet";
 import { EventManager, type CalendarEventItem } from "@/components/ui/event-manager";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { FeedbackType } from "@/lib/feedback-types";
 import { canReschedule, canSubmitForm, type Viewer } from "@/lib/spaces/rules";
 import type { Space, SpaceForm, SpaceTask, TaskAppointment } from "@/lib/spaces/types";
 
@@ -17,6 +18,7 @@ export function AgendaView({
   forms,
   clients,
   attendees,
+  feedbackTypes = [],
   viewer,
 }: {
   appointments: TaskAppointment[];
@@ -25,6 +27,7 @@ export function AgendaView({
   forms: SpaceForm[];
   clients: ClientOption[];
   attendees: AttendeeOption[];
+  feedbackTypes?: FeedbackType[];
   viewer: Viewer;
 }) {
   const router = useRouter();
@@ -109,6 +112,8 @@ export function AgendaView({
         form={selected ? forms.find((form) => form.id === selected.formId) ?? null : null}
         viewer={viewer}
         attendees={attendees}
+        clients={clients}
+        feedbackTypes={feedbackTypes}
         onClose={() => setSelectedId(null)}
       />
       <TaskFormDialog

@@ -21,7 +21,7 @@ O admin configura, sem código:
 - **Aprovação**: etapa do tipo aprovação mostra Aprovar e Recusar só para o dono. Recusar exige motivo e devolve para a etapa configurada (ou a anterior).
 - **Concluída**: a última etapa é sempre do tipo Concluída. Quem abriu a tarefa é avisado.
 - **Visibilidade**: admin vê tudo; membros veem as tarefas do espaço; os demais veem só o que abriram ou o que pegaram.
-- **Admin** move a tarefa para qualquer etapa, exclui tarefas e configura tudo em `/app/gestao/*`.
+- **Admin** move a tarefa para qualquer etapa, edita a ficha (formulário, cliente, responsável), solicita reajuste (devolve à etapa de recusa com motivo, inclusive em concluídas), exclui tarefas e configura tudo em `/app/gestao/*`.
 - **Avisos** no app (sino no cabeçalho). E-mail fica para depois.
 - **Cliente** é um tipo de campo de formulário; cada formulário decide se pede e se é obrigatório.
 - **Minhas tarefas** (`/app/tarefas`): "Sua vez" (o que espera por você) e "Minhas solicitações".
@@ -52,7 +52,7 @@ components/dashboard/app-quick-actions.tsx       botão laranja montado a partir
 
 Banco: `spaces`, `space_stages`, `space_forms` (campos em JSON), `space_tasks` (valores em JSON), `space_task_events` (histórico e comentários), `notifications`, `quick_actions`.
 
-As tarefas só mudam pelas funções `space_create_task`, `space_task_advance`, `space_task_approve`, `space_task_reject`, `space_task_claim`, `space_task_move` e `space_task_comment` (security definer). Elas aplicam as regras e gravam histórico e avisos. A RLS não dá update direto em `space_tasks` a quem não é admin.
+As tarefas só mudam pelas funções `space_create_task`, `space_task_advance`, `space_task_approve`, `space_task_reject`, `space_task_claim`, `space_task_move`, `space_task_comment`, `space_task_update` e `space_task_rework` (security definer). Elas aplicam as regras e gravam histórico e avisos. A RLS não dá update direto em `space_tasks` a quem não é admin.
 
 ## Espaços iniciais
 

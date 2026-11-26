@@ -77,6 +77,9 @@ describe("gestão de funcionários", () => {
     const logs = readFileSync("supabase/migrations/20261123233355_admin_logs.sql", "utf8");
     expect(logs).toContain("service_role");
     expect(logs).toContain("platform_events");
+    const allowAdmin = readFileSync("supabase/migrations/20261125171127_allow_admin_employee_edit.sql", "utf8");
+    expect(allowAdmin).toContain("protect_managed_admin_profile");
+    expect(allowAdmin).toContain("auth.role() is distinct from 'service_role'");
     expect(sql).toContain("employee_access_is_active");
     expect(sql).toContain("'commercial'");
     expect(sql).toContain("enable row level security");

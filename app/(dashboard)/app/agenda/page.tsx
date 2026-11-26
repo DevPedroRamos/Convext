@@ -3,6 +3,7 @@ import { AgendaView } from "@/components/agenda/agenda-view";
 import { PageHeader } from "@/components/finance/ui";
 import { listAppointments, listAttendeeOptions } from "@/lib/agenda/data";
 import { listClients } from "@/lib/clients";
+import { listFeedbackTypes } from "@/lib/feedback-types";
 import { canAccessArea } from "@/lib/access";
 import { listForms, listSpaces, listTasksByIds } from "@/lib/spaces/data";
 import { getViewer } from "@/lib/spaces/viewer";
@@ -28,12 +29,13 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
   const fallback = defaultRange();
   const from = one(params.de) || fallback.from;
   const to = one(params.ate) || fallback.to;
-  const [appointments, attendees, spaces, forms, clients] = await Promise.all([
+  const [appointments, attendees, spaces, forms, clients, feedbackTypes] = await Promise.all([
     listAppointments({ from, to }),
     listAttendeeOptions(),
     listSpaces(),
     listForms(),
     listClients(),
+    listFeedbackTypes(),
   ]);
   const tasks = await listTasksByIds([...new Set(appointments.map((item) => item.taskId))]);
   return (
@@ -46,6 +48,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
         forms={forms}
         clients={clients.map((client) => ({ id: client.id, name: client.name }))}
         attendees={attendees}
+        feedbackTypes={feedbackTypes}
         viewer={viewer}
       />
     </div>

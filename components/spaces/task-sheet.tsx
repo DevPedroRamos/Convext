@@ -1,11 +1,13 @@
 "use client";
 
-import { Check, Hand, Loader2, Send, Trash, X } from "lucide-react";
+import { Check, Hand, Loader2, Pencil, RotateCcw, Send, Trash, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useState } from "react";
 import { spacesRequest } from "@/components/spaces/api";
 import { AppointmentField, type AttendeeOption } from "@/components/spaces/appointment-field";
 import { GalleryThumbs } from "@/components/spaces/gallery-field";
+import { type ClientOption, FieldInput } from "@/components/spaces/task-form-dialog";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { timeAgo } from "@/components/spaces/task-card";
 import { TaskHistory } from "@/components/spaces/task-history";
 import { Field } from "@/components/finance/ui";
@@ -16,18 +18,40 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Textarea } from "@/components/ui/textarea";
 import { ownerLabel } from "@/lib/spaces/roles";
 import { parseGallery } from "@/lib/spaces/gallery";
-import { canAct, canClaim, canReschedule, missingRequirement, nextStage, orderedStages, rejectTarget, type Viewer } from "@/lib/spaces/rules";
+import type { FeedbackType } from "@/lib/feedback-types";
+import { canAct, canClaim, canReschedule, firstMissingField, missingRequirement, nextStage, orderedStages, rejectTarget, reworkTarget, type Viewer } from "@/lib/spaces/rules";
 import type { Space, SpaceForm, SpaceTask, TaskEvent } from "@/lib/spaces/types";
 import type { AppointmentInput } from "@/lib/validations/spaces";
 import { cn } from "@/lib/utils";
 
-type Props = { task: SpaceTask | null; space: Space | null; form: SpaceForm | null; viewer: Viewer; attendees?: AttendeeOption[]; onClose: () => void };
+type Props = {
+  task: SpaceTask | null;
+  space: Space | null;
+  form: SpaceForm | null;
+  viewer: Viewer;
+  attendees?: AttendeeOption[];
+  clients?: ClientOption[];
+  feedbackTypes?: FeedbackType[];
+  onClose: () => void;
+};
 
-export function TaskSheet({ task, space, form, viewer, attendees = [], onClose }: Props) {
+export function TaskSheet({ task, space, form, viewer, attendees = [], clients = [], feedbackTypes = [], onClose }: Props) {
   return (
     <Sheet open={Boolean(task)} onOpenChange={(open) => !open && onClose()}>
       <SheetContent size="panel">
-        {task && space ? <TaskDetail key={`${task.id}:${task.stageId}:${task.updatedAt}`} task={task} space={space} form={form} viewer={viewer} attendees={attendees} onClose={onClose} /> : null}
+        {task && space ? (
+          <TaskDetail
+            key={`${task.id}:${task.stageId}:${task.updatedAt}`}
+            task={task}
+            space={space}
+            form={form}
+            viewer={viewer}
+            attendees={attendees}
+            clients={clients}
+            feedbackTypes={feedbackTypes}
+            onClose={onClose}
+          />
+        ) : null}
       </SheetContent>
     </Sheet>
   );
@@ -44,7 +68,32 @@ function toInput(task: SpaceTask): AppointmentInput | null {
   };
 }
 
-function TaskDetail({ task, space, form, viewer, attendees, onClose }: { task: SpaceTask; space: Space; form: SpaceForm | null; viewer: Viewer; attendees: AttendeeOption[]; onClose: () => void }) {
+function formValues(task: SpaceTask, form: SpaceForm | null) {
+  const values: Record<string, string> = { ...task.values, titulo: task.title };
+  const clientField = form?.fields.find((field) => field.type === "client");
+  if (clientField && task.clientId) values[clientField.key] = task.clientId;
+  return values;
+}
+
+function TaskDetail({
+  task,
+  space,
+  form,
+  viewer,
+  attendees,
+  clients,
+  feedbackTypes,
+  onClose,
+}: {
+  task: SpaceTask;
+  space: Space;
+  form: SpaceForm | null;
+  viewer: Viewer;
+  attendees: AttendeeOption[];
+  clients: ClientOption[];
+  feedbackTypes: FeedbackType[];
+  onClose: () => void;
+}) {
   const router = useRouter();
   const stages = orderedStages(space);
   const stage = stages.find((item) => item.id === task.stageId) ?? stages[0];
@@ -61,6 +110,14 @@ function TaskDetail({ task, space, form, viewer, attendees, onClose }: { task: S
   const [moveTo, setMoveTo] = useState(stage.id);
   const [editingAppointment, setEditingAppointment] = useState(false);
   const [appointmentDraft, setAppointmentDraft] = useState<AppointmentInput | null>(() => toInput(task));
+  const [editing, setEditing] = useState(false);
+  const [reworking, setReworking] = useState(false);
+  const [reworkReason, setReworkReason] = useState("");
+  const [editValues, setEditValues] = useState(() => formValues(task, form));
+  const [editAssignee, setEditAssignee] = useState(task.assigneeId ?? "none");
+  const [editClient, setEditClient] = useState(task.clientId ?? "none");
+  const [editAppointment, setEditAppointment] = useState<AppointmentInput | null>(() => toInput(task));
+  const [editError, setEditError] = useState<string | null>(null);
 
   async function loadEvents() {
     const payload = await fetch(`/api/spaces/tasks/${task.id}`).then((response) => response.json()).catch(() => ({}));
@@ -95,6 +152,35 @@ function TaskDetail({ task, space, form, viewer, attendees, onClose }: { task: S
   const fields = (form?.fields ?? []).filter((field) => field.key !== "titulo" && field.type !== "client" && field.type !== "appointment");
   const schedule = canReschedule(viewer.role);
   const required = stages.filter((item) => item.requiresLabel && task.values[item.requiresLabel]);
+  const backTo = reworkTarget(space);
+
+  async function saveEdit() {
+    const clientField = form?.fields.find((field) => field.type === "client");
+    const appointmentField = form?.fields.find((field) => field.type === "appointment");
+    const clientId = clientField ? editValues[clientField.key] || null : (editClient === "none" ? null : editClient);
+    const extra = Object.fromEntries(Object.entries(editValues).filter(([key]) => key !== "titulo" && key !== clientField?.key));
+    if (!editValues.titulo?.trim()) {
+      setEditError("Informe o título.");
+      return;
+    }
+    if (form) {
+      const missing = firstMissingField(form.fields, editValues, clientId, appointmentField ? editAppointment : undefined);
+      if (missing) {
+        setEditError(`Preencha: ${missing}.`);
+        return;
+      }
+    }
+    setEditError(null);
+    const done = await run("update", {
+      action: "update",
+      title: editValues.titulo,
+      clientId,
+      values: extra,
+      assigneeId: editAssignee === "none" ? null : editAssignee,
+      ...(appointmentField ? { appointment: editAppointment?.startsAt && editAppointment.attendeeIds.length ? editAppointment : null } : {}),
+    }, "Demanda atualizada.");
+    if (done) setEditing(false);
+  }
 
   return (
     <div className="grid gap-5 pt-2">
@@ -229,16 +315,90 @@ function TaskDetail({ task, space, form, viewer, attendees, onClose }: { task: S
       {viewer.role === "admin" ? (
         <div className="grid gap-2 rounded-lg border border-border p-3">
           <p className="text-xs text-muted-foreground">Admin</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Select value={moveTo} onValueChange={setMoveTo}>
-              <SelectTrigger className="w-full sm:w-52" aria-label="Mover para a etapa"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {stages.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Button size="sm" variant="outline" disabled={moveTo === stage.id || busy === "move"} onClick={() => run("move", { action: "move", stageId: moveTo }, "Tarefa movida.")}>Mover</Button>
-            <Button size="sm" variant="ghost" className="ml-auto text-destructive" onClick={remove}><Trash /> Excluir</Button>
-          </div>
+          {editing ? (
+            <div className="grid gap-3">
+              {(form?.fields ?? [{ key: "titulo", label: "Título", type: "text" as const, required: true }]).map((field) => (
+                <FieldInput
+                  key={field.key}
+                  field={field}
+                  value={editValues[field.key] ?? ""}
+                  clients={clients}
+                  attendees={attendees}
+                  appointment={editAppointment}
+                  feedbackTypes={feedbackTypes}
+                  solution={editValues.solucao}
+                  onChange={(value) => setEditValues((current) => ({ ...current, [field.key]: value }))}
+                  onAppointmentChange={setEditAppointment}
+                  onSolutionChange={(solucao) => setEditValues((current) => ({ ...current, solucao }))}
+                />
+              ))}
+              {form?.fields.some((field) => field.type === "client") ? null : (
+                <Field label="Cliente">
+                  <SearchableSelect
+                    value={editClient}
+                    onValueChange={setEditClient}
+                    options={[{ value: "none", label: "Sem cliente" }, ...clients.map((item) => ({ value: item.id, label: item.name }))]}
+                    placeholder="Sem cliente"
+                  />
+                </Field>
+              )}
+              <Field label="Responsável">
+                <SearchableSelect
+                  value={editAssignee}
+                  onValueChange={setEditAssignee}
+                  options={[{ value: "none", label: "Fila da etapa" }, ...attendees.map((item) => ({ value: item.id, label: item.name }))]}
+                  placeholder="Fila da etapa"
+                />
+              </Field>
+              {editError ? <p className="text-sm text-destructive">{editError}</p> : null}
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" disabled={busy === "update"} onClick={saveEdit}>{busy === "update" ? <Loader2 className="animate-spin" /> : <Pencil />} Salvar</Button>
+                <Button size="sm" variant="ghost" onClick={() => { setEditing(false); setEditValues(formValues(task, form)); setEditAssignee(task.assigneeId ?? "none"); setEditClient(task.clientId ?? "none"); setEditAppointment(toInput(task)); setEditError(null); }}>Cancelar</Button>
+              </div>
+            </div>
+          ) : reworking ? (
+            <div className="grid gap-3">
+              <p className="text-sm text-muted-foreground">Devolve para {backTo?.name ?? "a etapa de recusa"} e avisa quem atende essa fila.</p>
+              <Field label="Motivo do reajuste *"><Textarea rows={3} value={reworkReason} onChange={(event) => setReworkReason(event.target.value)} autoFocus /></Field>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  disabled={busy === "rework" || reworkReason.trim().length < 3}
+                  onClick={async () => {
+                    if (await run("rework", { action: "rework", reason: reworkReason }, "Reajuste solicitado.")) {
+                      setReworking(false);
+                      setReworkReason("");
+                    }
+                  }}
+                >
+                  {busy === "rework" ? <Loader2 className="animate-spin" /> : <RotateCcw />} Devolver
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setReworking(false)}>Cancelar</Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => { setEditing(true); setReworking(false); setEditValues(formValues(task, form)); setEditAssignee(task.assigneeId ?? "none"); setEditClient(task.clientId ?? "none"); setEditAppointment(toInput(task)); setEditError(null); }}>
+                  <Pencil /> Editar demanda
+                </Button>
+                <Button size="sm" variant="outline" disabled={!backTo} onClick={() => { setReworking(true); setEditing(false); }}>
+                  <RotateCcw /> Solicitar reajuste
+                </Button>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Select value={moveTo} onValueChange={setMoveTo}>
+                  <SelectTrigger className="w-full sm:w-52" aria-label="Mover para a etapa"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {stages.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Button size="sm" variant="outline" disabled={moveTo === stage.id || busy === "move"} onClick={() => run("move", { action: "move", stageId: moveTo }, "Tarefa movida.")}>Mover</Button>
+                <Button size="sm" variant="ghost" className="ml-auto text-destructive" onClick={remove}><Trash /> Excluir</Button>
+              </div>
+            </>
+          )}
         </div>
       ) : null}
 

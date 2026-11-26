@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, CalendarClock, CalendarX, Check, FilePlus, Hand, MessageSquare, Send, ShieldCheck, Shuffle, X } from "lucide-react";
+import { Calendar, CalendarClock, CalendarX, Check, FilePlus, Hand, MessageSquare, Pencil, RotateCcw, Send, ShieldCheck, Shuffle, X } from "lucide-react";
 import { timeAgo } from "@/components/spaces/task-card";
 import type { TaskEvent } from "@/lib/spaces/types";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,8 @@ const icons: Record<TaskEvent["kind"], typeof Send> = {
   scheduled: Calendar,
   rescheduled: CalendarClock,
   unscheduled: CalendarX,
+  updated: Pencil,
+  reworked: RotateCcw,
 };
 
 export function TaskHistory({ events }: { events: TaskEvent[] }) {
@@ -30,12 +32,12 @@ export function TaskHistory({ events }: { events: TaskEvent[] }) {
         return (
           <div key={event.id} className={cn("relative flex gap-3 px-4 py-3", event.kind === "comment" && "bg-muted/40")}>
             {index < items.length - 1 ? <div className="absolute top-9 bottom-0 left-[1.55rem] w-px bg-border" /> : null}
-            <div className={cn("z-1 flex size-5 shrink-0 items-center justify-center rounded-full border bg-background text-muted-foreground", event.kind === "rejected" && "border-destructive text-destructive")}>
+            <div className={cn("z-1 flex size-5 shrink-0 items-center justify-center rounded-full border bg-background text-muted-foreground", (event.kind === "rejected" || event.kind === "reworked") && "border-destructive text-destructive")}>
               <Icon className="size-3" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className={cn("text-sm font-medium", event.kind === "rejected" && "text-destructive")}>{event.message}</p>
+                <p className={cn("text-sm font-medium", (event.kind === "rejected" || event.kind === "reworked") && "text-destructive")}>{event.message}</p>
                 <p className="text-xs text-muted-foreground">{timeAgo(event.createdAt)}</p>
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
@@ -60,5 +62,7 @@ function kindLabel(kind: TaskEvent["kind"]) {
   if (kind === "scheduled") return "Agendado";
   if (kind === "rescheduled") return "Remarcado";
   if (kind === "unscheduled") return "Removido";
+  if (kind === "updated") return "Edição";
+  if (kind === "reworked") return "Reajuste";
   return "Comentário";
 }

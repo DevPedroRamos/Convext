@@ -72,7 +72,7 @@ export type TaskAppointment = {
 export type TaskEvent = {
   id: string;
   actorName: string | null;
-  kind: "created" | "advanced" | "approved" | "rejected" | "claimed" | "moved" | "comment" | "scheduled" | "rescheduled" | "unscheduled";
+  kind: "created" | "advanced" | "approved" | "rejected" | "claimed" | "moved" | "comment" | "scheduled" | "rescheduled" | "unscheduled" | "updated" | "reworked";
   message: string;
   createdAt: string;
 };

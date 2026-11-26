@@ -32,7 +32,7 @@ export async function listAttendeeOptions(): Promise<AttendeeOption[]> {
   const { data } = await client
     .from("profiles")
     .select("id, first_name, last_name, email, role")
-    .in("role", ["creator", "coordinator", "admin"])
+    .in("role", ["admin", "coordinator", "traffic", "creator", "commercial"])
     .order("first_name");
   return ((data ?? []) as Row[]).map((row) => ({
     id: row.id as string,

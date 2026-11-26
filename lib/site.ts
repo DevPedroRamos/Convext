@@ -3,7 +3,7 @@ export const siteConfig = {
   url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:8080",
   description: "Performance para o mercado imobiliário. Mais leads qualificados e mais oportunidades para vender.",
   contact: {
-    email: "contato@convext.com.br",
+    email: "contato@sagacompanybr.com.br",
     phone: "+55 (11) 0000-0000",
     instagram: "https://instagram.com/convext",
     linkedin: "https://linkedin.com/company/convext",
